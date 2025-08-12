@@ -2,6 +2,7 @@ import { SourceMetadata, SourceConfig } from '../../models/Source';
 export declare class SourceResolvers {
     private sourceModel;
     private fileModel;
+    private fileProcessingService;
     private eventProcessingService;
     private dropboxService;
     private googleDriveService;

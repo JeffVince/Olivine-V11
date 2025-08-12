@@ -1,6 +1,7 @@
 import { FileModel, FileMetadata } from '../../models/File';
 import { SourceModel } from '../../models/Source';
 import { FileProcessingService } from '../../services/FileProcessingService';
+import { QueueService } from '../../services/queues/QueueService';
 import { EventProcessingService } from '../../services/EventProcessingService';
 
 export class FileResolvers {
@@ -12,8 +13,12 @@ export class FileResolvers {
   constructor() {
     this.fileModel = new FileModel();
     this.sourceModel = new SourceModel();
-    this.fileProcessingService = new FileProcessingService();
-    this.eventProcessingService = new EventProcessingService();
+    // Create services with proper dependencies to break circular dependency
+    const eventProcessingService = new EventProcessingService(null as any, new QueueService());
+    this.fileProcessingService = new FileProcessingService(eventProcessingService);
+    // Set the fileProcessingService dependency in eventProcessingService
+    (eventProcessingService as any).fileProcessingService = this.fileProcessingService;
+    this.eventProcessingService = eventProcessingService;
   }
 
   /**

@@ -10,6 +10,7 @@ const PostgresService_1 = require("../services/PostgresService");
 const DropboxService_1 = require("../services/DropboxService");
 const GoogleDriveService_1 = require("../services/GoogleDriveService");
 const FileProcessingService_1 = require("../services/FileProcessingService");
+const EventProcessingService_1 = require("../services/EventProcessingService");
 const ClassificationService_1 = require("../services/classification/ClassificationService");
 const TaxonomyService_1 = require("../services/TaxonomyService");
 const path_1 = __importDefault(require("path"));
@@ -28,7 +29,7 @@ class FileStewardAgent extends BaseAgent_1.BaseAgent {
         this.postgresService = new PostgresService_1.PostgresService();
         this.dropboxService = new DropboxService_1.DropboxService();
         this.gdriveService = new GoogleDriveService_1.GoogleDriveService();
-        const eventProcessingService = new EventProcessingService(null);
+        const eventProcessingService = new EventProcessingService_1.EventProcessingService(null, queueService);
         this.fileProcessingService = new FileProcessingService_1.FileProcessingService(eventProcessingService);
         eventProcessingService.fileProcessingService = this.fileProcessingService;
         this.classificationService = new ClassificationService_1.ClassificationService(this.postgresService);

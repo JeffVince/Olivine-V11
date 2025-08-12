@@ -1,0 +1,17 @@
+# Settings
+
+* [ ] **Settings:** Central place for user and project configuration not covered elsewhere. This may be split into sub-tabs (Profile Settings, Project Settings, etc.).
+
+  * [ ] **User Profile Settings:** Allow users to view and edit their personal info: name, profile picture (if applicable), email (might be non-editable if it's their login), and change password or 2FA setup if supported. If using Supabase Auth magic links, password might not apply; adjust accordingly (perhaps just an option to manage auth via email).
+  * [ ] **Notification Preferences:** Let users configure how and when they get notifications. E.g., toggle email notifications for certain events (like "send me an email when a suggestion is waiting" or "daily summary emails"), toggle in-app sound or pop-up for new chat messages or suggestions. If Slack is integrated, maybe preference "also send important notifications to Slack". Ensure defaults are sensible and clearly indicate what each toggle means.
+  * [ ] **Project Settings:** (If not elsewhere) include settings specific to the current project:
+
+    * [ ] **Project Details:** Edit project name, description, or associated company info. Possibly set a project status (active/archived).
+    * [ ] **Reference & Policy Settings:** If a reference project was used, show that link and allow updating it (though changing reference on the fly might be complex – perhaps just display it and note policies were imported). Possibly allow exporting current policy or re-importing from reference if needed.
+    * [ ] **Template Management:** If the platform supports custom templates (for call sheets or other documents), provide an interface to upload or define templates. For example, a list of call sheet templates available – user can upload a new Word/PDF/Markdown template or edit template settings (this could be advanced, Phase 2 feature).
+    * [ ] **Auto-Approval Rules:** If the user wants to trust the AI for certain suggestions, provide settings to auto-approve low-risk suggestions. For instance, a toggle: "Automatically approve renames that match policy with high confidence" – with a warning that user can review in log later. This is optional and off by default for safety.
+    * [ ] **Team & Permissions:** If not covered on a separate screen, show the list of project members and their roles here, and allow the owner to invite/remove people, similar to the Projects Dashboard team management.
+    * [ ] **Integration Settings:** Project-specific integration info, like which folder is linked. Possibly allow changing the linked folder or re-syncing from here. If the project uses any communication integration (like Slack channel for notifications), allow setting that (e.g. "send project notifications to #project-updates channel").
+  * [ ] **Keyboard Shortcuts & Theme:** Provide user-level toggles such as dark mode on/off (if supported UI theme) and perhaps a reference sheet or link for keyboard shortcuts (especially if command palette or other shortcuts exist).
+  * [ ] **Admin Sub-settings:** If the user has admin privileges, possibly show an "Admin" subsection for advanced configurations (could link to Admin views described below). If not, hide those.
+  * [ ] Ensure that each settings form or toggle provides feedback on save (e.g. "Settings updated" toast) and properly persists changes. Validation on input fields is important (e.g. template file correct format, email for invites valid, etc.). Also, consider a "Reset to default" for certain preferences.

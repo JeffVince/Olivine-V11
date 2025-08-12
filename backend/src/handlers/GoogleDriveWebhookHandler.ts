@@ -23,7 +23,7 @@ export class GoogleDriveWebhookHandler {
     this.queueService = queueService;
     this.configService = new ConfigService();
     // Create services with proper dependencies to break circular dependency
-    const eventProcessingService = new EventProcessingService(null as any);
+    const eventProcessingService = new EventProcessingService(null as any, queueService);
     this.fileProcessingService = new FileProcessingService(eventProcessingService);
     // Set the fileProcessingService dependency in eventProcessingService
     (eventProcessingService as any).fileProcessingService = this.fileProcessingService;

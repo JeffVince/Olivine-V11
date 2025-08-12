@@ -8,8 +8,8 @@ const ProvenanceService_1 = require("./provenance/ProvenanceService");
 const Neo4jService_1 = require("./Neo4jService");
 const QueueService_1 = require("./queues/QueueService");
 class EnhancedFileProcessingService extends FileProcessingService_1.FileProcessingService {
-    constructor() {
-        super();
+    constructor(eventProcessingService) {
+        super(eventProcessingService);
         this.taxonomyService = new TaxonomyService_1.TaxonomyService();
         this.orchestrator = new AgentOrchestrator_1.AgentOrchestrator();
         this.provenance = new ProvenanceService_1.ProvenanceService();

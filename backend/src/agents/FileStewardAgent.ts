@@ -54,7 +54,7 @@ export class FileStewardAgent extends BaseAgent {
     this.dropboxService = new DropboxService();
     this.gdriveService = new GoogleDriveService();
     // Create services with proper dependencies to break circular dependency
-    const eventProcessingService = new EventProcessingService(null as any);
+    const eventProcessingService = new EventProcessingService(null as any, queueService);
     this.fileProcessingService = new FileProcessingService(eventProcessingService);
     // Set the fileProcessingService dependency in eventProcessingService
     (eventProcessingService as any).fileProcessingService = this.fileProcessingService;

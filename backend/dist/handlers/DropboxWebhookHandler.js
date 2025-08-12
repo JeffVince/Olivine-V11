@@ -46,8 +46,10 @@ class DropboxWebhookHandler {
         this.postgresService = new PostgresService_1.PostgresService();
         this.queueService = queueService;
         this.configService = new ConfigService_1.ConfigService();
-        this.fileProcessingService = new FileProcessingService_1.FileProcessingService();
-        this.eventProcessingService = new EventProcessingService_1.EventProcessingService();
+        const eventProcessingService = new EventProcessingService_1.EventProcessingService(null, queueService);
+        this.fileProcessingService = new FileProcessingService_1.FileProcessingService(eventProcessingService);
+        eventProcessingService.fileProcessingService = this.fileProcessingService;
+        this.eventProcessingService = eventProcessingService;
         this.webhookSecret = process.env.DROPBOX_WEBHOOK_SECRET || '';
     }
     validateSignature(body, signature) {

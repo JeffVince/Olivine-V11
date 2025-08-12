@@ -1,4 +1,5 @@
 import { FileProcessingService } from './FileProcessingService';
+import { EventProcessingService } from './EventProcessingService';
 interface FileProcessingRequest {
     fileId: string;
     fileName: string;
@@ -38,7 +39,7 @@ export declare class EnhancedFileProcessingService extends FileProcessingService
     private provenance;
     private neo4j;
     private queueService;
-    constructor();
+    constructor(eventProcessingService: EventProcessingService);
     processFileWithAI(request: FileProcessingRequest): Promise<FileProcessingResult>;
     batchProcessFiles(requests: FileProcessingRequest[]): Promise<FileProcessingResult[]>;
     processFilesByCriteria(criteria: {

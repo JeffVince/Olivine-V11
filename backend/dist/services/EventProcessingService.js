@@ -3,18 +3,17 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.EventProcessingService = void 0;
 const bullmq_1 = require("bullmq");
 const uuid_1 = require("uuid");
-const QueueService_1 = require("./queues/QueueService");
 const Neo4jService_1 = require("./Neo4jService");
 const PostgresService_1 = require("./PostgresService");
 const File_1 = require("../models/File");
 const Source_1 = require("../models/Source");
 const TaxonomyService_1 = require("./TaxonomyService");
 class EventProcessingService {
-    constructor(fileProcessingService) {
+    constructor(fileProcessingService, queueService) {
         this.agentStatus = new Map();
         this.retryAttempts = new Map();
         this.maxRetryAttempts = 3;
-        this.queueService = new QueueService_1.QueueService();
+        this.queueService = queueService;
         this.neo4jService = new Neo4jService_1.Neo4jService();
         this.postgresService = new PostgresService_1.PostgresService();
         this.fileModel = new File_1.FileModel();

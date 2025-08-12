@@ -7,6 +7,7 @@ exports.EnhancedFileResolvers = void 0;
 const Neo4jService_1 = require("../../services/Neo4jService");
 const PostgresService_1 = require("../../services/PostgresService");
 const FileProcessingService_1 = require("../../services/FileProcessingService");
+const EventProcessingService_1 = require("../../services/EventProcessingService");
 const ClassificationService_1 = require("../../services/classification/ClassificationService");
 const TaxonomyService_1 = require("../../services/TaxonomyService");
 const QueueService_1 = require("../../services/queues/QueueService");
@@ -16,7 +17,9 @@ class EnhancedFileResolvers {
     constructor() {
         this.neo4jService = new Neo4jService_1.Neo4jService();
         this.postgresService = new PostgresService_1.PostgresService();
-        this.fileProcessingService = new FileProcessingService_1.FileProcessingService();
+        const eventProcessingService = new EventProcessingService_1.EventProcessingService(null, new QueueService_1.QueueService());
+        this.fileProcessingService = new FileProcessingService_1.FileProcessingService(eventProcessingService);
+        eventProcessingService.fileProcessingService = this.fileProcessingService;
         this.classificationService = new ClassificationService_1.ClassificationService(this.postgresService);
         this.queueService = new QueueService_1.QueueService();
         this.tenantService = new TenantService_1.TenantService();

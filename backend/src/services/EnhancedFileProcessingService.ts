@@ -1,4 +1,5 @@
 import { FileProcessingService } from './FileProcessingService';
+import { EventProcessingService } from './EventProcessingService';
 import { TaxonomyService } from './TaxonomyService';
 import { AgentOrchestrator } from './AgentOrchestrator';
 import { ProvenanceService } from './provenance/ProvenanceService';
@@ -47,8 +48,8 @@ export class EnhancedFileProcessingService extends FileProcessingService {
   private neo4j: Neo4jService;
   private queueService: QueueService;
 
-  constructor() {
-    super();
+  constructor(eventProcessingService: EventProcessingService) {
+    super(eventProcessingService);
     this.taxonomyService = new TaxonomyService();
     this.orchestrator = new AgentOrchestrator();
     this.provenance = new ProvenanceService();

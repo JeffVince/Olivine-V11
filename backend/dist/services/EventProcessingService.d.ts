@@ -1,4 +1,5 @@
 import { Job } from 'bullmq';
+import { QueueService } from './queues/QueueService';
 import { FileProcessingService } from './FileProcessingService';
 interface SyncJobData {
     fileId: string;
@@ -34,7 +35,7 @@ export declare class EventProcessingService {
     private fileSyncQueue;
     private fileClassificationQueue;
     private contentExtractionQueue;
-    constructor(fileProcessingService: FileProcessingService);
+    constructor(fileProcessingService: FileProcessingService, queueService: QueueService);
     addSyncJob(jobData: SyncJobData, priority?: number): Promise<string>;
     addClassificationJob(jobData: ClassificationJobData, priority?: number): Promise<string>;
     addExtractionJob(jobData: ExtractionJobData, priority?: number): Promise<string>;

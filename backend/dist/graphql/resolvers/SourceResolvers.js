@@ -4,13 +4,18 @@ exports.SourceResolvers = void 0;
 const Source_1 = require("../../models/Source");
 const File_1 = require("../../models/File");
 const EventProcessingService_1 = require("../../services/EventProcessingService");
+const FileProcessingService_1 = require("../../services/FileProcessingService");
+const QueueService_1 = require("../../services/queues/QueueService");
 const DropboxService_1 = require("../../services/DropboxService");
 const GoogleDriveService_1 = require("../../services/GoogleDriveService");
 class SourceResolvers {
     constructor() {
         this.sourceModel = new Source_1.SourceModel();
         this.fileModel = new File_1.FileModel();
-        this.eventProcessingService = new EventProcessingService_1.EventProcessingService();
+        const eventProcessingService = new EventProcessingService_1.EventProcessingService(null, new QueueService_1.QueueService());
+        this.fileProcessingService = new FileProcessingService_1.FileProcessingService(eventProcessingService);
+        eventProcessingService.fileProcessingService = this.fileProcessingService;
+        this.eventProcessingService = eventProcessingService;
         this.dropboxService = new DropboxService_1.DropboxService();
         this.googleDriveService = new GoogleDriveService_1.GoogleDriveService();
     }

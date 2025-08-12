@@ -4,13 +4,16 @@ exports.FileResolvers = void 0;
 const File_1 = require("../../models/File");
 const Source_1 = require("../../models/Source");
 const FileProcessingService_1 = require("../../services/FileProcessingService");
+const QueueService_1 = require("../../services/queues/QueueService");
 const EventProcessingService_1 = require("../../services/EventProcessingService");
 class FileResolvers {
     constructor() {
         this.fileModel = new File_1.FileModel();
         this.sourceModel = new Source_1.SourceModel();
-        this.fileProcessingService = new FileProcessingService_1.FileProcessingService();
-        this.eventProcessingService = new EventProcessingService_1.EventProcessingService();
+        const eventProcessingService = new EventProcessingService_1.EventProcessingService(null, new QueueService_1.QueueService());
+        this.fileProcessingService = new FileProcessingService_1.FileProcessingService(eventProcessingService);
+        eventProcessingService.fileProcessingService = this.fileProcessingService;
+        this.eventProcessingService = eventProcessingService;
     }
     async getFiles(organizationId, sourceId, limit = 100) {
         if (sourceId) {

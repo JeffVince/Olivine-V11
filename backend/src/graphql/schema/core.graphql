@@ -7,8 +7,8 @@ type Source {
   type: SourceType!
   config: JSON
   active: Boolean!
-  createdAt: String!
-  updatedAt: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 type FileMeta {
@@ -20,8 +20,8 @@ type FileMeta {
   extension: String
   mimeType: String
   size: Int
-  createdAt: String!
-  updatedAt: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
   modifiedAt: String
   deletedAt: String
   versionId: String

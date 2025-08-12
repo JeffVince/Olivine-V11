@@ -1,6 +1,7 @@
 import { Neo4jService } from '../../services/Neo4jService';
 import { PostgresService } from '../../services/PostgresService';
 import { FileProcessingService } from '../../services/FileProcessingService';
+import { EventProcessingService } from '../../services/EventProcessingService';
 import { ClassificationService } from '../../services/classification/ClassificationService';
 import { TaxonomyService } from '../../services/TaxonomyService';
 import { QueueService } from '../../services/queues/QueueService';
@@ -46,7 +47,11 @@ export class EnhancedFileResolvers {
   constructor() {
     this.neo4jService = new Neo4jService();
     this.postgresService = new PostgresService();
-    this.fileProcessingService = new FileProcessingService();
+    // Create services with proper dependencies to break circular dependency
+    const eventProcessingService = new EventProcessingService(null as any, new QueueService());
+    this.fileProcessingService = new FileProcessingService(eventProcessingService);
+    // Set the fileProcessingService dependency in eventProcessingService
+    (eventProcessingService as any).fileProcessingService = this.fileProcessingService;
     this.classificationService = new ClassificationService(this.postgresService);
     this.queueService = new QueueService();
     this.tenantService = new TenantService();

@@ -1,10 +1,17 @@
 import { EventProcessingService } from '../services/EventProcessingService';
+import { FileProcessingService } from '../services/FileProcessingService';
+import { QueueService } from '../services/queues/QueueService';
 
 describe('EventProcessingService', () => {
   let eventProcessingService: EventProcessingService;
 
   beforeAll(() => {
-    eventProcessingService = new EventProcessingService();
+    // Create services with proper dependencies to break circular dependency
+    const eventProcessingServiceInstance = new EventProcessingService(null as any, new QueueService());
+    const fileProcessingService = new FileProcessingService(eventProcessingServiceInstance);
+    // Set the fileProcessingService dependency in eventProcessingService
+    (eventProcessingServiceInstance as any).fileProcessingService = fileProcessingService;
+    eventProcessingService = eventProcessingServiceInstance;
   });
 
   afterAll(async () => {
