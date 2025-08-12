@@ -15,19 +15,22 @@ class Neo4jService {
             encrypted: this.config.encrypted ? 'ENCRYPTION_ON' : 'ENCRYPTION_OFF'
         });
     }
-    getSession(orgId) {
+    getSession(orgId, accessMode) {
         return this.driver.session({
             database: 'neo4j',
-            defaultAccessMode: 'READ'
+            defaultAccessMode: accessMode || 'READ'
         });
     }
     async run(query, params = {}) {
         return this.executeQuery(query, params);
     }
     async executeQuery(query, params = {}, orgId) {
+        const q = query.replace(/\/\*[\s\S]*?\*\//g, '').replace(/--.*$/gm, '').trim();
+        const isWriteQuery = /(CREATE|MERGE|SET\s+|DELETE|REMOVE|DROP|CALL\s+db\.|CREATE\s+CONSTRAINT|CREATE\s+INDEX)/i.test(q);
+        const accessMode = isWriteQuery ? 'WRITE' : 'READ';
         const session = this.driver.session({
             database: 'neo4j',
-            defaultAccessMode: 'READ'
+            defaultAccessMode: accessMode
         });
         try {
             if (orgId) {
@@ -45,7 +48,7 @@ class Neo4jService {
         }
     }
     async executeQueryInTransaction(query, params = {}, orgId) {
-        const session = this.getSession();
+        const session = this.getSession(orgId, 'WRITE');
         try {
             const result = await session.executeWrite(tx => tx.run(query, params));
             return result;
@@ -55,10 +58,7 @@ class Neo4jService {
         }
     }
     async executeWriteQuery(query, params = {}, orgId) {
-        const session = this.driver.session({
-            database: 'neo4j',
-            defaultAccessMode: 'WRITE'
-        });
+        const session = this.getSession(orgId, 'WRITE');
         try {
             if (orgId) {
                 params.orgId = orgId;
@@ -75,10 +75,7 @@ class Neo4jService {
         }
     }
     async executeTransaction(queries, orgId) {
-        const session = this.driver.session({
-            database: 'neo4j',
-            defaultAccessMode: 'WRITE'
-        });
+        const session = this.getSession(orgId, 'WRITE');
         const results = [];
         let tx = null;
         try {

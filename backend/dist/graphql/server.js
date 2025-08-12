@@ -1,13 +1,48 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.graphqlServer = exports.GraphQLServer = void 0;
 const server_1 = require("@apollo/server");
+const express4_1 = require("@as-integrations/express4");
+const drainHttpServer_1 = require("@apollo/server/plugin/drainHttpServer");
+const default_1 = require("@apollo/server/plugin/landingPage/default");
 const schema_1 = require("@graphql-tools/schema");
 const ws_1 = require("ws");
-const ws_2 = require("graphql-ws/lib/use/ws");
 const http_1 = require("http");
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
@@ -22,6 +57,9 @@ const PostgresService_1 = require("../services/PostgresService");
 const QueueService_1 = require("../services/queues/QueueService");
 const winston_1 = __importDefault(require("winston"));
 class GraphQLServer {
+    generateRequestId() {
+        return `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    }
     constructor() {
         this.app = (0, express_1.default)();
         this.httpServer = (0, http_1.createServer)(this.app);
@@ -132,19 +170,20 @@ class GraphQLServer {
             resolvers
         });
     }
-    setupWebSocketServer(schema) {
+    async setupWebSocketServer(schema) {
         this.logger.info('Setting up WebSocket server...');
         this.wsServer = new ws_1.WebSocketServer({
             server: this.httpServer,
             path: '/graphql'
         });
-        (0, ws_2.useServer)({
+        const { useServer } = await Promise.resolve().then(() => __importStar(require('graphql-ws/dist/use/ws')));
+        useServer({
             schema,
             context: async (ctx) => {
                 try {
                     return await this.securityMiddleware.createContext({
-                        req: ctx.extra.request,
-                        res: ctx.extra.response || {}
+                        req: ctx.extra?.request,
+                        res: ctx.extra?.response || {}
                     });
                 }
                 catch (error) {
@@ -160,8 +199,8 @@ class GraphQLServer {
             onDisconnect: async (ctx) => {
                 this.logger.info('WebSocket client disconnected');
             },
-            onError: (ctx, message, errors) => {
-                this.logger.error('WebSocket error:', { message, errors });
+            onError: (ctx, id, payload, errors) => {
+                this.logger.error('WebSocket error:', { id, payload, errors });
             }
         }, this.wsServer);
     }
@@ -170,10 +209,10 @@ class GraphQLServer {
         this.apolloServer = new server_1.ApolloServer({
             schema,
             plugins: [
-                ApolloServerPluginDrainHttpServer({ httpServer: this.httpServer }),
+                (0, drainHttpServer_1.ApolloServerPluginDrainHttpServer)({ httpServer: this.httpServer }),
                 process.env.NODE_ENV === 'production'
-                    ? ApolloServerPluginLandingPageLocalDefault({ footer: false })
-                    : ApolloServerPluginLandingPageLocalDefault(),
+                    ? (0, default_1.ApolloServerPluginLandingPageLocalDefault)({ footer: false })
+                    : (0, default_1.ApolloServerPluginLandingPageLocalDefault)(),
                 {
                     async requestDidStart() {
                         return {
@@ -194,9 +233,10 @@ class GraphQLServer {
                 },
                 {
                     async requestDidStart() {
+                        const startTime = Date.now();
                         return {
                             async willSendResponse(requestContext) {
-                                const duration = Date.now() - requestContext.request.http?.startTime || 0;
+                                const duration = Date.now() - startTime;
                                 winston_1.default.info('GraphQL request completed', {
                                     operationName: requestContext.request.operationName,
                                     duration: `${duration}ms`,
@@ -208,14 +248,19 @@ class GraphQLServer {
                 }
             ],
             formatError: (error) => {
-                this.logger.error('GraphQL Error:', {
-                    message: error.message,
-                    locations: error.locations,
-                    path: error.path,
-                    extensions: error.extensions
-                });
+                if (error instanceof Error) {
+                    this.logger.error('GraphQL Error:', {
+                        message: error.message,
+                        locations: 'locations' in error ? error.locations : undefined,
+                        path: 'path' in error ? error.path : undefined,
+                        extensions: 'extensions' in error ? error.extensions : undefined
+                    });
+                }
+                else {
+                    this.logger.error('GraphQL Error:', { error });
+                }
                 if (process.env.NODE_ENV === 'production') {
-                    if (error.extensions?.code === 'INTERNAL_SERVER_ERROR') {
+                    if ('extensions' in error && error.extensions?.code === 'INTERNAL_SERVER_ERROR') {
                         return new graphql_1.GraphQLError('Internal server error');
                     }
                 }
@@ -253,23 +298,28 @@ class GraphQLServer {
                 this.logger.error('Health check failed:', error);
                 res.status(503).json({
                     status: 'unhealthy',
-                    error: error.message,
+                    error: error instanceof Error ? error.message : 'Unknown error',
                     timestamp: new Date().toISOString()
                 });
             }
         });
-        this.app.use('/graphql', expressMiddleware(this.apolloServer, {
+        this.app.use('/graphql', (0, express4_1.expressMiddleware)(this.apolloServer, {
             context: async ({ req, res }) => {
                 req.startTime = Date.now();
                 return this.securityMiddleware.createContext({ req, res });
             }
         }));
         this.app.use((error, req, res, next) => {
-            this.logger.error('Express error:', error);
+            const requestId = req.id || `req-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+            this.logger.error('Express error:', {
+                error: error.message,
+                requestId,
+                stack: error.stack
+            });
             if (!res.headersSent) {
                 res.status(500).json({
                     error: 'Internal server error',
-                    requestId: req.id
+                    requestId
                 });
             }
         });
@@ -302,7 +352,8 @@ class GraphQLServer {
                     await this.neo4jService.run(query);
                 }
                 catch (error) {
-                    if (!error.message.includes('already exists')) {
+                    const errorMessage = error instanceof Error ? error.message : String(error);
+                    if (!errorMessage.includes('already exists')) {
                         this.logger.warn(`Failed to create index/constraint: ${query}`, error);
                     }
                 }
@@ -340,6 +391,12 @@ class GraphQLServer {
         catch {
             return false;
         }
+    }
+    getApp() {
+        return this.app;
+    }
+    getHttpServer() {
+        return this.httpServer;
     }
 }
 exports.GraphQLServer = GraphQLServer;

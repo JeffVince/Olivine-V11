@@ -24,11 +24,11 @@ export class Neo4jService {
    * Get a Neo4j session
    * @returns Neo4j session
    */
-  getSession(orgId?: string): Session {
+  getSession(orgId?: string, accessMode?: 'READ' | 'WRITE'): Session {
     // TODO: Implementation Checklist - 07-Testing-QA-Checklist.md - Backend Neo4j service tests
     return this.driver.session({
       database: 'neo4j',
-      defaultAccessMode: 'READ'
+      defaultAccessMode: accessMode || 'READ'
     });
   }
 
@@ -53,9 +53,14 @@ export class Neo4jService {
    * // TODO: Implementation Checklist - 07-Testing-QA-Checklist.md - Backend database query tests
    */
   async executeQuery(query: string, params: Record<string, any> = {}, orgId?: string): Promise<any> {
+    // Determine if this is a write operation. Be robust to newlines and comments.
+    const q = query.replace(/\/\*[\s\S]*?\*\//g, '').replace(/--.*$/gm, '').trim();
+    const isWriteQuery = /(CREATE|MERGE|SET\s+|DELETE|REMOVE|DROP|CALL\s+db\.|CREATE\s+CONSTRAINT|CREATE\s+INDEX)/i.test(q);
+    const accessMode = isWriteQuery ? 'WRITE' : 'READ';
+    
     const session = this.driver.session({
       database: 'neo4j',
-      defaultAccessMode: 'READ'
+      defaultAccessMode: accessMode
     });
     try {
       // Add org_id to params if provided for multi-tenant filtering
@@ -82,7 +87,7 @@ export class Neo4jService {
    */
   async executeQueryInTransaction(query: string, params: Record<string, any> = {}, orgId?: string): Promise<any> {
     // TODO: Implementation Checklist - 07-Testing-QA-Checklist.md - Backend Neo4j service tests
-    const session = this.getSession();
+    const session = this.getSession(orgId, 'WRITE');
     try {
       const result = await session.executeWrite(tx => tx.run(query, params));
       return result;
@@ -100,10 +105,7 @@ export class Neo4jService {
    */
   async executeWriteQuery(query: string, params: Record<string, any> = {}, orgId?: string): Promise<any> {
     // TODO: Implementation Checklist - 07-Testing-QA-Checklist.md - Backend Neo4j service tests
-    const session = this.driver.session({
-      database: 'neo4j',
-      defaultAccessMode: 'WRITE'
-    });
+    const session = this.getSession(orgId, 'WRITE');
     try {
       // Add org_id to params if provided for multi-tenant filtering
       if (orgId) {
@@ -128,10 +130,7 @@ export class Neo4jService {
    */
   async executeTransaction(queries: Array<{query: string, params?: Record<string, any>}>, orgId?: string): Promise<any[]> {
     // TODO: Implementation Checklist - 07-Testing-QA-Checklist.md - Backend Neo4j service tests
-    const session = this.driver.session({
-      database: 'neo4j',
-      defaultAccessMode: 'WRITE'
-    });
+    const session = this.getSession(orgId, 'WRITE');
     const results: any[] = [];
     let tx: Transaction | null = null;
     

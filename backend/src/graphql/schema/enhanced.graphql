@@ -605,6 +605,8 @@ input CreateContentInput {
   description: String
   format: String!
   metadata: JSON
+  references: [ID!]  # File or Content IDs to reference
+  derivedFrom: [ID!] # Content IDs this is derived from
 }
 
 input UpdateContentInput {
@@ -756,16 +758,35 @@ type Mutation {
 type Subscription {
   # File updates
   fileUpdated(orgId: ID!, projectId: ID): File!
-  fileClassified(orgId: ID!): File!
+  fileClassified(orgId: ID!, projectId: ID): File!
+  
+  # Content ontology updates
+  sceneCreated(orgId: ID!, projectId: ID!): Scene!
+  characterCreated(orgId: ID!, projectId: ID!): Character!
+  
+  # Operations ontology updates
+  purchaseOrderCreated(orgId: ID!, projectId: ID): PurchaseOrder!
+  budgetUpdated(orgId: ID!, projectId: ID!): Budget!
+  
+  # Agent processing updates
+  agentTaskCompleted(orgId: ID!, agentType: String): JSON!
+  workflowExecuted(orgId: ID!, workflowId: String): JSON!
+  
+  # Novelty detection alerts
+  noveltyDetected(orgId: ID!, alertLevel: String): JSON!
+  
+  # Provenance updates
+  commitCreated(orgId: ID!, projectId: ID, branchName: String): Commit!
+  entityVersionCreated(orgId: ID!, entityType: String): EntityVersion!
+  
+  # System health and monitoring
+  systemAlert(orgId: ID!, severity: String): JSON!
   
   # Sync progress
-  syncProgress(orgId: ID!, sourceId: ID!): SyncProgressUpdate!
+  syncProgress(orgId: ID!, sourceId: ID): SyncProgressUpdate!
   
   # Classification updates
   classificationProgress(orgId: ID!): ClassificationProgressUpdate!
-  
-  # Commit events
-  commitCreated(orgId: ID!, projectId: ID): Commit!
   
   # System events
   systemEvents(orgId: ID!): SystemEvent!

@@ -44,24 +44,30 @@ export declare class EnhancedResolvers {
             content: (_: any, { id, orgId }: {
                 id: string;
                 orgId: string;
-            }, context: any) => Promise<any>;
+            }, context: any) => Promise<import("../../services/ContentService").Content | null>;
             contents: (_: any, { filter, limit, offset }: {
                 filter?: any;
                 limit?: number;
                 offset?: number;
-            }, context: any) => Promise<any[]>;
+            }, context: any) => Promise<import("../../services/ContentService").Content[]>;
+            searchContent: (_: any, { orgId, searchText, type, limit }: {
+                orgId: string;
+                searchText: string;
+                type?: string;
+                limit?: number;
+            }, context: any) => Promise<{
+                results: {
+                    content: import("../../services/ContentService").Content;
+                    score: number;
+                }[];
+                totalCount: number;
+            }>;
             searchFiles: (_: any, { orgId, query, filters, limit }: {
                 orgId: string;
                 query: string;
                 filters?: any;
                 limit?: number;
             }, context: any) => Promise<import("./EnhancedFileResolvers").FileSearchResults>;
-            searchContent: (_: any, { orgId, query, filters, limit }: {
-                orgId: string;
-                query: string;
-                filters?: any;
-                limit?: number;
-            }, context: any) => Promise<any>;
             commit: (_: any, { id, orgId }: {
                 id: string;
                 orgId: string;
@@ -198,7 +204,7 @@ export declare class EnhancedResolvers {
         Project: {
             organization: (parent: any, _: any, context: any) => Promise<any>;
             files: (parent: any, _: any, context: any) => Promise<any[]>;
-            content: (parent: any, _: any, context: any) => Promise<any[]>;
+            content: (parent: any, _: any, context: any) => Promise<import("../../services/ContentService").Content[]>;
             commits: (parent: any, _: any, context: any) => Promise<any[]>;
         };
         Source: {
@@ -222,8 +228,6 @@ export declare class EnhancedResolvers {
     private createProjectInGraph;
     private triggerFullSync;
     private getSystemHealth;
-    private getContent;
-    private getContents;
     private searchContent;
     private getCommit;
     private getCommits;

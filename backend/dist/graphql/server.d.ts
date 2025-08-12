@@ -1,3 +1,4 @@
+import express from 'express';
 export declare class GraphQLServer {
     private app;
     private httpServer;
@@ -9,6 +10,7 @@ export declare class GraphQLServer {
     private logger;
     private neo4jService;
     private postgresService;
+    private generateRequestId;
     private queueService;
     constructor();
     start(port?: number): Promise<void>;
@@ -22,6 +24,8 @@ export declare class GraphQLServer {
     private checkNeo4jHealth;
     private checkPostgresHealth;
     private checkQueueHealth;
+    getApp(): express.Application;
+    getHttpServer(): any;
 }
 export declare const graphqlServer: GraphQLServer;
 //# sourceMappingURL=server.d.ts.map

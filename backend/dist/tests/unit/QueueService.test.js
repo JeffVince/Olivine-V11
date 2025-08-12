@@ -6,25 +6,26 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const QueueService_1 = require("../../services/queues/QueueService");
 const bullmq_1 = require("bullmq");
 const ioredis_1 = __importDefault(require("ioredis"));
+const mockQueueInstance = {
+    add: jest.fn(),
+    close: jest.fn(),
+    getJob: jest.fn(),
+    getJobs: jest.fn()
+};
 jest.mock('bullmq', () => ({
-    Queue: jest.fn().mockImplementation(() => ({
-        add: jest.fn(),
-        close: jest.fn(),
-        getJob: jest.fn(),
-        getJobs: jest.fn()
-    })),
+    Queue: jest.fn().mockImplementation(() => mockQueueInstance),
     Worker: jest.fn(),
     QueueEvents: jest.fn().mockImplementation(() => ({
         on: jest.fn(),
         close: jest.fn()
     }))
 }));
-jest.mock('ioredis', () => ({
-    default: jest.fn().mockImplementation(() => ({
+jest.mock('ioredis', () => {
+    return jest.fn().mockReturnValue({
         quit: jest.fn(),
         ping: jest.fn()
-    }))
-}));
+    });
+});
 describe('QueueService', () => {
     let queueService;
     let mockConnection;
@@ -36,17 +37,12 @@ describe('QueueService', () => {
             quit: jest.fn().mockResolvedValue(undefined),
             ping: jest.fn().mockResolvedValue('PONG')
         };
-        mockQueue = {
-            add: jest.fn(),
-            close: jest.fn().mockResolvedValue(undefined),
-            getJob: jest.fn(),
-            getJobs: jest.fn()
-        };
+        mockQueue = require('bullmq').Queue.mock.instances[0] || mockQueueInstance;
         mockQueueEvents = {
             on: jest.fn(),
             close: jest.fn().mockResolvedValue(undefined)
         };
-        ioredis_1.default.mockImplementation(() => mockConnection);
+        ioredis_1.default.mockReturnValue(mockConnection);
         queueService = new QueueService_1.QueueService({
             redisUrl: 'redis://localhost:6379'
         });
@@ -84,7 +80,7 @@ describe('QueueService', () => {
         });
         it('should create worker with custom options', () => {
             const processor = jest.fn();
-            const customOptions = { concurrency: 10, autorun: false };
+            const customOptions = { connection: mockConnection, concurrency: 10, autorun: false };
             queueService.registerWorker('agent-jobs', processor, customOptions);
             expect(bullmq_1.Worker).toHaveBeenCalledWith('agent-jobs', processor, expect.objectContaining({
                 connection: mockConnection,
@@ -125,6 +121,7 @@ describe('QueueService', () => {
             ]);
             queueService.queues = mockQueues;
             queueService.queueEvents = mockQueueEventsMap;
+            mockQueue.add.mockClear();
             await queueService.close();
             expect(mockQueue.close).toHaveBeenCalledTimes(2);
             expect(mockQueueEvents.close).toHaveBeenCalledTimes(2);

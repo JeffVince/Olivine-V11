@@ -401,7 +401,7 @@ export class ProvenanceService {
       org_id
     }, org_id);
 
-    return result.records.map(record => {
+    return result.records.map((record: any) => {
       const version = record.get('v').properties;
       return {
         ...version,

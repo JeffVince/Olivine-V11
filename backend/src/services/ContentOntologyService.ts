@@ -216,7 +216,7 @@ export class ContentOntologyService {
     `;
 
     const result = await this.neo4j.executeQuery(query, { org_id: orgId }, orgId);
-    return result.records.map(record => record.get('p').properties);
+    return result.records.map((record: any) => record.get('p').properties);
   }
 
   // ===== SCENE OPERATIONS =====

@@ -53,18 +53,22 @@ export class MigrationService {
       const migrationPath = path.join(neo4jMigrationsDir, file);
       const migrationContent = fs.readFileSync(migrationPath, 'utf8');
       
-      // Split migration content into separate statements
-      const statements = migrationContent
+      // Clean up the migration content - remove comments and split into statements
+      const cleanedContent = migrationContent
+        .replace(/\/\*[\s\S]*?\*\//g, '') // Remove block comments
+        .replace(/\/\/.*$/gm, ''); // Remove line comments
+      
+      const statements = cleanedContent
         .split(';')
         .map(stmt => stmt.trim())
         .filter(stmt => stmt.length > 0);
       
       console.log(`Applying Neo4j migration: ${file} with ${statements.length} statements`);
       
-      // Execute each statement separately
+      // Execute each statement separately using writeQuery for DDL operations
       for (const statement of statements) {
         if (statement.trim().length > 0) {
-          await this.neo4jService.executeQuery(statement);
+          await this.neo4jService.executeWriteQuery(statement);
         }
       }
     }

@@ -59,16 +59,16 @@ CREATE INDEX shootday_status IF NOT EXISTS FOR (sd:ShootDay) ON (sd.status);
 
 /* Content relationship indexes */
 CREATE INDEX scene_character_relationships IF NOT EXISTS FOR (ef:EdgeFact) 
-ON (ef.type, ef.from_id, ef.valid_to) WHERE ef.type = 'FEATURES_CHARACTER';
+ON (ef.type, ef.from_id, ef.valid_to);
 
 CREATE INDEX scene_scheduling_relationships IF NOT EXISTS FOR (ef:EdgeFact) 
-ON (ef.type, ef.to_id, ef.valid_to) WHERE ef.type = 'SCHEDULED_FOR';
+ON (ef.type, ef.to_id, ef.valid_to);
 
 CREATE INDEX talent_character_relationships IF NOT EXISTS FOR (ef:EdgeFact) 
-ON (ef.type, ef.from_id, ef.valid_to) WHERE ef.type = 'PLAYS_CHARACTER';
+ON (ef.type, ef.from_id, ef.valid_to);
 
 CREATE INDEX scene_prop_relationships IF NOT EXISTS FOR (ef:EdgeFact) 
-ON (ef.type, ef.from_id, ef.valid_to) WHERE ef.type = 'NEEDS_PROP';
+ON (ef.type, ef.from_id, ef.valid_to);
 
 CREATE INDEX scene_location_relationships IF NOT EXISTS FOR (ef:EdgeFact) 
-ON (ef.type, ef.from_id, ef.valid_to) WHERE ef.type = 'SET_AT';
+ON (ef.type, ef.from_id, ef.valid_to);

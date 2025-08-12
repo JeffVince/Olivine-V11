@@ -1,5 +1,4 @@
 import express, { Request, Response } from 'express';
-import { ApolloServer } from 'apollo-server-express';
 import { Neo4jGraphQL } from '@neo4j/graphql';
 import fs from 'fs'
 import path from 'path'
@@ -20,6 +19,7 @@ import { TaxonomyClassificationAgent } from './agents/TaxonomyClassificationAgen
 import { ProvenanceTrackingAgent } from './agents/ProvenanceTrackingAgent';
 import { SyncAgent } from './agents/SyncAgent';
 import oauthRoutes from './routes/oauthRoutes';
+import { GraphQLServer } from './graphql/server';
 
 // Load environment variables
 // TODO: Implementation Plan - 09-Monitoring-Logging-Implementation.md - Environment variable loading and configuration
@@ -30,7 +30,12 @@ const app = express();
 // Apply middleware
 // TODO: Implementation Plan - 05-API-Implementation.md - API middleware configuration
 // TODO: Implementation Checklist - 05-API-GraphQL-Checklist.md - Security middleware implementation
-app.use(cors());
+// CORS: Allow frontend origin and credentials for Apollo client with credentials: 'include'
+const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || 'http://localhost:3000'
+app.use(cors({
+  origin: FRONTEND_ORIGIN,
+  credentials: true,
+}));
 app.use(helmet());
 app.use(express.json());
 app.use('/api/oauth', oauthRoutes);
@@ -87,26 +92,40 @@ registry.register({ name: 'sync-agent', instance: new SyncAgent(queueService) })
 // Start server function
 async function startServer() {
   try {
-    // Get the generated schema
-    const neo4jSchema = await neoSchema.getSchema();
-    const agentResolvers = buildAgentResolvers(queueService)
-    const coreResolvers = buildCoreResolvers()
-    const schema = makeExecutableSchema({
-      typeDefs: [neo4jSchema, coreTypeDefs as any, agentTypeDefs as any] as any,
-      resolvers: [coreResolvers as any, agentResolvers as any] as any,
-    })
-    const apolloServer = new ApolloServer({ schema });
-    await apolloServer.start();
-    // Apply Apollo GraphQL middleware
-    apolloServer.applyMiddleware({ app: app as any, path: '/graphql' });
+    // Create GraphQL server with WebSocket support
+    const graphqlServer = new GraphQLServer();
     
-    // Start the Express server
-    const port = process.env.PORT || 8080;
-    app.listen(port, async () => {
-      await registry.startAll();
-      console.log(`Olivine backend server running on port ${port}`);
-      console.log(`GraphQL endpoint available at http://localhost:${port}/graphql`);
-    });
+    // Start the GraphQL server
+    const port = parseInt(process.env.PORT || '8080', 10);
+    await graphqlServer.start(port);
+    
+    // Get the Express app from the GraphQL server
+    const app = graphqlServer.getApp();
+    
+    // Apply additional middleware
+    app.use(cors({
+      origin: process.env.FRONTEND_ORIGIN || 'http://localhost:3000',
+      credentials: true,
+    }));
+    app.use(helmet());
+    app.use(express.json());
+    app.use('/api/oauth', oauthRoutes);
+    
+    // Initialize webhook handlers (will be created after queueService is instantiated)
+    const dropboxWebhookHandler = new DropboxWebhookHandler(queueService);
+    const gdriveWebhookHandler = new GoogleDriveWebhookHandler(queueService);
+    
+    // Dropbox webhook routes
+    app.get('/api/webhooks/dropbox', (req: Request, res: Response) => dropboxWebhookHandler.handleWebhook(req, res));
+    app.post('/api/webhooks/dropbox', (req: Request, res: Response) => dropboxWebhookHandler.handleWebhook(req, res));
+    
+    // Google Drive webhook routes
+    app.get('/api/webhooks/gdrive', (req: Request, res: Response) => gdriveWebhookHandler.handleWebhook(req, res));
+    app.post('/api/webhooks/gdrive', (req: Request, res: Response) => gdriveWebhookHandler.handleWebhook(req, res));
+    
+    await registry.startAll();
+    console.log(`Olivine backend server running on port ${port}`);
+    console.log(`GraphQL endpoint available at http://localhost:${port}/graphql`);
   } catch (error) {
     console.error('Error starting server:', error);
     process.exit(1);

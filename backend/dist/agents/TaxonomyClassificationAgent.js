@@ -5,6 +5,7 @@ const BaseAgent_1 = require("./BaseAgent");
 const ClassificationService_1 = require("../services/classification/ClassificationService");
 const PostgresService_1 = require("../services/PostgresService");
 const Neo4jService_1 = require("../services/Neo4jService");
+const TaxonomyService_1 = require("../services/TaxonomyService");
 const uuid_1 = require("uuid");
 class TaxonomyClassificationAgent extends BaseAgent_1.BaseAgent {
     constructor(queueService, config) {
@@ -20,6 +21,7 @@ class TaxonomyClassificationAgent extends BaseAgent_1.BaseAgent {
         this.classificationService = new ClassificationService_1.ClassificationService(new PostgresService_1.PostgresService());
         this.postgresService = new PostgresService_1.PostgresService();
         this.neo4jService = new Neo4jService_1.Neo4jService();
+        this.taxonomyService = new TaxonomyService_1.TaxonomyService();
     }
     async onStart() {
         this.logger.info('Starting TaxonomyClassificationAgent...');
@@ -52,7 +54,19 @@ class TaxonomyClassificationAgent extends BaseAgent_1.BaseAgent {
             if (classificationResult.slotKey === 'UNCLASSIFIED') {
                 classificationResult = await this.performMLClassification(orgId, fileData);
             }
-            await this.updateFileClassification(fileId, classificationResult);
+            await this.taxonomyService.applyClassification(fileId, {
+                slot: classificationResult.slotKey,
+                confidence: classificationResult.confidence,
+                method: classificationResult.method === 'taxonomy' ? 'rule_based' : classificationResult.method === 'ml' ? 'ml_based' : 'manual',
+                rule_id: classificationResult.ruleId,
+                metadata: classificationResult.metadata
+            }, orgId, 'system');
+            await this.updateFileClassification(fileId, {
+                status: 'classified',
+                confidence: classificationResult.confidence,
+                method: classificationResult.method,
+                metadata: classificationResult.metadata
+            });
             const commitId = await this.createCommit(orgId, `Classified file: ${filePath} as ${classificationResult.slotKey}`, {
                 fileId,
                 classification: classificationResult,
@@ -294,9 +308,8 @@ class TaxonomyClassificationAgent extends BaseAgent_1.BaseAgent {
         const query = `
       MATCH (f:File {id: $fileId})
       SET 
-        f.classification_status = 'classified',
+        f.classification_status = $status,
         f.classification_confidence = $confidence,
-        f.canonical_slot = $canonicalSlot,
         f.classification_method = $method,
         f.classification_metadata = $metadata,
         f.classified_at = datetime()
@@ -304,8 +317,8 @@ class TaxonomyClassificationAgent extends BaseAgent_1.BaseAgent {
     `;
         await this.neo4jService.run(query, {
             fileId,
+            status: classification.status,
             confidence: classification.confidence,
-            canonicalSlot: classification.slotKey,
             method: classification.method,
             metadata: JSON.stringify(classification.metadata || {})
         });

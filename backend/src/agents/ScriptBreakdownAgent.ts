@@ -1,7 +1,9 @@
-import { BaseAgent } from './BaseAgent';
+import { BaseAgent, AgentStatus } from './BaseAgent';
 import { ContentOntologyService, Project, Scene, Character, Prop } from '../services/ContentOntologyService';
 import { TaxonomyService } from '../services/TaxonomyService';
+import { MockLlmProvider } from '../services/llm/MockLlmProvider';
 import { LlmService } from '../services/llm/LlmService';
+import { QueueService } from '../services/queues/QueueService';
 
 interface ScriptBreakdownResult {
   scenes: Scene[];
@@ -28,11 +30,17 @@ export class ScriptBreakdownAgent extends BaseAgent {
   private taxonomyService: TaxonomyService;
   private llmService: LlmService;
 
-  constructor() {
-    super('script_breakdown_agent', 'Analyzes scripts and breaks them down into scenes, characters, and props');
+  constructor(queueService: QueueService) {
+    super('script_breakdown_agent', queueService, { 
+      maxRetries: 3,
+      retryDelay: 1000,
+      healthCheckInterval: 30000,
+      enableMonitoring: true,
+      logLevel: 'info'
+    });
     this.contentService = new ContentOntologyService();
     this.taxonomyService = new TaxonomyService();
-    this.llmService = new LlmService();
+    this.llmService = new LlmService(new MockLlmProvider());
   }
 
   /**
@@ -146,7 +154,8 @@ export class ScriptBreakdownAgent extends BaseAgent {
     `;
 
     try {
-      const response = await this.llmService.generateResponse(prompt, {
+      const response = await this.llmService.complete([{ role: 'user', content: prompt }], {
+        model: 'default',
         temperature: 0.1, // Low temperature for consistent extraction
         maxTokens: 4000
       });
@@ -199,7 +208,8 @@ export class ScriptBreakdownAgent extends BaseAgent {
     `;
 
     try {
-      const response = await this.llmService.generateResponse(prompt, {
+      const response = await this.llmService.complete([{ role: 'user', content: prompt }], {
+        model: 'default',
         temperature: 0.1,
         maxTokens: 2000
       });
@@ -333,13 +343,36 @@ export class ScriptBreakdownAgent extends BaseAgent {
   /**
    * Get agent status
    */
-  async getStatus(): Promise<any> {
+  getStatus(): AgentStatus {
     return {
       name: this.name,
-      description: this.description,
-      status: 'active',
-      capabilities: this.getCapabilities(),
-      last_processed: new Date().toISOString()
-    };
+      running: this.running,
+      paused: this.paused,
+      error: this.lastError,
+      startTime: this.startTime,
+      lastActivity: this.lastActivity,
+      processedJobs: this.processedJobs,
+      failedJobs: this.failedJobs
+    }
+  }
+
+  protected async onStart(): Promise<void> {
+    // Implementation for starting the agent
+    console.log(`${this.name} agent started`);
+  }
+
+  protected async onStop(): Promise<void> {
+    // Implementation for stopping the agent
+    console.log(`${this.name} agent stopped`);
+  }
+
+  protected async onPause(): Promise<void> {
+    // Implementation for pausing the agent
+    console.log(`${this.name} agent paused`);
+  }
+
+  protected async onResume(): Promise<void> {
+    // Implementation for resuming the agent
+    console.log(`${this.name} agent resumed`);
   }
 }

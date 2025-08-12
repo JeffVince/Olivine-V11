@@ -67,10 +67,10 @@ CREATE INDEX insurance_doc_expiry IF NOT EXISTS FOR (id:InsuranceDoc) ON (id.exp
 
 /* Financial relationship indexes */
 CREATE INDEX po_scene_relationships IF NOT EXISTS FOR (ef:EdgeFact) 
-ON (ef.type, ef.from_id, ef.valid_to) WHERE ef.type = 'FOR_SCENE';
+ON (ef.type, ef.from_id, ef.valid_to);
 
 CREATE INDEX budget_allocation_relationships IF NOT EXISTS FOR (ef:EdgeFact) 
-ON (ef.type, ef.from_id, ef.valid_to) WHERE ef.type = 'ALLOCATED_TO';
+ON (ef.type, ef.from_id, ef.valid_to);
 
 CREATE INDEX compliance_application_relationships IF NOT EXISTS FOR (ef:EdgeFact) 
-ON (ef.type, ef.from_id, ef.valid_to) WHERE ef.type = 'APPLIES_TO';
+ON (ef.type, ef.from_id, ef.valid_to);

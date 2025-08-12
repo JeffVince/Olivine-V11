@@ -237,7 +237,7 @@ export class TaxonomyService {
 
     const result = await this.neo4j.executeQuery(query, { file_id: fileId, org_id: orgId }, orgId);
 
-    return result.records.map(record => ({
+    return result.records.map((record: any) => ({
       slot: record.get('slot'),
       confidence: record.get('confidence'),
       method: 'rule_based' as const,
@@ -345,7 +345,7 @@ export class TaxonomyService {
     `;
 
     const result = await this.neo4j.executeQuery(query, { org_id: orgId }, orgId);
-    return result.records.map(record => record.get('cs').properties);
+    return result.records.map((record: any) => record.get('cs').properties);
   }
 
   /**
@@ -359,7 +359,7 @@ export class TaxonomyService {
     `;
 
     const result = await this.neo4j.executeQuery(query, { org_id: orgId }, orgId);
-    return result.records.map(record => record.get('tp').properties);
+    return result.records.map((record: any) => record.get('tp').properties);
   }
 
   /**
@@ -374,7 +374,7 @@ export class TaxonomyService {
     `;
 
     const result = await this.neo4j.executeQuery(query, { profile_id: profileId, org_id: orgId }, orgId);
-    return result.records.map(record => record.get('tr').properties);
+    return result.records.map((record: any) => record.get('tr').properties);
   }
 
   /**

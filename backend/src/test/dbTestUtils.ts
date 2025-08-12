@@ -1,6 +1,6 @@
 import { Neo4jService } from '../services/Neo4jService';
 import { PostgresService } from '../services/PostgresService';
-import { QueueService } from '../services/QueueService';
+import { QueueService } from '../services/queues/QueueService';
 import { AuthService } from '../services/AuthService';
 import { ConfigService } from '../services/ConfigService';
 
@@ -107,7 +107,8 @@ export class DbTestUtils {
     try {
       const neo4jHealthy = await this.neo4jService.healthCheck();
       const postgresHealthy = await this.postgresService.healthCheck();
-      const redisHealthy = await this.queueService.healthCheck();
+      const redisPing = await this.queueService.ping();
+      const redisHealthy = redisPing === 'PONG';
       
       return neo4jHealthy && postgresHealthy && redisHealthy;
     } catch (error) {

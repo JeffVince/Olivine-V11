@@ -1,7 +1,10 @@
-import { BaseAgent } from './BaseAgent';
+import { BaseAgent, AgentStatus } from './BaseAgent';
+import { ContentOntologyService } from '../services/ContentOntologyService';
 import { Neo4jService } from '../services/Neo4jService';
-import { ProvenanceService } from '../services/provenance/ProvenanceService';
 import { LlmService } from '../services/llm/LlmService';
+import { QueueService } from '../services/queues/QueueService';
+import { MockLlmProvider } from '../services/llm/MockLlmProvider';
+import { ProvenanceService } from '../services/provenance/ProvenanceService';
 
 interface NoveltyDetectionRequest {
   entityId: string;
@@ -47,11 +50,17 @@ export class NoveltyDetectionAgent extends BaseAgent {
   private provenance: ProvenanceService;
   private llmService: LlmService;
 
-  constructor() {
-    super('novelty_detection_agent', 'Detects novel patterns and changes in the knowledge graph');
+  constructor(queueService: QueueService) {
+    super('novelty_detection_agent', queueService, { 
+      maxRetries: 3,
+      retryDelay: 1000,
+      healthCheckInterval: 30000,
+      enableMonitoring: true,
+      logLevel: 'info'
+    });
     this.neo4j = new Neo4jService();
     this.provenance = new ProvenanceService();
-    this.llmService = new LlmService();
+    this.llmService = new LlmService(new MockLlmProvider());
   }
 
   /**
@@ -385,7 +394,8 @@ export class NoveltyDetectionAgent extends BaseAgent {
     `;
 
     try {
-      const response = await this.llmService.generateResponse(prompt, {
+      const response = await this.llmService.complete([{ role: 'user', content: prompt }], {
+        model: 'default',
         temperature: 0.3,
         maxTokens: 200
       });
@@ -485,18 +495,36 @@ export class NoveltyDetectionAgent extends BaseAgent {
   /**
    * Get agent status
    */
-  async getStatus(): Promise<any> {
+  getStatus(): AgentStatus {
     return {
       name: this.name,
-      description: this.description,
-      status: 'active',
-      capabilities: this.getCapabilities(),
-      last_processed: new Date().toISOString(),
-      detection_thresholds: {
-        novelty_threshold: 0.3,
-        pattern_deviation_threshold: 0.5,
-        significance_threshold: 0.4
-      }
-    };
+      running: this.running,
+      paused: this.paused,
+      error: this.lastError,
+      startTime: this.startTime,
+      lastActivity: this.lastActivity,
+      processedJobs: this.processedJobs,
+      failedJobs: this.failedJobs
+    }
+  }
+
+  protected async onStart(): Promise<void> {
+    // Implementation for starting the agent
+    console.log(`${this.name} agent started`);
+  }
+
+  protected async onStop(): Promise<void> {
+    // Implementation for stopping the agent
+    console.log(`${this.name} agent stopped`);
+  }
+
+  protected async onPause(): Promise<void> {
+    // Implementation for pausing the agent
+    console.log(`${this.name} agent paused`);
+  }
+
+  protected async onResume(): Promise<void> {
+    // Implementation for resuming the agent
+    console.log(`${this.name} agent resumed`);
   }
 }

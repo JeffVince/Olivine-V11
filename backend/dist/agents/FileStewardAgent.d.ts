@@ -24,6 +24,7 @@ export declare class FileStewardAgent extends BaseAgent {
     private gdriveService;
     private fileProcessingService;
     private classificationService;
+    private taxonomyService;
     constructor(queueService: QueueService, config?: Partial<AgentConfig>);
     protected onStart(): Promise<void>;
     protected onStop(): Promise<void>;

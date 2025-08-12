@@ -1,10 +1,12 @@
 import { Queue, Worker, Job } from 'bullmq';
 import { v4 as uuidv4 } from 'uuid';
-import { QueueService } from './QueueService';
+import { QueueService } from './queues/QueueService';
 import { Neo4jService } from './Neo4jService';
 import { PostgresService } from './PostgresService';
-import { FileModel, FileClassification } from '../models/File';
+import { FileModel, FileClassification, FileMetadata } from '../models/File';
 import { SourceModel } from '../models/Source';
+import { TaxonomyService } from './TaxonomyService';
+import { FileProcessingService } from './FileProcessingService';
 
 // Job data interfaces as specified in the implementation plan
 interface SyncJobData {
@@ -39,6 +41,13 @@ export class EventProcessingService {
   private postgresService: PostgresService;
   private fileModel: FileModel;
   private sourceModel: SourceModel;
+  private taxonomyService: TaxonomyService;
+  private fileProcessingService: FileProcessingService;
+  
+  // Agent monitoring and status tracking
+  private agentStatus: Map<string, any> = new Map();
+  private retryAttempts: Map<string, number> = new Map();
+  private maxRetryAttempts: number = 3;
   
   // BullMQ queues as specified in the implementation plan
   private fileSyncQueue: Queue<SyncJobData>;
@@ -51,6 +60,8 @@ export class EventProcessingService {
     this.postgresService = new PostgresService();
     this.fileModel = new FileModel();
     this.sourceModel = new SourceModel();
+    this.taxonomyService = new TaxonomyService();
+    this.fileProcessingService = new FileProcessingService();
     
     // Initialize BullMQ queues with prioritization as specified in the plan
     this.fileSyncQueue = new Queue('file-sync', {
@@ -460,11 +471,466 @@ export class EventProcessingService {
   }
 
   /**
-   * Close all queue connections
+   * Close all queue connections and cleanup resources
    */
   async close(): Promise<void> {
-    await this.fileSyncQueue.close();
-    await this.fileClassificationQueue.close();
-    await this.contentExtractionQueue.close();
+    console.log('Closing EventProcessingService...');
+    
+    try {
+      // Close BullMQ queues
+      await Promise.all([
+        this.fileSyncQueue.close(),
+        this.fileClassificationQueue.close(),
+        this.contentExtractionQueue.close()
+      ]);
+      
+      // Close service connections
+      await Promise.all([
+        this.neo4jService.close(),
+        this.postgresService.close(),
+        this.queueService.close()
+      ]);
+      
+      // Clear internal maps
+      this.agentStatus.clear();
+      this.retryAttempts.clear();
+      
+      console.log('EventProcessingService closed successfully');
+    } catch (error) {
+      console.error('Error closing EventProcessingService:', error);
+      throw error;
+    }
+  }
+
+  // ===== ENHANCED HELPER METHODS =====
+  
+  /**
+   * Create commit record for provenance tracking
+   */
+  private async createCommit(orgId: string, commitData: any): Promise<string> {
+    const commitId = uuidv4();
+    
+    const query = `
+      CREATE (c:Commit {
+        id: $commitId,
+        orgId: $orgId,
+        message: $message,
+        author: $author,
+        authorType: $authorType,
+        timestamp: datetime(),
+        metadata: $metadata
+      })
+      RETURN c.id as commitId
+    `;
+    
+    await this.neo4jService.executeQuery(query, {
+      commitId,
+      orgId,
+      message: commitData.message,
+      author: commitData.author,
+      authorType: commitData.authorType,
+      metadata: JSON.stringify(commitData.metadata || {})
+    });
+    
+    return commitId;
+  }
+  
+  /**
+   * Create action record for audit trail
+   */
+  private async createAction(commitId: string, actionData: any): Promise<void> {
+    const actionId = uuidv4();
+    
+    const query = `
+      MATCH (c:Commit {id: $commitId})
+      CREATE (a:Action {
+        id: $actionId,
+        actionType: $actionType,
+        tool: $tool,
+        entityType: $entityType,
+        entityId: $entityId,
+        inputs: $inputs,
+        outputs: $outputs,
+        status: $status,
+        errorMessage: $errorMessage,
+        executionTime: $executionTime,
+        timestamp: datetime()
+      })
+      CREATE (c)-[:HAS_ACTION]->(a)
+    `;
+    
+    await this.neo4jService.executeQuery(query, {
+      commitId,
+      actionId,
+      actionType: actionData.actionType,
+      tool: actionData.tool,
+      entityType: actionData.entityType,
+      entityId: actionData.entityId,
+      inputs: JSON.stringify(actionData.inputs),
+      outputs: JSON.stringify(actionData.outputs),
+      status: actionData.status,
+      errorMessage: actionData.errorMessage || null,
+      executionTime: actionData.executionTime || 0
+    });
+  }
+  
+  /**
+   * Create entity version for change tracking
+   */
+  private async createEntityVersion(entityId: string, entityType: string, properties: any, commitId: string): Promise<void> {
+    const versionId = uuidv4();
+    
+    const query = `
+      MATCH (c:Commit {id: $commitId})
+      CREATE (v:EntityVersion {
+        id: $versionId,
+        entityId: $entityId,
+        entityType: $entityType,
+        properties: $properties,
+        timestamp: datetime()
+      })
+      CREATE (c)-[:HAS_VERSION]->(v)
+    `;
+    
+    await this.neo4jService.executeQuery(query, {
+      commitId,
+      versionId,
+      entityId,
+      entityType,
+      properties: JSON.stringify(properties)
+    });
+  }
+
+  /**
+   * Update agent status for monitoring
+   */
+  private async updateAgentStatus(agentType: string, orgId: string, status: 'success' | 'error', executionTime: number, error?: string): Promise<void> {
+    const statusKey = `${orgId}:${agentType}`;
+    let agentStatus = this.agentStatus.get(statusKey) || {
+      agentType,
+      orgId,
+      status: 'idle',
+      lastExecution: new Date().toISOString(),
+      executionCount: 0,
+      successCount: 0,
+      errorCount: 0,
+      averageExecutionTime: 0
+    };
+    
+    agentStatus.executionCount++;
+    agentStatus.lastExecution = new Date().toISOString();
+    
+    if (status === 'success') {
+      agentStatus.status = 'idle';
+      agentStatus.successCount++;
+    } else {
+      agentStatus.status = 'error';
+      agentStatus.errorCount++;
+      agentStatus.lastError = error;
+    }
+    
+    agentStatus.averageExecutionTime = (
+      (agentStatus.averageExecutionTime * (agentStatus.executionCount - 1)) + executionTime
+    ) / agentStatus.executionCount;
+    
+    this.agentStatus.set(statusKey, agentStatus);
+  }
+
+  /**
+   * Execute function with retry logic
+   */
+  private async executeWithRetry(fn: () => Promise<void>, jobId: string): Promise<void> {
+    const attempts = this.retryAttempts.get(jobId) || 0;
+    
+    try {
+      await fn();
+      // Reset retry count on success
+      this.retryAttempts.delete(jobId);
+    } catch (error) {
+      if (attempts < this.maxRetryAttempts) {
+        this.retryAttempts.set(jobId, attempts + 1);
+        console.log(`Retrying job ${jobId}, attempt ${attempts + 1}/${this.maxRetryAttempts}`);
+        
+        // Exponential backoff
+        const delay = Math.pow(2, attempts) * 1000;
+        await new Promise(resolve => setTimeout(resolve, delay));
+        
+        return this.executeWithRetry(fn, jobId);
+      } else {
+        this.retryAttempts.delete(jobId);
+        throw error;
+      }
+    }
+  }
+
+  /**
+   * Handle sync error with proper logging and recovery
+   */
+  private async handleSyncError(job: Job<SyncJobData>, error: Error): Promise<void> {
+    const { fileId, orgId } = job.data;
+    
+    console.error(`Sync error for file ${fileId}:`, {
+      error: error.message,
+      stack: error.stack,
+      jobData: job.data
+    });
+    
+    // Store error in database for analysis
+    const errorQuery = `
+      INSERT INTO sync_errors (file_id, org_id, error_message, error_stack, job_data, created_at)
+      VALUES ($1, $2, $3, $4, $5, NOW())
+    `;
+    
+    try {
+      await this.postgresService.executeQuery(errorQuery, [
+        fileId,
+        orgId,
+        error.message,
+        error.stack,
+        JSON.stringify(job.data)
+      ]);
+    } catch (dbError) {
+      console.error('Failed to store sync error:', dbError);
+    }
+  }
+
+  /**
+   * Extract filename from path
+   */
+  private extractFileName(filePath: string): string {
+    return filePath.split('/').pop() || filePath;
+  }
+  
+  /**
+   * Extract file extension from path
+   */
+  private extractFileExtension(filePath: string): string {
+    const filename = this.extractFileName(filePath);
+    const lastDotIndex = filename.lastIndexOf('.');
+    return lastDotIndex > 0 ? filename.substring(lastDotIndex + 1).toLowerCase() : '';
+  }
+
+  /**
+   * Extract tags from content and filename
+   */
+  private extractTags(content: string, filename: string): string[] {
+    const tags = new Set<string>();
+    
+    // Extract from filename
+    const nameParts = filename.toLowerCase().split(/[._-]/);
+    nameParts.forEach(part => {
+      if (part.length > 2) tags.add(part);
+    });
+    
+    // Extract from content (simple keyword extraction)
+    if (content) {
+      const words = content.toLowerCase().match(/\b\w{4,}\b/g) || [];
+      const wordCounts = words.reduce((acc, word) => {
+        acc[word] = (acc[word] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+      
+      // Get most frequent words as tags
+      Object.entries(wordCounts)
+        .filter(([word, count]) => count > 2)
+        .sort(([, a], [, b]) => b - a)
+        .slice(0, 10)
+        .forEach(([word]) => tags.add(word));
+    }
+    
+    return Array.from(tags).slice(0, 20); // Limit to 20 tags
+  }
+
+  /**
+   * Create file relationships in Neo4j
+   */
+  private async createFileRelationships(fileId: string, sourceId: string, orgId: string, filePath: string, commitId: string): Promise<void> {
+    const query = `
+      MATCH (f:File {id: $fileId, orgId: $orgId})
+      MATCH (s:Source {id: $sourceId, orgId: $orgId})
+      MATCH (c:Commit {id: $commitId})
+      MERGE (f)-[:STORED_IN]->(s)
+      MERGE (f)-[:CREATED_IN]->(c)
+    `;
+    
+    await this.neo4jService.executeQuery(query, { fileId, sourceId, orgId, commitId });
+  }
+
+  /**
+   * Create classification relationships
+   */
+  private async createClassificationRelationships(fileId: string, orgId: string, classification: any, commitId: string): Promise<void> {
+    if (classification.type && classification.type !== 'UNCLASSIFIED') {
+      const query = `
+        MATCH (f:File {id: $fileId, orgId: $orgId})
+        MERGE (c:Classification {type: $classificationType, orgId: $orgId})
+        MERGE (f)-[:CLASSIFIED_AS {confidence: $confidence, method: $method, timestamp: datetime()}]->(c)
+      `;
+      
+      await this.neo4jService.executeQuery(query, {
+        fileId,
+        orgId,
+        classificationType: classification.type,
+        confidence: classification.confidence,
+        method: classification.method || 'unknown'
+      });
+    }
+  }
+
+  /**
+   * Create content extraction relationships
+   */
+  private async createContentExtractionRelationships(fileId: string, orgId: string, content: string, metadata: any, commitId: string): Promise<void> {
+    const query = `
+      MATCH (f:File {id: $fileId, orgId: $orgId})
+      CREATE (e:ExtractedContent {
+        id: randomUUID(),
+        fileId: $fileId,
+        orgId: $orgId,
+        contentLength: $contentLength,
+        extractionMethod: $extractionMethod,
+        extractedAt: datetime(),
+        metadata: $metadata
+      })
+      CREATE (f)-[:HAS_EXTRACTED_CONTENT]->(e)
+    `;
+    
+    await this.neo4jService.executeQuery(query, {
+      fileId,
+      orgId,
+      contentLength: content.length,
+      extractionMethod: metadata.method || 'basic',
+      metadata: JSON.stringify(metadata)
+    });
+  }
+
+  /**
+   * Ensure folder hierarchy exists
+   */
+  private async ensureFolderHierarchy(orgId: string, sourceId: string, filePath: string, commitId: string): Promise<void> {
+    const pathParts = filePath.split('/').filter(part => part.length > 0);
+    pathParts.pop(); // Remove filename
+    
+    if (pathParts.length === 0) return;
+    
+    let currentPath = '';
+    let parentId: string | null = null;
+    
+    for (const folderName of pathParts) {
+      currentPath += `/${folderName}`;
+      
+      const folderId = await this.upsertFolderNode(orgId, sourceId, currentPath, folderName, parentId, commitId);
+      
+      if (parentId) {
+        await this.createFolderRelationship(parentId, folderId, 'CONTAINS', commitId);
+      }
+      
+      parentId = folderId;
+    }
+  }
+  
+  /**
+   * Create or update folder node
+   */
+  private async upsertFolderNode(orgId: string, sourceId: string, path: string, name: string, parentId: string | null, commitId: string): Promise<string> {
+    const query = `
+      MERGE (f:Folder {orgId: $orgId, sourceId: $sourceId, path: $path})
+      ON CREATE SET f.id = randomUUID(), f.createdAt = datetime()
+      SET f.name = $name, f.updatedAt = datetime()
+      RETURN f.id as folderId
+    `;
+    
+    const result = await this.neo4jService.executeQuery(query, {
+      orgId, sourceId, path, name
+    });
+    
+    return result.records[0].get('folderId');
+  }
+  
+  /**
+   * Create folder relationship
+   */
+  private async createFolderRelationship(parentId: string, childId: string, relType: string, commitId: string): Promise<void> {
+    const query = `
+      MATCH (parent {id: $parentId})
+      MATCH (child {id: $childId})
+      MERGE (parent)-[:${relType}]->(child)
+    `;
+    
+    await this.neo4jService.executeQuery(query, { parentId, childId });
+  }
+
+  /**
+   * Clean up orphaned relationships
+   */
+  private async cleanupOrphanedRelationships(fileId: string, orgId: string, commitId: string): Promise<void> {
+    const query = `
+      MATCH (f:File {id: $fileId, orgId: $orgId})
+      OPTIONAL MATCH (f)-[r]-()
+      DELETE r
+    `;
+    
+    await this.neo4jService.executeQuery(query, { fileId, orgId });
+  }
+
+  /**
+   * Report worker error for monitoring
+   */
+  private reportWorkerError(workerName: string, error: Error): void {
+    console.error(`Worker ${workerName} error reported:`, {
+      error: error.message,
+      stack: error.stack,
+      timestamp: new Date().toISOString()
+    });
+  }
+  
+  /**
+   * Update worker statistics
+   */
+  private updateWorkerStats(workerName: string, status: string): void {
+    console.log(`Worker ${workerName} job ${status} at ${new Date().toISOString()}`);
+  }
+  
+  /**
+   * Handle job failure with proper logging
+   */
+  private handleJobFailure(job: Job | undefined, error: Error): void {
+    if (!job) return;
+    
+    console.error('Job failure details:', {
+      jobId: job.id,
+      jobName: job.name,
+      jobData: job.data,
+      error: error.message,
+      stack: error.stack,
+      timestamp: new Date().toISOString()
+    });
+  }
+  
+  /**
+   * Perform health check on workers and services
+   */
+  private async performHealthCheck(): Promise<void> {
+    try {
+      // Check service health
+      const [neo4jHealth, postgresHealth, redisHealth] = await Promise.all([
+        this.neo4jService.healthCheck(),
+        this.postgresService.healthCheck(),
+        this.queueService.ping()
+      ]);
+      
+      const healthStatus = {
+        neo4j: neo4jHealth,
+        postgres: postgresHealth,
+        redis: redisHealth,
+        timestamp: new Date().toISOString()
+      };
+      
+      if (!neo4jHealth || !postgresHealth || !redisHealth) {
+        console.warn('Health check failed:', healthStatus);
+      }
+    } catch (error) {
+      console.error('Health check error:', error);
+    }
   }
 }

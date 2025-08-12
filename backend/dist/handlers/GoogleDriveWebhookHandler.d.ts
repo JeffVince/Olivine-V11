@@ -8,19 +8,16 @@ export declare class GoogleDriveWebhookHandler {
     private eventProcessingService;
     constructor(queueService: QueueService);
     handleWebhook(req: Request, res: Response): Promise<void>;
-    private findSourceByChannelId;
-    private getStoredPageToken;
     private processGoogleDriveChanges;
-    private processChanges;
-    private initializePageToken;
-    private processGoogleDriveFileChange;
-    private handleGoogleDriveFileCreateOrUpdate;
-    private handleGoogleDriveFileDelete;
-    private buildFilePath;
-    private handleDeletedFile;
-    private storePageToken;
-    private getGoogleDriveClient;
     private processFileChange;
-    private handleModifiedFile;
+    private getGoogleDriveService;
+    private getFilePath;
+    private storeGoogleDriveEvent;
+    private getSourceFromChannel;
+    private getStoredCredentials;
+    private getStoredPageToken;
+    private updateStoredPageToken;
+    setupPushNotifications(sourceId: string, orgId: string): Promise<void>;
+    private updateSourceWebhookInfo;
 }
 //# sourceMappingURL=GoogleDriveWebhookHandler.d.ts.map

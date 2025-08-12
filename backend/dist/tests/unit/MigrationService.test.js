@@ -49,7 +49,7 @@ describe('MigrationService', () => {
         jest.clearAllMocks();
         mockNeo4jService = new Neo4jService_1.Neo4jService();
         mockPostgresService = new PostgresService_1.PostgresService();
-        mockNeo4jService.executeQuery = jest.fn();
+        mockNeo4jService.executeWriteQuery = jest.fn();
         mockNeo4jService.healthCheck = jest.fn().mockResolvedValue(true);
         mockNeo4jService.close = jest.fn().mockResolvedValue(undefined);
         mockPostgresService.executeQuery = jest.fn();
@@ -89,7 +89,7 @@ describe('MigrationService', () => {
             expect(fs.readdirSync).toHaveBeenCalledWith(path.join(__dirname, '../../migrations/neo4j'));
             expect(fs.readFileSync).toHaveBeenCalledWith(path.join(__dirname, '../../migrations/neo4j/001_test_migration.cypher'), 'utf8');
             expect(fs.readFileSync).toHaveBeenCalledWith(path.join(__dirname, '../../migrations/neo4j/002_test_migration.cypher'), 'utf8');
-            expect(mockNeo4jService.executeQuery).toHaveBeenCalledTimes(4);
+            expect(mockNeo4jService.executeWriteQuery).toHaveBeenCalledTimes(4);
             consoleLogSpy.mockRestore();
         });
         it('should handle case when Neo4j migrations directory does not exist', async () => {
@@ -134,7 +134,7 @@ describe('MigrationService', () => {
             });
             mockPostgresService.executeQuery
                 .mockResolvedValueOnce({ rows: [], command: 'SELECT', rowCount: 0, oid: 0, fields: [] })
-                .mockRejectedValueOnce(new Error('already exists'))
+                .mockRejectedValueOnce(new Error('Policy already exists, skipping'))
                 .mockResolvedValueOnce({ rows: [], command: 'SELECT', rowCount: 0, oid: 0, fields: [] });
             const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
             await migrationService.applyPostgresMigrations();

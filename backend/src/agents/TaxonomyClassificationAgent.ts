@@ -3,6 +3,7 @@ import { QueueService } from '../services/queues/QueueService'
 import { ClassificationService } from '../services/classification/ClassificationService'
 import { PostgresService } from '../services/PostgresService'
 import { Neo4jService } from '../services/Neo4jService'
+import { TaxonomyService } from '../services/TaxonomyService'
 import { v4 as uuidv4 } from 'uuid'
 
 export interface TaxonomyRule {
@@ -36,6 +37,7 @@ export class TaxonomyClassificationAgent extends BaseAgent {
   private classificationService: ClassificationService;
   private postgresService: PostgresService;
   private neo4jService: Neo4jService;
+  private taxonomyService: TaxonomyService;
   private taxonomyRules: Map<string, TaxonomyRule[]> = new Map();
   
   constructor(queueService: QueueService, config?: Partial<AgentConfig>) {
@@ -51,6 +53,7 @@ export class TaxonomyClassificationAgent extends BaseAgent {
     this.classificationService = new ClassificationService(new PostgresService());
     this.postgresService = new PostgresService();
     this.neo4jService = new Neo4jService();
+    this.taxonomyService = new TaxonomyService();
   }
 
   /**
@@ -113,8 +116,27 @@ export class TaxonomyClassificationAgent extends BaseAgent {
         classificationResult = await this.performMLClassification(orgId, fileData);
       }
 
-      // Update file node with classification results
-      await this.updateFileClassification(fileId, classificationResult);
+      // Persist classification as temporal EdgeFact via TaxonomyService
+      await this.taxonomyService.applyClassification(
+        fileId,
+        {
+          slot: classificationResult.slotKey,
+          confidence: classificationResult.confidence,
+          method: classificationResult.method === 'taxonomy' ? 'rule_based' : classificationResult.method === 'ml' ? 'ml_based' : 'manual',
+          rule_id: classificationResult.ruleId,
+          metadata: classificationResult.metadata
+        },
+        orgId,
+        'system'
+      );
+
+      // Reflect status/metadata on File node (no convenience edges)
+      await this.updateFileClassification(fileId, {
+        status: 'classified',
+        confidence: classificationResult.confidence,
+        method: classificationResult.method,
+        metadata: classificationResult.metadata
+      });
 
       // Create commit for classification action
       const commitId = await this.createCommit(
@@ -434,13 +456,15 @@ export class TaxonomyClassificationAgent extends BaseAgent {
   /**
    * Updates file classification in Neo4j
    */
-  private async updateFileClassification(fileId: string, classification: ClassificationResult): Promise<void> {
+  private async updateFileClassification(
+    fileId: string,
+    classification: { status: string; confidence: number; method?: string; metadata?: any }
+  ): Promise<void> {
     const query = `
       MATCH (f:File {id: $fileId})
       SET 
-        f.classification_status = 'classified',
+        f.classification_status = $status,
         f.classification_confidence = $confidence,
-        f.canonical_slot = $canonicalSlot,
         f.classification_method = $method,
         f.classification_metadata = $metadata,
         f.classified_at = datetime()
@@ -449,8 +473,8 @@ export class TaxonomyClassificationAgent extends BaseAgent {
 
     await this.neo4jService.run(query, {
       fileId,
+      status: classification.status,
       confidence: classification.confidence,
-      canonicalSlot: classification.slotKey,
       method: classification.method,
       metadata: JSON.stringify(classification.metadata || {})
     });

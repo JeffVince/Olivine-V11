@@ -692,7 +692,7 @@ export class OperationsOntologyService {
     `;
 
     const result = await this.neo4j.executeQuery(query, { org_id: orgId }, orgId);
-    return result.records.map(record => ({
+    return result.records.map((record: any) => ({
       vendor_name: record.get('vendor_name'),
       category: record.get('category'),
       rating: record.get('rating'),

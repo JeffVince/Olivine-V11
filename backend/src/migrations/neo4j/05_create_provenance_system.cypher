@@ -25,7 +25,7 @@ CREATE INDEX entity_version_entity_type IF NOT EXISTS FOR (ev:EntityVersion) ON 
 CREATE INDEX entity_version_valid_from IF NOT EXISTS FOR (ev:EntityVersion) ON (ev.valid_from);
 CREATE INDEX entity_version_valid_to IF NOT EXISTS FOR (ev:EntityVersion) ON (ev.valid_to);
 CREATE INDEX entity_version_temporal IF NOT EXISTS FOR (ev:EntityVersion) ON (ev.entity_id, ev.entity_type, ev.valid_from, ev.valid_to);
-CREATE INDEX current_versions IF NOT EXISTS FOR (ev:EntityVersion) ON (ev.entity_id, ev.entity_type) WHERE ev.valid_to IS NULL;
+CREATE INDEX current_versions IF NOT EXISTS FOR (ev:EntityVersion) ON (ev.entity_id, ev.entity_type);
 
 /* Branch constraints and indexes */
 CREATE CONSTRAINT unique_branch IF NOT EXISTS FOR (b:Branch) REQUIRE (b.name, b.org_id) IS UNIQUE;
@@ -36,7 +36,7 @@ CREATE INDEX branch_created_by IF NOT EXISTS FOR (b:Branch) ON (b.created_by);
 
 /* Temporal EdgeFact indexes (additional to base EdgeFact indexes) */
 CREATE INDEX temporal_edgefacts IF NOT EXISTS FOR (ef:EdgeFact) ON (ef.type, ef.valid_from, ef.valid_to);
-CREATE INDEX current_edgefacts IF NOT EXISTS FOR (ef:EdgeFact) ON (ef.type, ef.from_id, ef.to_id) WHERE ef.valid_to IS NULL;
+CREATE INDEX current_edgefacts IF NOT EXISTS FOR (ef:EdgeFact) ON (ef.type, ef.from_id, ef.to_id);
 CREATE INDEX edgefact_commit_tracking IF NOT EXISTS FOR (ef:EdgeFact) ON (ef.created_by_commit);
 
 /* Performance indexes for common temporal queries */
@@ -44,20 +44,12 @@ CREATE INDEX temporal_range_queries IF NOT EXISTS FOR (ef:EdgeFact) ON (ef.valid
 CREATE INDEX entity_history_lookup IF NOT EXISTS FOR (ev:EntityVersion) ON (ev.entity_id, ev.valid_from);
 
 /* Create default main branch for system */
-MERGE (main_branch:Branch {
+CREATE (main_branch:Branch {
     name: "main",
     org_id: "system",
-    project_id: null,
     description: "Default main branch for system operations",
-    created_from_commit: null,
-    head_commit: null,
     status: "active",
     created_by: "system",
     created_at: datetime(),
-    merged_at: null,
-    merged_by: null,
-    metadata: {
-        purpose: "system_default",
-        approval_required: false
-    }
+    metadata: '{"purpose": "system_default", "approval_required": false}'
 })

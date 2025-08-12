@@ -8,13 +8,22 @@
     "dev": "nodemon --exec ts-node src/index.ts",
     "start": "node dist/index.js",
     "test": "jest",
+    "test:unit": "jest --selectProjects unit",
+    "test:integration": "jest --selectProjects integration",
+    "test:e2e": "jest --selectProjects e2e",
+    "test:performance": "jest --selectProjects performance",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
+    "test:ci": "jest --ci --coverage --watchAll=false",
     "lint": "eslint src/**/*.ts",
-    "migrate": "ts-node src/scripts/migrate.ts"
+    "lint:fix": "eslint src/**/*.ts --fix",
+    "migrate": "ts-node src/scripts/migrate.ts",
+    "test:setup": "ts-node src/tests/globalSetup.ts",
+    "test:teardown": "ts-node src/tests/globalTeardown.ts"
   },
   "dependencies": {
     "@apollo/server": "^5.0.0",
+    "@as-integrations/express4": "^1.1.2",
     "@graphql-tools/schema": "^10.0.0",
     "@neo4j/graphql": "^7.2.6",
     "@supabase/supabase-js": "^2.55.0",

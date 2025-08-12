@@ -28,6 +28,7 @@ export declare class TaxonomyClassificationAgent extends BaseAgent {
     private classificationService;
     private postgresService;
     private neo4jService;
+    private taxonomyService;
     private taxonomyRules;
     constructor(queueService: QueueService, config?: Partial<AgentConfig>);
     protected onStart(): Promise<void>;

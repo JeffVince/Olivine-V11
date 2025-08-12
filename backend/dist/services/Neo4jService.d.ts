@@ -3,7 +3,7 @@ export declare class Neo4jService {
     private driver;
     private config;
     constructor();
-    getSession(orgId?: string): Session;
+    getSession(orgId?: string, accessMode?: 'READ' | 'WRITE'): Session;
     run(query: string, params?: Record<string, any>): Promise<any>;
     executeQuery(query: string, params?: Record<string, any>, orgId?: string): Promise<any>;
     executeQueryInTransaction(query: string, params?: Record<string, any>, orgId?: string): Promise<any>;

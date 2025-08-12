@@ -172,20 +172,20 @@ export class ConfigService {
    */
   validateConfig(): boolean {
     // Validate Neo4j configuration
-    if (!this.databaseConfig.neo4j.uri || !this.databaseConfig.neo4j.user || !this.databaseConfig.neo4j.password) {
+    if (!process.env.NEO4J_URI || !process.env.NEO4J_USER || !process.env.NEO4J_PASSWORD) {
       console.error('Invalid Neo4j configuration');
       return false;
     }
 
     // Validate PostgreSQL configuration
-    if (!this.databaseConfig.postgres.host || !this.databaseConfig.postgres.database || 
-        !this.databaseConfig.postgres.user || !this.databaseConfig.postgres.password) {
+    if (!process.env.POSTGRES_HOST || !process.env.POSTGRES_DB || 
+        !process.env.POSTGRES_USER || !process.env.POSTGRES_PASSWORD) {
       console.error('Invalid PostgreSQL configuration');
       return false;
     }
 
     // Validate Redis configuration
-    if (!this.databaseConfig.redis.host) {
+    if (!process.env.REDIS_HOST) {
       console.error('Invalid Redis configuration');
       return false;
     }

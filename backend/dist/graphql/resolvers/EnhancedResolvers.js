@@ -1,4 +1,37 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -107,16 +140,27 @@ class EnhancedResolvers {
                     return this.fileResolvers.getFiles(filter, limit, offset, context);
                 },
                 content: async (_, { id, orgId }, context) => {
-                    return this.getContent(id, orgId, context);
+                    const contentService = new (await Promise.resolve().then(() => __importStar(require('../../services/ContentService')))).ContentService();
+                    return contentService.getContent(id, orgId);
                 },
                 contents: async (_, { filter, limit, offset }, context) => {
-                    return this.getContents(filter, limit ?? 50, offset ?? 0, context);
+                    const contentService = new (await Promise.resolve().then(() => __importStar(require('../../services/ContentService')))).ContentService();
+                    const orgId = filter?.orgId;
+                    const type = filter?.contentType;
+                    if (!orgId)
+                        throw new Error('orgId is required in filter');
+                    return contentService.listContent(orgId, type, limit ?? 50, offset ?? 0);
+                },
+                searchContent: async (_, { orgId, searchText, type, limit }, context) => {
+                    const contentService = new (await Promise.resolve().then(() => __importStar(require('../../services/ContentService')))).ContentService();
+                    const results = await contentService.searchContent(orgId, searchText, type, limit || 20);
+                    return {
+                        results: results.map(r => ({ content: r.content, score: r.score })),
+                        totalCount: results.length
+                    };
                 },
                 searchFiles: async (_, { orgId, query, filters, limit }, context) => {
                     return this.fileResolvers.searchFiles(orgId, query, filters, limit, context);
-                },
-                searchContent: async (_, { orgId, query, filters, limit }, context) => {
-                    return this.searchContent(orgId, query, filters, limit ?? 50, context);
                 },
                 commit: async (_, { id, orgId }, context) => {
                     return this.getCommit(id, orgId, context);
@@ -275,7 +319,8 @@ class EnhancedResolvers {
                     return this.fileResolvers.getFiles({ orgId: parent.orgId, projectId: parent.id }, 100, 0, context);
                 },
                 content: async (parent, _, context) => {
-                    return this.getContents({ orgId: parent.orgId, projectId: parent.id }, 100, 0, context);
+                    const contentService = new (await Promise.resolve().then(() => __importStar(require('../../services/ContentService')))).ContentService();
+                    return contentService.listContent(parent.orgId, undefined, 100, 0);
                 },
                 commits: async (parent, _, context) => {
                     return this.getCommits({ orgId: parent.orgId, projectId: parent.id }, 50, 0, context);
@@ -436,8 +481,6 @@ class EnhancedResolvers {
             timestamp: new Date()
         };
     }
-    async getContent(id, orgId, context) { return null; }
-    async getContents(filter, limit, offset, context) { return []; }
     async searchContent(orgId, query, filters, limit, context) { return { results: [], totalCount: 0, facets: {} }; }
     async getCommit(id, orgId, context) { return null; }
     async getCommits(filter, limit, offset, context) { return []; }
@@ -451,9 +494,18 @@ class EnhancedResolvers {
     async updateSource(input, context) { return null; }
     async deleteSource(id, orgId, context) { return false; }
     async triggerSourceSync(sourceId, orgId, context) { return false; }
-    async createContent(input, context) { return null; }
-    async updateContent(input, context) { return null; }
-    async deleteContent(id, orgId, context) { return false; }
+    async createContent(input, context) {
+        const contentService = new (await Promise.resolve().then(() => __importStar(require('../../services/ContentService')))).ContentService();
+        return contentService.createContent(input, context.user?.id || 'system');
+    }
+    async updateContent(input, context) {
+        const contentService = new (await Promise.resolve().then(() => __importStar(require('../../services/ContentService')))).ContentService();
+        return contentService.updateContent(input.id, input, context.user?.id || 'system');
+    }
+    async deleteContent(id, orgId, context) {
+        const contentService = new (await Promise.resolve().then(() => __importStar(require('../../services/ContentService')))).ContentService();
+        return contentService.deleteContent(id, orgId, context.user?.id || 'system');
+    }
     async createCommit(input, context) { return null; }
     async rebuildIndex(orgId, context) { return false; }
     async getFileChildren(fileId, orgId, context) { return []; }

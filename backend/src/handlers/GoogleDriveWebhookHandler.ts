@@ -150,10 +150,12 @@ export class GoogleDriveWebhookHandler {
       await this.storeGoogleDriveEvent(eventData);
 
       // Queue for processing
-      await this.queueService.enqueue('file-processing', {
-        eventId: eventData.id,
-        sourceType: 'google_drive',
-        orgId: source.org_id
+      await this.queueService.addJob('file-sync', 'sync-event', {
+        orgId: source.org_id,
+        sourceId: source.id,
+        eventType: changeType,
+        resourcePath: eventData.file_path,
+        eventData: eventData
       });
 
     } catch (error) {
@@ -174,9 +176,9 @@ export class GoogleDriveWebhookHandler {
       }
 
       const oauth2Client = new google.auth.OAuth2(
-        this.configService.get('GOOGLE_DRIVE_CLIENT_ID'),
-        this.configService.get('GOOGLE_DRIVE_CLIENT_SECRET'),
-        this.configService.get('GOOGLE_DRIVE_REDIRECT_URI')
+        process.env.GOOGLE_DRIVE_CLIENT_ID,
+        process.env.GOOGLE_DRIVE_CLIENT_SECRET,
+        process.env.GOOGLE_DRIVE_REDIRECT_URI
       );
 
       oauth2Client.setCredentials(credentials);
@@ -243,7 +245,7 @@ export class GoogleDriveWebhookHandler {
         metadata = EXCLUDED.metadata
     `;
 
-    await this.postgresService.query(query, [
+    await this.postgresService.executeQuery(query, [
       eventData.id,
       eventData.org_id,
       eventData.source_id,
@@ -270,7 +272,7 @@ export class GoogleDriveWebhookHandler {
       AND settings->>'webhook_channel_id' = $1
     `;
 
-    const result = await this.postgresService.query(query, [channelId]);
+    const result = await this.postgresService.executeQuery(query, [channelId]);
     return result.rows[0] || null;
   }
 
@@ -282,7 +284,7 @@ export class GoogleDriveWebhookHandler {
       SELECT settings FROM sources WHERE id = $1
     `;
 
-    const result = await this.postgresService.query(query, [sourceId]);
+    const result = await this.postgresService.executeQuery(query, [sourceId]);
     const source = result.rows[0];
     
     if (!source || !source.settings || !source.settings.credentials) {
@@ -300,7 +302,7 @@ export class GoogleDriveWebhookHandler {
       SELECT settings FROM sources WHERE id = $1
     `;
 
-    const result = await this.postgresService.query(query, [sourceId]);
+    const result = await this.postgresService.executeQuery(query, [sourceId]);
     const source = result.rows[0];
     
     return source?.settings?.page_token || '1';
@@ -316,7 +318,7 @@ export class GoogleDriveWebhookHandler {
       WHERE id = $1
     `;
 
-    await this.postgresService.query(query, [sourceId, JSON.stringify(pageToken)]);
+    await this.postgresService.executeQuery(query, [sourceId, JSON.stringify(pageToken)]);
   }
 
   /**
@@ -340,7 +342,7 @@ export class GoogleDriveWebhookHandler {
         requestBody: {
           id: channelId,
           type: 'web_hook',
-          address: `${this.configService.get('WEBHOOK_BASE_URL')}/webhooks/google-drive`,
+          address: `${process.env.WEBHOOK_BASE_URL}/webhooks/google-drive`,
           token: orgId // Use org_id as verification token
         }
       });
@@ -375,7 +377,7 @@ export class GoogleDriveWebhookHandler {
       WHERE id = $1
     `;
 
-    await this.postgresService.query(query, [
+    await this.postgresService.executeQuery(query, [
       sourceId,
       JSON.stringify(channelId),
       JSON.stringify(resourceId),

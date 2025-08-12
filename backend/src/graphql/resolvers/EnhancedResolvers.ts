@@ -140,11 +140,25 @@ export class EnhancedResolvers {
 
         // Content queries
         content: async (_: any, { id, orgId }: { id: string; orgId: string }, context: any) => {
-          return this.getContent(id, orgId, context);
+          const contentService = new (await import('../../services/ContentService')).ContentService();
+          return contentService.getContent(id, orgId);
         },
 
         contents: async (_: any, { filter, limit, offset }: { filter?: any; limit?: number; offset?: number }, context: any) => {
-          return this.getContents(filter, limit ?? 50, offset ?? 0, context);
+          const contentService = new (await import('../../services/ContentService')).ContentService();
+          const orgId = filter?.orgId;
+          const type = filter?.contentType;
+          if (!orgId) throw new Error('orgId is required in filter');
+          return contentService.listContent(orgId, type, limit ?? 50, offset ?? 0);
+        },
+
+        searchContent: async (_: any, { orgId, searchText, type, limit }: { orgId: string; searchText: string; type?: string; limit?: number }, context: any) => {
+          const contentService = new (await import('../../services/ContentService')).ContentService();
+          const results = await contentService.searchContent(orgId, searchText, type, limit || 20);
+          return {
+            results: results.map(r => ({ content: r.content, score: r.score })),
+            totalCount: results.length
+          };
         },
 
         // Search queries
@@ -152,9 +166,7 @@ export class EnhancedResolvers {
           return this.fileResolvers.searchFiles(orgId, query, filters, limit, context);
         },
 
-        searchContent: async (_: any, { orgId, query, filters, limit }: { orgId: string; query: string; filters?: any; limit?: number }, context: any) => {
-          return this.searchContent(orgId, query, filters, limit ?? 50, context);
-        },
+
 
         // Versioning & Provenance queries
         commit: async (_: any, { id, orgId }: { id: string; orgId: string }, context: any) => {
@@ -358,7 +370,8 @@ export class EnhancedResolvers {
         },
 
         content: async (parent: any, _: any, context: any) => {
-          return this.getContents({ orgId: parent.orgId, projectId: parent.id }, 100, 0, context);
+          const contentService = new (await import('../../services/ContentService')).ContentService();
+          return contentService.listContent(parent.orgId, undefined, 100, 0);
         },
 
         commits: async (parent: any, _: any, context: any) => {
@@ -590,8 +603,7 @@ export class EnhancedResolvers {
   }
 
   // Additional helper methods would be implemented here...
-  private async getContent(id: string, orgId: string, context: any): Promise<any> { return null; }
-  private async getContents(filter: any, limit: number, offset: number, context: any): Promise<any[]> { return []; }
+
   private async searchContent(orgId: string, query: string, filters: any, limit: number, context: any): Promise<any> { return { results: [], totalCount: 0, facets: {} }; }
   private async getCommit(id: string, orgId: string, context: any): Promise<any> { return null; }
   private async getCommits(filter: any, limit: number, offset: number, context: any): Promise<any[]> { return []; }
@@ -605,9 +617,20 @@ export class EnhancedResolvers {
   private async updateSource(input: any, context: any): Promise<any> { return null; }
   private async deleteSource(id: string, orgId: string, context: any): Promise<boolean> { return false; }
   private async triggerSourceSync(sourceId: string, orgId: string, context: any): Promise<boolean> { return false; }
-  private async createContent(input: any, context: any): Promise<any> { return null; }
-  private async updateContent(input: any, context: any): Promise<any> { return null; }
-  private async deleteContent(id: string, orgId: string, context: any): Promise<boolean> { return false; }
+  private async createContent(input: any, context: any): Promise<any> { 
+    const contentService = new (await import('../../services/ContentService')).ContentService();
+    return contentService.createContent(input, context.user?.id || 'system');
+  }
+  
+  private async updateContent(input: any, context: any): Promise<any> { 
+    const contentService = new (await import('../../services/ContentService')).ContentService();
+    return contentService.updateContent(input.id, input, context.user?.id || 'system');
+  }
+  
+  private async deleteContent(id: string, orgId: string, context: any): Promise<boolean> { 
+    const contentService = new (await import('../../services/ContentService')).ContentService();
+    return contentService.deleteContent(id, orgId, context.user?.id || 'system');
+  }
   private async createCommit(input: any, context: any): Promise<any> { return null; }
   private async rebuildIndex(orgId: string, context: any): Promise<boolean> { return false; }
   private async getFileChildren(fileId: string, orgId: string, context: any): Promise<any[]> { return []; }

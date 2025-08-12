@@ -11,6 +11,7 @@ const DropboxService_1 = require("../services/DropboxService");
 const GoogleDriveService_1 = require("../services/GoogleDriveService");
 const FileProcessingService_1 = require("../services/FileProcessingService");
 const ClassificationService_1 = require("../services/classification/ClassificationService");
+const TaxonomyService_1 = require("../services/TaxonomyService");
 const path_1 = __importDefault(require("path"));
 const uuid_1 = require("uuid");
 class FileStewardAgent extends BaseAgent_1.BaseAgent {
@@ -29,6 +30,7 @@ class FileStewardAgent extends BaseAgent_1.BaseAgent {
         this.gdriveService = new GoogleDriveService_1.GoogleDriveService();
         this.fileProcessingService = new FileProcessingService_1.FileProcessingService();
         this.classificationService = new ClassificationService_1.ClassificationService(this.postgresService);
+        this.taxonomyService = new TaxonomyService_1.TaxonomyService();
     }
     async onStart() {
         this.logger.info('Starting FileStewardAgent queue workers...');
@@ -397,7 +399,19 @@ class FileStewardAgent extends BaseAgent_1.BaseAgent {
                 size: metadata?.size,
                 extractedText: fileContent
             });
-            await this.updateFileClassification(fileId, classification);
+            const taxonomyClassification = {
+                slot: classification.slotKey,
+                confidence: classification.confidence,
+                method: classification.method === 'taxonomy' ? 'rule_based' : 'ml_based',
+                rule_id: classification.ruleId || undefined,
+                metadata: {}
+            };
+            await this.taxonomyService.applyClassification(fileId, taxonomyClassification, orgId, 'system');
+            await this.updateFileClassification(fileId, {
+                status: 'classified',
+                confidence: classification.confidence,
+                metadata: { method: classification.method, ruleId: classification.ruleId, slotKey: classification.slotKey }
+            });
             this.logger.info(`File classified successfully: ${filePath}`, { classification });
         }
         catch (error) {
@@ -411,7 +425,6 @@ class FileStewardAgent extends BaseAgent_1.BaseAgent {
       SET 
         f.classification_status = $status,
         f.classification_confidence = $confidence,
-        f.canonical_slot = $canonicalSlot,
         f.classification_metadata = $metadata
       RETURN f
     `;
@@ -419,7 +432,6 @@ class FileStewardAgent extends BaseAgent_1.BaseAgent {
             fileId,
             status: classification.status || 'classified',
             confidence: classification.confidence || 0,
-            canonicalSlot: classification.slotKey || 'UNCLASSIFIED',
             metadata: JSON.stringify(classification.metadata || {})
         });
     }

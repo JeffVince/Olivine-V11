@@ -1,10 +1,11 @@
-import { ApolloServer } from '@apollo/server';
-import { expressMiddleware } from '@apollo/server/express4';
+import { ApolloServer, BaseContext } from '@apollo/server';
+import { expressMiddleware } from '@as-integrations/express4';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
 import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import { WebSocketServer } from 'ws';
-import { useServer } from 'graphql-ws/lib/use/ws';
+import type { Context } from 'graphql-ws';
+import { useServer } from 'graphql-ws/dist/use/ws';
 import { PubSub } from 'graphql-subscriptions';
 import { createServer } from 'http';
 import express from 'express';
@@ -24,7 +25,7 @@ import winston from 'winston';
 export class GraphQLServer {
   private app: express.Application;
   private httpServer: any;
-  private apolloServer?: ApolloServer;
+  private apolloServer?: ApolloServer<BaseContext>;
   private wsServer?: WebSocketServer;
   private enhancedResolvers: EnhancedResolvers;
   private securityMiddleware: SecurityMiddleware;
@@ -32,6 +33,10 @@ export class GraphQLServer {
   private logger: winston.Logger;
   private neo4jService: Neo4jService;
   private postgresService: PostgresService;
+
+  private generateRequestId(): string {
+    return `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  }
   private queueService: QueueService;
 
   constructor() {
@@ -215,7 +220,7 @@ export class GraphQLServer {
   /**
    * Setup WebSocket server for GraphQL subscriptions
    */
-  private setupWebSocketServer(schema: any): void {
+  private async setupWebSocketServer(schema: any): Promise<void> {
     this.logger.info('Setting up WebSocket server...');
 
     this.wsServer = new WebSocketServer({
@@ -223,30 +228,33 @@ export class GraphQLServer {
       path: '/graphql'
     });
 
+    // Dynamically import useServer to avoid module resolution issues
+    const { useServer } = await import('graphql-ws/dist/use/ws');
+
     useServer({
       schema,
-      context: async (ctx) => {
+      context: async (ctx: Context) => {
         // Create context for WebSocket connections
         try {
           return await this.securityMiddleware.createContext({
-            req: ctx.extra.request,
-            res: ctx.extra.response || {}
+            req: (ctx.extra as any)?.request,
+            res: (ctx.extra as any)?.response || {}
           } as any);
         } catch (error) {
           this.logger.error('WebSocket context creation failed:', error);
           throw error;
         }
       },
-      onConnect: async (ctx) => {
+      onConnect: async (ctx: Context) => {
         this.logger.info('WebSocket client connected', {
           connectionParams: ctx.connectionParams
         });
       },
-      onDisconnect: async (ctx) => {
+      onDisconnect: async (ctx: Context) => {
         this.logger.info('WebSocket client disconnected');
       },
-      onError: (ctx, message, errors) => {
-        this.logger.error('WebSocket error:', { message, errors });
+      onError: (ctx: Context, id: string, payload: any, errors: readonly any[]) => {
+        this.logger.error('WebSocket error:', { id, payload, errors });
       }
     }, this.wsServer);
   }
@@ -257,7 +265,7 @@ export class GraphQLServer {
   private async createApolloServer(schema: any): Promise<void> {
     this.logger.info('Creating Apollo Server...');
 
-    this.apolloServer = new ApolloServer<GraphQLContext>({
+    this.apolloServer = new ApolloServer<BaseContext>({
       schema,
       plugins: [
         // Plugin to handle HTTP server shutdown
@@ -291,9 +299,10 @@ export class GraphQLServer {
         // Performance monitoring plugin
         {
           async requestDidStart() {
+            const startTime = Date.now();
             return {
               async willSendResponse(requestContext) {
-                const duration = Date.now() - requestContext.request.http?.startTime || 0;
+                const duration = Date.now() - startTime;
                 winston.info('GraphQL request completed', {
                   operationName: requestContext.request.operationName,
                   duration: `${duration}ms`,
@@ -306,16 +315,22 @@ export class GraphQLServer {
       ],
       formatError: (error) => {
         // Log all GraphQL errors
-        this.logger.error('GraphQL Error:', {
-          message: error.message,
-          locations: error.locations,
-          path: error.path,
-          extensions: error.extensions
-        });
+        // Type guard to safely access error properties
+        if (error instanceof Error) {
+          this.logger.error('GraphQL Error:', {
+            message: error.message,
+            locations: 'locations' in error ? (error as any).locations : undefined,
+            path: 'path' in error ? (error as any).path : undefined,
+            extensions: 'extensions' in error ? (error as any).extensions : undefined
+          });
+        } else {
+          this.logger.error('GraphQL Error:', { error });
+        }
 
         // Don't expose internal errors in production
         if (process.env.NODE_ENV === 'production') {
-          if (error.extensions?.code === 'INTERNAL_SERVER_ERROR') {
+          // Type guard for extensions access
+          if ('extensions' in error && error.extensions?.code === 'INTERNAL_SERVER_ERROR') {
             return new GraphQLError('Internal server error');
           }
         }
@@ -367,7 +382,7 @@ export class GraphQLServer {
         this.logger.error('Health check failed:', error);
         res.status(503).json({
           status: 'unhealthy',
-          error: error.message,
+          error: error instanceof Error ? error.message : 'Unknown error',
           timestamp: new Date().toISOString()
         });
       }
@@ -375,7 +390,7 @@ export class GraphQLServer {
 
     // GraphQL endpoint
     this.app.use('/graphql', expressMiddleware(this.apolloServer!, {
-      context: async ({ req, res }) => {
+      context: async ({ req, res }: { req: express.Request; res: express.Response }) => {
         // Add request start time for performance monitoring
         (req as any).startTime = Date.now();
         
@@ -384,13 +399,20 @@ export class GraphQLServer {
     }));
 
     // Error handling middleware
-    this.app.use((error: any, req: any, res: any, next: any) => {
-      this.logger.error('Express error:', error);
+    this.app.use((error: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
+      // Generate or retrieve request ID
+      const requestId = (req as any).id || `req-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      
+      this.logger.error('Express error:', {
+        error: error.message,
+        requestId,
+        stack: error.stack
+      });
       
       if (!res.headersSent) {
         res.status(500).json({
           error: 'Internal server error',
-          requestId: req.id
+          requestId
         });
       }
     });
@@ -444,7 +466,8 @@ export class GraphQLServer {
           await this.neo4jService.run(query);
         } catch (error) {
           // Ignore errors for already existing constraints/indexes
-          if (!error.message.includes('already exists')) {
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          if (!errorMessage.includes('already exists')) {
             this.logger.warn(`Failed to create index/constraint: ${query}`, error);
           }
         }
@@ -485,6 +508,15 @@ export class GraphQLServer {
     } catch {
       return false;
     }
+  }
+
+  // Public methods to access app and httpServer
+  public getApp(): express.Application {
+    return this.app;
+  }
+
+  public getHttpServer(): any {
+    return this.httpServer;
   }
 }
 

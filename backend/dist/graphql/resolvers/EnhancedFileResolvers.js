@@ -8,6 +8,7 @@ const Neo4jService_1 = require("../../services/Neo4jService");
 const PostgresService_1 = require("../../services/PostgresService");
 const FileProcessingService_1 = require("../../services/FileProcessingService");
 const ClassificationService_1 = require("../../services/classification/ClassificationService");
+const TaxonomyService_1 = require("../../services/TaxonomyService");
 const QueueService_1 = require("../../services/queues/QueueService");
 const TenantService_1 = require("../../services/TenantService");
 const winston_1 = __importDefault(require("winston"));
@@ -19,6 +20,7 @@ class EnhancedFileResolvers {
         this.classificationService = new ClassificationService_1.ClassificationService(this.postgresService);
         this.queueService = new QueueService_1.QueueService();
         this.tenantService = new TenantService_1.TenantService();
+        this.taxonomyService = new TaxonomyService_1.TaxonomyService();
         this.logger = winston_1.default.createLogger({
             level: 'info',
             format: winston_1.default.format.combine(winston_1.default.format.timestamp(), winston_1.default.format.json(), winston_1.default.format.label({ label: 'enhanced-file-resolvers' })),
@@ -37,7 +39,8 @@ class EnhancedFileResolvers {
       OPTIONAL MATCH (s:Source {id: f.source_id, org_id: $orgId})
       OPTIONAL MATCH (p:Project {id: f.project_id, org_id: $orgId})
       OPTIONAL MATCH (parent:File {id: f.parent_id, org_id: $orgId})
-      RETURN f, s, p, parent
+      OPTIONAL MATCH (f)<-[:FROM]-(ef:EdgeFact {type: 'CLASSIFIED_AS', valid_to: null})-[:TO]->(cs:CanonicalSlot)
+      RETURN f, s, p, parent, cs
     `;
         const result = await this.neo4jService.run(query, { id, orgId });
         if (result.records.length === 0) {
@@ -48,6 +51,7 @@ class EnhancedFileResolvers {
         const source = record.get('s')?.properties;
         const project = record.get('p')?.properties;
         const parent = record.get('parent')?.properties;
+        const cs = record.get('cs')?.properties;
         return {
             id: file.id,
             orgId: file.org_id,
@@ -62,7 +66,7 @@ class EnhancedFileResolvers {
             metadata: JSON.parse(file.metadata || '{}'),
             classificationStatus: file.classification_status || 'PENDING',
             classificationConfidence: file.classification_confidence?.toNumber?.() || file.classification_confidence,
-            canonicalSlot: file.canonical_slot,
+            canonicalSlot: cs?.key || null,
             extractedText: file.extracted_text,
             current: file.current,
             deleted: file.deleted,
@@ -127,7 +131,8 @@ class EnhancedFileResolvers {
       WHERE ${whereConditions.join(' AND ')}
       OPTIONAL MATCH (s:Source {id: f.source_id, org_id: $orgId})
       OPTIONAL MATCH (p:Project {id: f.project_id, org_id: $orgId})
-      RETURN f, s, p
+      OPTIONAL MATCH (f)<-[:FROM]-(ef:EdgeFact {type: 'CLASSIFIED_AS', valid_to: null})-[:TO]->(cs:CanonicalSlot)
+      RETURN f, s, p, cs
       ORDER BY f.updated_at DESC
       SKIP $offset
       LIMIT $limit
@@ -139,6 +144,7 @@ class EnhancedFileResolvers {
             const file = record.get('f').properties;
             const source = record.get('s')?.properties;
             const project = record.get('p')?.properties;
+            const cs = record.get('cs')?.properties;
             return {
                 id: file.id,
                 orgId: file.org_id,
@@ -153,7 +159,7 @@ class EnhancedFileResolvers {
                 metadata: JSON.parse(file.metadata || '{}'),
                 classificationStatus: file.classification_status || 'PENDING',
                 classificationConfidence: file.classification_confidence?.toNumber?.() || file.classification_confidence,
-                canonicalSlot: file.canonical_slot,
+                canonicalSlot: cs?.key || null,
                 extractedText: file.extracted_text,
                 current: file.current,
                 deleted: file.deleted,
@@ -175,7 +181,8 @@ class EnhancedFileResolvers {
       ${this.buildSearchFilters(filters)}
       OPTIONAL MATCH (s:Source {id: node.source_id, org_id: $orgId})
       OPTIONAL MATCH (p:Project {id: node.project_id, org_id: $orgId})
-      RETURN node as f, s, p, score
+      OPTIONAL MATCH (node)<-[:FROM]-(ef:EdgeFact {type: 'CLASSIFIED_AS', valid_to: null})-[:TO]->(cs:CanonicalSlot)
+      RETURN node as f, s, p, cs, score
       ORDER BY score DESC
       LIMIT $limit
     `;
@@ -190,6 +197,7 @@ class EnhancedFileResolvers {
             const file = record.get('f').properties;
             const source = record.get('s')?.properties;
             const project = record.get('p')?.properties;
+            const cs = record.get('cs')?.properties;
             const score = record.get('score');
             const highlights = this.generateHighlights(file, query);
             return {
@@ -206,7 +214,7 @@ class EnhancedFileResolvers {
                     metadata: JSON.parse(file.metadata || '{}'),
                     classificationStatus: file.classification_status || 'PENDING',
                     classificationConfidence: file.classification_confidence?.toNumber?.() || file.classification_confidence,
-                    canonicalSlot: file.canonical_slot,
+                    canonicalSlot: cs?.key || null,
                     extractedText: file.extracted_text,
                     current: file.current,
                     deleted: file.deleted,
@@ -230,34 +238,26 @@ class EnhancedFileResolvers {
     async classifyFile(input, context) {
         await this.tenantService.validateAccess(context.user, input.orgId);
         this.logger.info(`Classifying file ${input.fileId}`, input);
-        const updateQuery = `
+        await this.taxonomyService.applyClassification(input.fileId, {
+            slot: input.canonicalSlot,
+            confidence: input.confidence || 1.0,
+            method: 'manual',
+            rule_id: undefined,
+            metadata: input.metadata || {}
+        }, input.orgId, context.user.id);
+        const statusUpdate = `
       MATCH (f:File {id: $fileId, org_id: $orgId})
-      SET f.canonical_slot = $canonicalSlot,
+      SET f.classification_status = 'CLASSIFIED',
           f.classification_confidence = $confidence,
-          f.classification_status = 'CLASSIFIED',
           f.classification_metadata = $metadata,
           f.updated_at = datetime()
       RETURN f
     `;
-        const result = await this.neo4jService.run(updateQuery, {
+        await this.neo4jService.run(statusUpdate, {
             fileId: input.fileId,
             orgId: input.orgId,
-            canonicalSlot: input.canonicalSlot,
             confidence: input.confidence || 1.0,
             metadata: JSON.stringify(input.metadata || {})
-        });
-        if (result.records.length === 0) {
-            throw new Error(`File not found: ${input.fileId}`);
-        }
-        await this.queueService.addJob('create-commit', 'create-commit', {
-            orgId: input.orgId,
-            message: `Manual classification: ${input.canonicalSlot}`,
-            author: context.user.id,
-            authorType: 'user',
-            metadata: {
-                fileId: input.fileId,
-                classificationSlot: input.canonicalSlot
-            }
         });
         return this.getFile(input.fileId, input.orgId, context);
     }
@@ -269,7 +269,6 @@ class EnhancedFileResolvers {
         MATCH (f:File {id: $fileId, org_id: $orgId})
         SET f.classification_status = 'PENDING',
             f.classification_confidence = 0,
-            f.canonical_slot = null,
             f.updated_at = datetime()
         RETURN f
       `;

@@ -24,7 +24,7 @@ describe('MigrationService', () => {
     mockPostgresService = new PostgresService() as jest.Mocked<PostgresService>;
     
     // Mock service methods
-    mockNeo4jService.executeQuery = jest.fn();
+    mockNeo4jService.executeWriteQuery = jest.fn();
     mockNeo4jService.healthCheck = jest.fn().mockResolvedValue(true);
     mockNeo4jService.close = jest.fn().mockResolvedValue(undefined);
     
@@ -83,8 +83,8 @@ describe('MigrationService', () => {
         'utf8'
       );
       
-      // Check that executeQuery was called for each statement
-      expect(mockNeo4jService.executeQuery).toHaveBeenCalledTimes(4);
+      // Check that executeWriteQuery was called for each statement
+      expect(mockNeo4jService.executeWriteQuery).toHaveBeenCalledTimes(4);
       
       consoleLogSpy.mockRestore();
     });
@@ -158,7 +158,7 @@ describe('MigrationService', () => {
       // Mock executeQuery to throw a duplicate policy error for the CREATE POLICY statement
       mockPostgresService.executeQuery
         .mockResolvedValueOnce({ rows: [], command: 'SELECT', rowCount: 0, oid: 0, fields: [] }) // SELECT statement succeeds
-        .mockRejectedValueOnce(new Error('already exists')) // CREATE POLICY statement fails with "already exists"
+        .mockRejectedValueOnce(new Error('Policy already exists, skipping')) // CREATE POLICY statement fails with "already exists"
         .mockResolvedValueOnce({ rows: [], command: 'SELECT', rowCount: 0, oid: 0, fields: [] }); // Second SELECT statement succeeds
       
       const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();

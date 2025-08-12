@@ -6,6 +6,7 @@ import { DropboxService } from '../services/DropboxService';
 import { GoogleDriveService } from '../services/GoogleDriveService';
 import { FileProcessingService } from '../services/FileProcessingService';
 import { ClassificationService } from '../services/classification/ClassificationService';
+import { TaxonomyService } from '../services/TaxonomyService';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -35,6 +36,7 @@ export class FileStewardAgent extends BaseAgent {
   private gdriveService: GoogleDriveService;
   private fileProcessingService: FileProcessingService;
   private classificationService: ClassificationService;
+  private taxonomyService: TaxonomyService;
 
   constructor(queueService: QueueService, config?: Partial<AgentConfig>) {
     super('file-steward-agent', queueService, {
@@ -52,6 +54,7 @@ export class FileStewardAgent extends BaseAgent {
     this.gdriveService = new GoogleDriveService();
     this.fileProcessingService = new FileProcessingService();
     this.classificationService = new ClassificationService(this.postgresService);
+    this.taxonomyService = new TaxonomyService();
   }
 
   /**
@@ -676,9 +679,23 @@ export class FileStewardAgent extends BaseAgent {
         size: metadata?.size,
         extractedText: fileContent
       });
+      
+      // Persist classification as temporal EdgeFact with provenance
+      const taxonomyClassification = {
+        slot: classification.slotKey,
+        confidence: classification.confidence,
+        method: classification.method === 'taxonomy' ? 'rule_based' as const : 'ml_based' as const,
+        rule_id: classification.ruleId || undefined,
+        metadata: {}
+      };
+      await this.taxonomyService.applyClassification(fileId, taxonomyClassification, orgId, 'system');
 
-      // Update file node with classification results
-      await this.updateFileClassification(fileId, classification);
+      // Optionally reflect status/metadata on File node without convenience edges
+      await this.updateFileClassification(fileId, {
+        status: 'classified',
+        confidence: classification.confidence,
+        metadata: { method: classification.method, ruleId: classification.ruleId, slotKey: classification.slotKey }
+      });
       
       this.logger.info(`File classified successfully: ${filePath}`, { classification });
     } catch (error) {
@@ -690,13 +707,15 @@ export class FileStewardAgent extends BaseAgent {
   /**
    * Updates file classification in Neo4j
    */
-  private async updateFileClassification(fileId: string, classification: any): Promise<void> {
+  private async updateFileClassification(
+    fileId: string,
+    classification: { status: string; confidence: number; metadata?: Record<string, unknown> }
+  ): Promise<void> {
     const query = `
       MATCH (f:File {id: $fileId})
       SET 
         f.classification_status = $status,
         f.classification_confidence = $confidence,
-        f.canonical_slot = $canonicalSlot,
         f.classification_metadata = $metadata
       RETURN f
     `;
@@ -705,7 +724,6 @@ export class FileStewardAgent extends BaseAgent {
       fileId,
       status: classification.status || 'classified',
       confidence: classification.confidence || 0,
-      canonicalSlot: classification.slotKey || 'UNCLASSIFIED',
       metadata: JSON.stringify(classification.metadata || {})
     });
   }

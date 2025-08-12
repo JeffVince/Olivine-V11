@@ -24,7 +24,7 @@ CREATE INDEX edgefact_type IF NOT EXISTS FOR (ef:EdgeFact) ON (ef.type);
 CREATE INDEX edgefact_from_id IF NOT EXISTS FOR (ef:EdgeFact) ON (ef.from_id);
 CREATE INDEX edgefact_to_id IF NOT EXISTS FOR (ef:EdgeFact) ON (ef.to_id);
 CREATE INDEX edgefact_valid_to IF NOT EXISTS FOR (ef:EdgeFact) ON (ef.valid_to);
-CREATE INDEX edgefact_classification IF NOT EXISTS FOR (ef:EdgeFact) ON (ef.type, ef.from_id, ef.valid_to) WHERE ef.type = 'CLASSIFIED_AS';
+CREATE INDEX edgefact_classification IF NOT EXISTS FOR (ef:EdgeFact) ON (ef.type, ef.from_id, ef.valid_to);
 
 /* Create standard CanonicalSlots */
 MERGE (cs1:CanonicalSlot {
@@ -34,11 +34,7 @@ MERGE (cs1:CanonicalSlot {
     category: "script",
     required: true,
     multiple: false,
-    validation_rules: {
-        mime_types: ["application/pdf", "text/plain"],
-        max_size_mb: 50,
-        naming_pattern: ".*script.*"
-    }
+    validation_rules: '{"mime_types": ["application/pdf", "text/plain"], "max_size_mb": 50, "naming_pattern": ".*script.*"}'
 })
 
 MERGE (cs2:CanonicalSlot {
@@ -48,11 +44,7 @@ MERGE (cs2:CanonicalSlot {
     category: "script",
     required: false,
     multiple: true,
-    validation_rules: {
-        mime_types: ["application/pdf", "text/plain", "application/msword"],
-        max_size_mb: 50,
-        naming_pattern: ".*(script|draft).*"
-    }
+    validation_rules: '{"mime_types": ["application/pdf", "text/plain", "application/msword"], "max_size_mb": 50, "naming_pattern": ".*(script|draft).*"}'
 })
 
 MERGE (cs3:CanonicalSlot {
@@ -62,11 +54,7 @@ MERGE (cs3:CanonicalSlot {
     category: "budget",
     required: true,
     multiple: false,
-    validation_rules: {
-        mime_types: ["application/vnd.ms-excel", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"],
-        max_size_mb: 100,
-        naming_pattern: ".*budget.*"
-    }
+    validation_rules: '{"mime_types": ["application/vnd.ms-excel", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"], "max_size_mb": 100, "naming_pattern": ".*budget.*"}'
 })
 
 MERGE (cs4:CanonicalSlot {
@@ -76,11 +64,7 @@ MERGE (cs4:CanonicalSlot {
     category: "callsheet",
     required: true,
     multiple: true,
-    validation_rules: {
-        mime_types: ["application/pdf"],
-        max_size_mb: 25,
-        naming_pattern: ".*(callsheet|call.sheet).*"
-    }
+    validation_rules: '{"mime_types": ["application/pdf"], "max_size_mb": 25, "naming_pattern": ".*(callsheet|call.sheet).*"}'
 })
 
 MERGE (cs5:CanonicalSlot {
@@ -90,11 +74,7 @@ MERGE (cs5:CanonicalSlot {
     category: "schedule",
     required: true,
     multiple: true,
-    validation_rules: {
-        mime_types: ["application/pdf", "application/vnd.ms-excel"],
-        max_size_mb: 50,
-        naming_pattern: ".*(schedule|shooting).*"
-    }
+    validation_rules: '{"mime_types": ["application/pdf", "application/vnd.ms-excel"], "max_size_mb": 50, "naming_pattern": ".*(schedule|shooting).*"}'
 })
 
 MERGE (cs6:CanonicalSlot {
@@ -104,11 +84,7 @@ MERGE (cs6:CanonicalSlot {
     category: "breakdown",
     required: false,
     multiple: true,
-    validation_rules: {
-        mime_types: ["application/pdf", "application/vnd.ms-excel"],
-        max_size_mb: 100,
-        naming_pattern: ".*(breakdown|scene).*"
-    }
+    validation_rules: '{"mime_types": ["application/pdf", "application/vnd.ms-excel"], "max_size_mb": 100, "naming_pattern": ".*(breakdown|scene).*"}'
 })
 
 MERGE (cs7:CanonicalSlot {
@@ -118,11 +94,7 @@ MERGE (cs7:CanonicalSlot {
     category: "contacts",
     required: true,
     multiple: false,
-    validation_rules: {
-        mime_types: ["application/pdf", "application/vnd.ms-excel"],
-        max_size_mb: 25,
-        naming_pattern: ".*(contact|crew|cast).*"
-    }
+    validation_rules: '{"mime_types": ["application/pdf", "application/vnd.ms-excel"], "max_size_mb": 25, "naming_pattern": ".*(contact|crew|cast).*"}'
 })
 
 MERGE (cs8:CanonicalSlot {
@@ -132,11 +104,7 @@ MERGE (cs8:CanonicalSlot {
     category: "legal",
     required: false,
     multiple: true,
-    validation_rules: {
-        mime_types: ["application/pdf"],
-        max_size_mb: 25,
-        naming_pattern: ".*(location|release|permit).*"
-    }
+    validation_rules: '{"mime_types": ["application/pdf"], "max_size_mb": 25, "naming_pattern": ".*(location|release|permit).*"}'
 })
 
 MERGE (cs9:CanonicalSlot {
@@ -146,11 +114,7 @@ MERGE (cs9:CanonicalSlot {
     category: "creative",
     required: false,
     multiple: true,
-    validation_rules: {
-        mime_types: ["application/pdf", "image/jpeg", "image/png"],
-        max_size_mb: 200,
-        naming_pattern: ".*(storyboard|story.board).*"
-    }
+    validation_rules: '{"mime_types": ["application/pdf", "image/jpeg", "image/png"], "max_size_mb": 200, "naming_pattern": ".*(storyboard|story.board).*"}'
 })
 
 MERGE (cs10:CanonicalSlot {
@@ -160,9 +124,5 @@ MERGE (cs10:CanonicalSlot {
     category: "equipment",
     required: false,
     multiple: true,
-    validation_rules: {
-        mime_types: ["application/pdf", "application/vnd.ms-excel"],
-        max_size_mb: 50,
-        naming_pattern: ".*(equipment|gear|rental).*"
-    }
+    validation_rules: '{"mime_types": ["application/pdf", "application/vnd.ms-excel"], "max_size_mb": 50, "naming_pattern": ".*(equipment|gear|rental).*"}'
 })

@@ -25,6 +25,11 @@ export declare class EventProcessingService {
     private postgresService;
     private fileModel;
     private sourceModel;
+    private taxonomyService;
+    private fileProcessingService;
+    private agentStatus;
+    private retryAttempts;
+    private maxRetryAttempts;
     private fileSyncQueue;
     private fileClassificationQueue;
     private contentExtractionQueue;
@@ -45,6 +50,26 @@ export declare class EventProcessingService {
     private extractTextContent;
     startWorkers(): Promise<void>;
     close(): Promise<void>;
+    private createCommit;
+    private createAction;
+    private createEntityVersion;
+    private updateAgentStatus;
+    private executeWithRetry;
+    private handleSyncError;
+    private extractFileName;
+    private extractFileExtension;
+    private extractTags;
+    private createFileRelationships;
+    private createClassificationRelationships;
+    private createContentExtractionRelationships;
+    private ensureFolderHierarchy;
+    private upsertFolderNode;
+    private createFolderRelationship;
+    private cleanupOrphanedRelationships;
+    private reportWorkerError;
+    private updateWorkerStats;
+    private handleJobFailure;
+    private performHealthCheck;
 }
 export {};
 //# sourceMappingURL=EventProcessingService.d.ts.map

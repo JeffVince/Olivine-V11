@@ -2,18 +2,26 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.EventProcessingService = void 0;
 const bullmq_1 = require("bullmq");
+const uuid_1 = require("uuid");
 const QueueService_1 = require("./QueueService");
 const Neo4jService_1 = require("./Neo4jService");
 const PostgresService_1 = require("./PostgresService");
 const File_1 = require("../models/File");
 const Source_1 = require("../models/Source");
+const TaxonomyService_1 = require("./TaxonomyService");
+const FileProcessingService_1 = require("./FileProcessingService");
 class EventProcessingService {
     constructor() {
+        this.agentStatus = new Map();
+        this.retryAttempts = new Map();
+        this.maxRetryAttempts = 3;
         this.queueService = new QueueService_1.QueueService();
         this.neo4jService = new Neo4jService_1.Neo4jService();
         this.postgresService = new PostgresService_1.PostgresService();
         this.fileModel = new File_1.FileModel();
         this.sourceModel = new Source_1.SourceModel();
+        this.taxonomyService = new TaxonomyService_1.TaxonomyService();
+        this.fileProcessingService = new FileProcessingService_1.FileProcessingService();
         this.fileSyncQueue = new bullmq_1.Queue('file-sync', {
             connection: {
                 host: process.env.REDIS_HOST || 'localhost',
@@ -292,9 +300,338 @@ class EventProcessingService {
         console.log('All queue workers started successfully');
     }
     async close() {
-        await this.fileSyncQueue.close();
-        await this.fileClassificationQueue.close();
-        await this.contentExtractionQueue.close();
+        console.log('Closing EventProcessingService...');
+        try {
+            await Promise.all([
+                this.fileSyncQueue.close(),
+                this.fileClassificationQueue.close(),
+                this.contentExtractionQueue.close()
+            ]);
+            await Promise.all([
+                this.neo4jService.close(),
+                this.postgresService.close(),
+                this.queueService.close()
+            ]);
+            this.agentStatus.clear();
+            this.retryAttempts.clear();
+            console.log('EventProcessingService closed successfully');
+        }
+        catch (error) {
+            console.error('Error closing EventProcessingService:', error);
+            throw error;
+        }
+    }
+    async createCommit(orgId, commitData) {
+        const commitId = (0, uuid_1.v4)();
+        const query = `
+      CREATE (c:Commit {
+        id: $commitId,
+        orgId: $orgId,
+        message: $message,
+        author: $author,
+        authorType: $authorType,
+        timestamp: datetime(),
+        metadata: $metadata
+      })
+      RETURN c.id as commitId
+    `;
+        await this.neo4jService.executeQuery(query, {
+            commitId,
+            orgId,
+            message: commitData.message,
+            author: commitData.author,
+            authorType: commitData.authorType,
+            metadata: JSON.stringify(commitData.metadata || {})
+        });
+        return commitId;
+    }
+    async createAction(commitId, actionData) {
+        const actionId = (0, uuid_1.v4)();
+        const query = `
+      MATCH (c:Commit {id: $commitId})
+      CREATE (a:Action {
+        id: $actionId,
+        actionType: $actionType,
+        tool: $tool,
+        entityType: $entityType,
+        entityId: $entityId,
+        inputs: $inputs,
+        outputs: $outputs,
+        status: $status,
+        errorMessage: $errorMessage,
+        executionTime: $executionTime,
+        timestamp: datetime()
+      })
+      CREATE (c)-[:HAS_ACTION]->(a)
+    `;
+        await this.neo4jService.executeQuery(query, {
+            commitId,
+            actionId,
+            actionType: actionData.actionType,
+            tool: actionData.tool,
+            entityType: actionData.entityType,
+            entityId: actionData.entityId,
+            inputs: JSON.stringify(actionData.inputs),
+            outputs: JSON.stringify(actionData.outputs),
+            status: actionData.status,
+            errorMessage: actionData.errorMessage || null,
+            executionTime: actionData.executionTime || 0
+        });
+    }
+    async createEntityVersion(entityId, entityType, properties, commitId) {
+        const versionId = (0, uuid_1.v4)();
+        const query = `
+      MATCH (c:Commit {id: $commitId})
+      CREATE (v:EntityVersion {
+        id: $versionId,
+        entityId: $entityId,
+        entityType: $entityType,
+        properties: $properties,
+        timestamp: datetime()
+      })
+      CREATE (c)-[:HAS_VERSION]->(v)
+    `;
+        await this.neo4jService.executeQuery(query, {
+            commitId,
+            versionId,
+            entityId,
+            entityType,
+            properties: JSON.stringify(properties)
+        });
+    }
+    async updateAgentStatus(agentType, orgId, status, executionTime, error) {
+        const statusKey = `${orgId}:${agentType}`;
+        let agentStatus = this.agentStatus.get(statusKey) || {
+            agentType,
+            orgId,
+            status: 'idle',
+            lastExecution: new Date().toISOString(),
+            executionCount: 0,
+            successCount: 0,
+            errorCount: 0,
+            averageExecutionTime: 0
+        };
+        agentStatus.executionCount++;
+        agentStatus.lastExecution = new Date().toISOString();
+        if (status === 'success') {
+            agentStatus.status = 'idle';
+            agentStatus.successCount++;
+        }
+        else {
+            agentStatus.status = 'error';
+            agentStatus.errorCount++;
+            agentStatus.lastError = error;
+        }
+        agentStatus.averageExecutionTime = ((agentStatus.averageExecutionTime * (agentStatus.executionCount - 1)) + executionTime) / agentStatus.executionCount;
+        this.agentStatus.set(statusKey, agentStatus);
+    }
+    async executeWithRetry(fn, jobId) {
+        const attempts = this.retryAttempts.get(jobId) || 0;
+        try {
+            await fn();
+            this.retryAttempts.delete(jobId);
+        }
+        catch (error) {
+            if (attempts < this.maxRetryAttempts) {
+                this.retryAttempts.set(jobId, attempts + 1);
+                console.log(`Retrying job ${jobId}, attempt ${attempts + 1}/${this.maxRetryAttempts}`);
+                const delay = Math.pow(2, attempts) * 1000;
+                await new Promise(resolve => setTimeout(resolve, delay));
+                return this.executeWithRetry(fn, jobId);
+            }
+            else {
+                this.retryAttempts.delete(jobId);
+                throw error;
+            }
+        }
+    }
+    async handleSyncError(job, error) {
+        const { fileId, orgId } = job.data;
+        console.error(`Sync error for file ${fileId}:`, {
+            error: error.message,
+            stack: error.stack,
+            jobData: job.data
+        });
+        const errorQuery = `
+      INSERT INTO sync_errors (file_id, org_id, error_message, error_stack, job_data, created_at)
+      VALUES ($1, $2, $3, $4, $5, NOW())
+    `;
+        try {
+            await this.postgresService.executeQuery(errorQuery, [
+                fileId,
+                orgId,
+                error.message,
+                error.stack,
+                JSON.stringify(job.data)
+            ]);
+        }
+        catch (dbError) {
+            console.error('Failed to store sync error:', dbError);
+        }
+    }
+    extractFileName(filePath) {
+        return filePath.split('/').pop() || filePath;
+    }
+    extractFileExtension(filePath) {
+        const filename = this.extractFileName(filePath);
+        const lastDotIndex = filename.lastIndexOf('.');
+        return lastDotIndex > 0 ? filename.substring(lastDotIndex + 1).toLowerCase() : '';
+    }
+    extractTags(content, filename) {
+        const tags = new Set();
+        const nameParts = filename.toLowerCase().split(/[._-]/);
+        nameParts.forEach(part => {
+            if (part.length > 2)
+                tags.add(part);
+        });
+        if (content) {
+            const words = content.toLowerCase().match(/\b\w{4,}\b/g) || [];
+            const wordCounts = words.reduce((acc, word) => {
+                acc[word] = (acc[word] || 0) + 1;
+                return acc;
+            }, {});
+            Object.entries(wordCounts)
+                .filter(([word, count]) => count > 2)
+                .sort(([, a], [, b]) => b - a)
+                .slice(0, 10)
+                .forEach(([word]) => tags.add(word));
+        }
+        return Array.from(tags).slice(0, 20);
+    }
+    async createFileRelationships(fileId, sourceId, orgId, filePath, commitId) {
+        const query = `
+      MATCH (f:File {id: $fileId, orgId: $orgId})
+      MATCH (s:Source {id: $sourceId, orgId: $orgId})
+      MATCH (c:Commit {id: $commitId})
+      MERGE (f)-[:STORED_IN]->(s)
+      MERGE (f)-[:CREATED_IN]->(c)
+    `;
+        await this.neo4jService.executeQuery(query, { fileId, sourceId, orgId, commitId });
+    }
+    async createClassificationRelationships(fileId, orgId, classification, commitId) {
+        if (classification.type && classification.type !== 'UNCLASSIFIED') {
+            const query = `
+        MATCH (f:File {id: $fileId, orgId: $orgId})
+        MERGE (c:Classification {type: $classificationType, orgId: $orgId})
+        MERGE (f)-[:CLASSIFIED_AS {confidence: $confidence, method: $method, timestamp: datetime()}]->(c)
+      `;
+            await this.neo4jService.executeQuery(query, {
+                fileId,
+                orgId,
+                classificationType: classification.type,
+                confidence: classification.confidence,
+                method: classification.method || 'unknown'
+            });
+        }
+    }
+    async createContentExtractionRelationships(fileId, orgId, content, metadata, commitId) {
+        const query = `
+      MATCH (f:File {id: $fileId, orgId: $orgId})
+      CREATE (e:ExtractedContent {
+        id: randomUUID(),
+        fileId: $fileId,
+        orgId: $orgId,
+        contentLength: $contentLength,
+        extractionMethod: $extractionMethod,
+        extractedAt: datetime(),
+        metadata: $metadata
+      })
+      CREATE (f)-[:HAS_EXTRACTED_CONTENT]->(e)
+    `;
+        await this.neo4jService.executeQuery(query, {
+            fileId,
+            orgId,
+            contentLength: content.length,
+            extractionMethod: metadata.method || 'basic',
+            metadata: JSON.stringify(metadata)
+        });
+    }
+    async ensureFolderHierarchy(orgId, sourceId, filePath, commitId) {
+        const pathParts = filePath.split('/').filter(part => part.length > 0);
+        pathParts.pop();
+        if (pathParts.length === 0)
+            return;
+        let currentPath = '';
+        let parentId = null;
+        for (const folderName of pathParts) {
+            currentPath += `/${folderName}`;
+            const folderId = await this.upsertFolderNode(orgId, sourceId, currentPath, folderName, parentId, commitId);
+            if (parentId) {
+                await this.createFolderRelationship(parentId, folderId, 'CONTAINS', commitId);
+            }
+            parentId = folderId;
+        }
+    }
+    async upsertFolderNode(orgId, sourceId, path, name, parentId, commitId) {
+        const query = `
+      MERGE (f:Folder {orgId: $orgId, sourceId: $sourceId, path: $path})
+      ON CREATE SET f.id = randomUUID(), f.createdAt = datetime()
+      SET f.name = $name, f.updatedAt = datetime()
+      RETURN f.id as folderId
+    `;
+        const result = await this.neo4jService.executeQuery(query, {
+            orgId, sourceId, path, name
+        });
+        return result.records[0].get('folderId');
+    }
+    async createFolderRelationship(parentId, childId, relType, commitId) {
+        const query = `
+      MATCH (parent {id: $parentId})
+      MATCH (child {id: $childId})
+      MERGE (parent)-[:${relType}]->(child)
+    `;
+        await this.neo4jService.executeQuery(query, { parentId, childId });
+    }
+    async cleanupOrphanedRelationships(fileId, orgId, commitId) {
+        const query = `
+      MATCH (f:File {id: $fileId, orgId: $orgId})
+      OPTIONAL MATCH (f)-[r]-()
+      DELETE r
+    `;
+        await this.neo4jService.executeQuery(query, { fileId, orgId });
+    }
+    reportWorkerError(workerName, error) {
+        console.error(`Worker ${workerName} error reported:`, {
+            error: error.message,
+            stack: error.stack,
+            timestamp: new Date().toISOString()
+        });
+    }
+    updateWorkerStats(workerName, status) {
+        console.log(`Worker ${workerName} job ${status} at ${new Date().toISOString()}`);
+    }
+    handleJobFailure(job, error) {
+        if (!job)
+            return;
+        console.error('Job failure details:', {
+            jobId: job.id,
+            jobName: job.name,
+            jobData: job.data,
+            error: error.message,
+            stack: error.stack,
+            timestamp: new Date().toISOString()
+        });
+    }
+    async performHealthCheck() {
+        try {
+            const [neo4jHealth, postgresHealth, redisHealth] = await Promise.all([
+                this.neo4jService.healthCheck(),
+                this.postgresService.healthCheck(),
+                this.queueService.healthCheck()
+            ]);
+            const healthStatus = {
+                neo4j: neo4jHealth,
+                postgres: postgresHealth,
+                redis: redisHealth,
+                timestamp: new Date().toISOString()
+            };
+            if (!neo4jHealth || !postgresHealth || !redisHealth) {
+                console.warn('Health check failed:', healthStatus);
+            }
+        }
+        catch (error) {
+            console.error('Health check error:', error);
+        }
     }
 }
 exports.EventProcessingService = EventProcessingService;

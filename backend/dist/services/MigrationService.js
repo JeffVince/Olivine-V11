@@ -32,14 +32,17 @@ class MigrationService {
         for (const file of migrationFiles) {
             const migrationPath = path_1.default.join(neo4jMigrationsDir, file);
             const migrationContent = fs_1.default.readFileSync(migrationPath, 'utf8');
-            const statements = migrationContent
+            const cleanedContent = migrationContent
+                .replace(/\/\*[\s\S]*?\*\//g, '')
+                .replace(/\/\/.*$/gm, '');
+            const statements = cleanedContent
                 .split(';')
                 .map(stmt => stmt.trim())
                 .filter(stmt => stmt.length > 0);
             console.log(`Applying Neo4j migration: ${file} with ${statements.length} statements`);
             for (const statement of statements) {
                 if (statement.trim().length > 0) {
-                    await this.neo4jService.executeQuery(statement);
+                    await this.neo4jService.executeWriteQuery(statement);
                 }
             }
         }

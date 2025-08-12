@@ -30,6 +30,7 @@ export declare class EnhancedFileResolvers {
     private queueService;
     private tenantService;
     private logger;
+    private taxonomyService;
     constructor();
     getFile(id: string, orgId: string, context: any): Promise<any>;
     getFiles(filter: FileFilter | undefined, limit: number | undefined, offset: number | undefined, context: any): Promise<any[]>;

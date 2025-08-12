@@ -4,13 +4,34 @@ exports.DropboxService = void 0;
 const dropbox_1 = require("dropbox");
 const PostgresService_1 = require("./PostgresService");
 const ConfigService_1 = require("./ConfigService");
-class DropboxService {
+const events_1 = require("events");
+class DropboxService extends events_1.EventEmitter {
     constructor() {
+        super();
         this.configService = new ConfigService_1.ConfigService();
         this.postgresService = new PostgresService_1.PostgresService();
         this.appKey = process.env.DROPBOX_APP_KEY || '';
         this.appSecret = process.env.DROPBOX_APP_SECRET || '';
         this.redirectUri = process.env.DROPBOX_REDIRECT_URI || '';
+        this.defaultRetryOptions = {
+            maxRetries: 3,
+            baseDelay: 1000,
+            maxDelay: 30000
+        };
+        this.rateLimitTracker = new Map();
+        this.metrics = {
+            totalRequests: 0,
+            successfulRequests: 0,
+            failedRequests: 0,
+            retryCount: 0,
+            rateLimitHits: 0,
+            averageResponseTime: 0,
+            bytesTransferred: 0,
+            operationCounts: {},
+            errorCounts: {}
+        };
+        this.logs = [];
+        this.maxLogEntries = parseInt(process.env.DROPBOX_MAX_LOG_ENTRIES || '1000');
         this.dropboxClient = new dropbox_1.Dropbox({
             clientId: this.appKey,
             clientSecret: this.appSecret
@@ -20,19 +41,289 @@ class DropboxService {
             clientSecret: this.appSecret
         });
     }
+    log(level, operation, message, metadata, orgId, sourceId, duration, error) {
+        const logEntry = {
+            timestamp: new Date(),
+            level,
+            operation,
+            message,
+            metadata,
+            orgId,
+            sourceId,
+            duration,
+            error: error ? this.sanitizeError(error) : undefined
+        };
+        this.logs.push(logEntry);
+        if (this.logs.length > this.maxLogEntries) {
+            this.logs = this.logs.slice(-this.maxLogEntries);
+        }
+        const logMessage = `[DropboxService:${operation}] ${message}`;
+        const contextInfo = {
+            orgId,
+            sourceId,
+            duration: duration ? `${duration}ms` : undefined,
+            metadata
+        };
+        switch (level) {
+            case 'error':
+                console.error(logMessage, contextInfo, error);
+                break;
+            case 'warn':
+                console.warn(logMessage, contextInfo);
+                break;
+            case 'debug':
+                if (process.env.NODE_ENV === 'development') {
+                    console.debug(logMessage, contextInfo);
+                }
+                break;
+            default:
+                console.log(logMessage, contextInfo);
+        }
+        this.emit('log', logEntry);
+    }
+    updateMetrics(operation, success, duration, bytesTransferred = 0, error) {
+        this.metrics.totalRequests++;
+        if (success) {
+            this.metrics.successfulRequests++;
+        }
+        else {
+            this.metrics.failedRequests++;
+            const errorType = error?.error?.['tag'] || error?.status?.toString() || 'unknown';
+            this.metrics.errorCounts[errorType] = (this.metrics.errorCounts[errorType] || 0) + 1;
+        }
+        this.metrics.operationCounts[operation] = (this.metrics.operationCounts[operation] || 0) + 1;
+        const totalTime = this.metrics.averageResponseTime * (this.metrics.totalRequests - 1) + duration;
+        this.metrics.averageResponseTime = totalTime / this.metrics.totalRequests;
+        this.metrics.bytesTransferred += bytesTransferred;
+        this.emit('metrics_updated', {
+            operation,
+            success,
+            duration,
+            bytesTransferred,
+            currentMetrics: { ...this.metrics }
+        });
+    }
+    getMetrics() {
+        return { ...this.metrics };
+    }
+    getLogs(limit, level) {
+        let filteredLogs = this.logs;
+        if (level) {
+            filteredLogs = this.logs.filter(log => log.level === level);
+        }
+        if (limit) {
+            return filteredLogs.slice(-limit);
+        }
+        return [...filteredLogs];
+    }
+    clearLogs() {
+        this.logs = [];
+        this.log('info', 'clearLogs', 'Logs cleared');
+    }
+    resetMetrics() {
+        this.metrics = {
+            totalRequests: 0,
+            successfulRequests: 0,
+            failedRequests: 0,
+            retryCount: 0,
+            rateLimitHits: 0,
+            averageResponseTime: 0,
+            bytesTransferred: 0,
+            operationCounts: {},
+            errorCounts: {}
+        };
+        this.log('info', 'resetMetrics', 'Metrics reset');
+    }
+    getHealthStatus() {
+        const recentErrors = this.getLogs(10, 'error');
+        const errorRate = this.metrics.totalRequests > 0 ?
+            this.metrics.failedRequests / this.metrics.totalRequests : 0;
+        let status = 'healthy';
+        if (errorRate > 0.1) {
+            status = 'error';
+        }
+        else if (errorRate > 0.05 || this.metrics.rateLimitHits > 10) {
+            status = 'warning';
+        }
+        return {
+            status,
+            metrics: this.getMetrics(),
+            recentErrors,
+            rateLimitStatus: Object.fromEntries(this.rateLimitTracker)
+        };
+    }
+    exportDiagnostics() {
+        return {
+            timestamp: new Date(),
+            metrics: this.getMetrics(),
+            logs: this.getLogs(),
+            healthStatus: this.getHealthStatus(),
+            configuration: {
+                maxRetries: this.defaultRetryOptions.maxRetries,
+                baseDelay: this.defaultRetryOptions.baseDelay,
+                maxDelay: this.defaultRetryOptions.maxDelay,
+                maxLogEntries: this.maxLogEntries
+            }
+        };
+    }
+    isRetryableError(error) {
+        if (!error)
+            return false;
+        if (error.status === 429 || error.error?.['tag'] === 'too_many_requests') {
+            return true;
+        }
+        if (error.status >= 500 && error.status < 600) {
+            return true;
+        }
+        if (error.code === 'ECONNRESET' || error.code === 'ETIMEDOUT' || error.code === 'ENOTFOUND') {
+            return true;
+        }
+        if (error.error_summary?.includes('internal_error') ||
+            error.error_summary?.includes('too_many_requests')) {
+            return true;
+        }
+        return false;
+    }
+    calculateBackoffDelay(attempt, baseDelay, maxDelay) {
+        const exponentialDelay = baseDelay * Math.pow(2, attempt - 1);
+        const jitter = Math.random() * 0.1 * exponentialDelay;
+        return Math.min(exponentialDelay + jitter, maxDelay);
+    }
+    async executeWithRetry(operation, operationName, options = {}, orgId, sourceId) {
+        const retryOptions = { ...this.defaultRetryOptions, ...options };
+        const startTime = Date.now();
+        let lastError;
+        let bytesTransferred = 0;
+        this.log('debug', operationName, `Starting operation`, { retryOptions }, orgId, sourceId);
+        for (let attempt = 1; attempt <= retryOptions.maxRetries + 1; attempt++) {
+            const attemptStartTime = Date.now();
+            try {
+                await this.checkRateLimit(operationName);
+                const result = await operation();
+                const duration = Date.now() - attemptStartTime;
+                const totalDuration = Date.now() - startTime;
+                if (result && typeof result === 'object') {
+                    if ('size' in result && typeof result.size === 'number')
+                        bytesTransferred = result.size;
+                    if ('length' in result && typeof result.length === 'number')
+                        bytesTransferred = result.length;
+                }
+                this.rateLimitTracker.delete(operationName);
+                this.updateMetrics(operationName, true, totalDuration, bytesTransferred);
+                this.log('info', operationName, `Operation completed successfully${attempt > 1 ? ` after ${attempt} attempts` : ''}`, { attempts: attempt, bytesTransferred }, orgId, sourceId, totalDuration);
+                this.emit('api_success', {
+                    operation: operationName,
+                    attempt,
+                    duration: totalDuration,
+                    bytesTransferred,
+                    orgId,
+                    sourceId
+                });
+                return result;
+            }
+            catch (error) {
+                lastError = error;
+                const attemptDuration = Date.now() - attemptStartTime;
+                if (error.status === 429) {
+                    const retryAfter = this.extractRetryAfter(error);
+                    this.rateLimitTracker.set(operationName, Date.now() + (retryAfter * 1000));
+                    this.metrics.rateLimitHits++;
+                    this.log('warn', operationName, `Rate limit hit, will retry after ${retryAfter}s`, { attempt, retryAfter }, orgId, sourceId, attemptDuration);
+                    this.emit('rate_limit_hit', {
+                        operation: operationName,
+                        retryAfter,
+                        attempt,
+                        orgId,
+                        sourceId
+                    });
+                }
+                const shouldRetry = attempt <= retryOptions.maxRetries &&
+                    (retryOptions.retryCondition?.(error) ?? this.isRetryableError(error));
+                if (!shouldRetry) {
+                    const totalDuration = Date.now() - startTime;
+                    this.updateMetrics(operationName, false, totalDuration, 0, error);
+                    this.log('error', operationName, `Operation failed after ${attempt} attempts`, { attempts: attempt, finalError: this.sanitizeError(error) }, orgId, sourceId, totalDuration, error);
+                    this.emit('api_error', {
+                        operation: operationName,
+                        error: this.sanitizeError(error),
+                        finalAttempt: true,
+                        attempts: attempt,
+                        duration: totalDuration,
+                        orgId,
+                        sourceId
+                    });
+                    break;
+                }
+                const delay = this.calculateBackoffDelay(attempt, retryOptions.baseDelay, retryOptions.maxDelay);
+                this.metrics.retryCount++;
+                this.log('warn', operationName, `Attempt ${attempt} failed, retrying in ${delay}ms`, { attempt, delay, error: this.sanitizeError(error) }, orgId, sourceId, attemptDuration, error);
+                this.emit('api_retry', {
+                    operation: operationName,
+                    attempt,
+                    delay,
+                    error: this.sanitizeError(error),
+                    orgId,
+                    sourceId
+                });
+                await this.sleep(delay);
+            }
+        }
+        throw this.enhanceError(lastError, operationName);
+    }
+    async checkRateLimit(operationName) {
+        const rateLimitUntil = this.rateLimitTracker.get(operationName);
+        if (rateLimitUntil && Date.now() < rateLimitUntil) {
+            const waitTime = rateLimitUntil - Date.now();
+            this.emit('rate_limit_wait', { operation: operationName, waitTime });
+            await this.sleep(waitTime);
+        }
+    }
+    extractRetryAfter(error) {
+        const retryAfter = error.headers?.['retry-after'] ||
+            error.response?.headers?.['retry-after'];
+        return retryAfter ? parseInt(retryAfter, 10) : 60;
+    }
+    sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+    sanitizeError(error) {
+        const sanitized = {
+            message: error.message,
+            status: error.status,
+            error_summary: error.error_summary,
+            tag: error.error?.['tag']
+        };
+        return sanitized;
+    }
+    enhanceError(error, operationName) {
+        const enhancedError = new Error(`Dropbox API operation '${operationName}' failed: ${error.message || error.error_summary || 'Unknown error'}`);
+        Object.assign(enhancedError, {
+            originalError: error,
+            operationName,
+            status: error.status,
+            isDropboxError: true
+        });
+        return enhancedError;
+    }
     async generateAuthUrl() {
-        const scopes = [
-            'files.metadata.read',
-            'files.content.read',
-            'team_data.member',
-            'team_info.read',
-            'files.team_metadata.read'
-        ];
-        const authUrl = await this.dropboxAuth.getAuthenticationUrl(this.redirectUri, undefined, 'code', 'offline', scopes);
-        return authUrl.toString();
+        return this.executeWithRetry(async () => {
+            const scopes = [
+                'files.metadata.read',
+                'files.content.read',
+                'files.content.write',
+                'files.metadata.write',
+                'team_data.member',
+                'team_info.read',
+                'files.team_metadata.read',
+                'sharing.read',
+                'sharing.write'
+            ];
+            const authUrl = await this.dropboxAuth.getAuthenticationUrl(this.redirectUri, undefined, 'code', 'offline', scopes);
+            return authUrl.toString();
+        }, 'generateAuthUrl');
     }
     async exchangeCodeForTokens(code) {
-        try {
+        return this.executeWithRetry(async () => {
             const tokenResponse = await this.dropboxAuth.getAccessTokenFromCode(this.redirectUri, code);
             const tokenData = {
                 access_token: tokenResponse.result.access_token,
@@ -67,14 +358,10 @@ class DropboxService {
                 console.error('Error getting account info:', error);
             }
             return tokenData;
-        }
-        catch (error) {
-            console.error('Error exchanging code for tokens:', error);
-            throw error;
-        }
+        }, 'exchangeCodeForTokens');
     }
     async refreshAccessToken(refreshToken) {
-        try {
+        return this.executeWithRetry(async () => {
             const authClient = new dropbox_1.DropboxAuth({
                 clientId: this.appKey,
                 clientSecret: this.appSecret,
@@ -88,11 +375,7 @@ class DropboxService {
                 expires_at: this.dropboxAuth.getAccessTokenExpiresAt().getTime(),
                 account_id: ''
             };
-        }
-        catch (error) {
-            console.error('Error refreshing access token:', error);
-            throw error;
-        }
+        }, 'refreshAccessToken');
     }
     async getStoredTokens(orgId, sourceId) {
         try {
@@ -234,18 +517,479 @@ class DropboxService {
         }
     }
     async downloadFile(orgId, sourceId, path) {
-        const client = await this.getClient(orgId, sourceId);
-        if (!client) {
-            throw new Error('Could not initialize Dropbox client');
-        }
-        try {
+        return this.executeWithRetry(async () => {
+            const client = await this.getClient(orgId, sourceId);
+            if (!client) {
+                throw new Error('Could not initialize Dropbox client');
+            }
             const response = await client.filesDownload({ path });
             return response.result;
+        }, 'downloadFile', {}, orgId, sourceId);
+    }
+    async uploadFile(orgId, sourceId, filePath, fileBuffer, contentType) {
+        return this.executeWithRetry(async () => {
+            const client = await this.getClient(orgId, sourceId);
+            if (!client) {
+                throw new Error('Could not initialize Dropbox client');
+            }
+            const FILE_SIZE_LIMIT = 150 * 1024 * 1024;
+            if (fileBuffer.length > FILE_SIZE_LIMIT) {
+                return this.uploadLargeFile(client, filePath, fileBuffer);
+            }
+            else {
+                const response = await client.filesUpload({
+                    path: filePath,
+                    contents: fileBuffer,
+                    mode: { '.tag': 'overwrite' },
+                    autorename: false
+                });
+                return response.result;
+            }
+        }, 'uploadFile', {}, orgId, sourceId);
+    }
+    async uploadLargeFile(client, filePath, fileBuffer) {
+        const CHUNK_SIZE = 8 * 1024 * 1024;
+        let sessionResponse = await client.filesUploadSessionStart({
+            close: false,
+            contents: fileBuffer.slice(0, CHUNK_SIZE)
+        });
+        const sessionId = sessionResponse.result.session_id;
+        let offset = CHUNK_SIZE;
+        while (offset < fileBuffer.length) {
+            const chunkEnd = Math.min(offset + CHUNK_SIZE, fileBuffer.length);
+            const chunk = fileBuffer.slice(offset, chunkEnd);
+            const isLastChunk = chunkEnd === fileBuffer.length;
+            if (isLastChunk) {
+                const finishResponse = await client.filesUploadSessionFinish({
+                    cursor: {
+                        session_id: sessionId,
+                        offset: offset
+                    },
+                    commit: {
+                        path: filePath,
+                        mode: { '.tag': 'overwrite' },
+                        autorename: false
+                    },
+                    contents: chunk
+                });
+                return finishResponse.result;
+            }
+            else {
+                await client.filesUploadSessionAppendV2({
+                    cursor: {
+                        session_id: sessionId,
+                        offset: offset
+                    },
+                    close: false,
+                    contents: chunk
+                });
+                offset = chunkEnd;
+            }
         }
-        catch (error) {
-            console.error('Error downloading file:', error);
-            throw error;
+    }
+    async deleteFile(orgId, sourceId, filePath) {
+        return this.executeWithRetry(async () => {
+            const client = await this.getClient(orgId, sourceId);
+            if (!client) {
+                throw new Error('Could not initialize Dropbox client');
+            }
+            const response = await client.filesDeleteV2({ path: filePath });
+            return response.result;
+        }, 'deleteFile');
+    }
+    async listFiles(orgId, sourceId, options = {}) {
+        return this.executeWithRetry(async () => {
+            const path = options.path || '';
+            const recursive = options.recursive || false;
+            const limit = options.limit || 100;
+            const client = await this.getClient(orgId, sourceId);
+            if (!client) {
+                throw new Error('Could not initialize Dropbox client');
+            }
+            const response = await client.filesListFolder({
+                path: path,
+                recursive: recursive,
+                limit: limit,
+                include_media_info: true,
+                include_deleted: false,
+                include_has_explicit_shared_members: true
+            });
+            return response.result;
+        }, 'listFiles');
+    }
+    async moveFile(orgId, sourceId, fromPath, toPath) {
+        return this.executeWithRetry(async () => {
+            const client = await this.getClient(orgId, sourceId);
+            if (!client) {
+                throw new Error('Could not initialize Dropbox client');
+            }
+            const response = await client.filesMoveV2({
+                from_path: fromPath,
+                to_path: toPath,
+                allow_shared_folder: true,
+                autorename: false,
+                allow_ownership_transfer: false
+            });
+            return response.result;
+        }, 'moveFile');
+    }
+    async copyFile(orgId, sourceId, fromPath, toPath) {
+        return this.executeWithRetry(async () => {
+            const client = await this.getClient(orgId, sourceId);
+            if (!client) {
+                throw new Error('Could not initialize Dropbox client');
+            }
+            const response = await client.filesCopyV2({
+                from_path: fromPath,
+                to_path: toPath,
+                allow_shared_folder: true,
+                autorename: false,
+                allow_ownership_transfer: false
+            });
+            return response.result;
+        }, 'copyFile');
+    }
+    async createFolder(orgId, sourceId, path) {
+        return this.executeWithRetry(async () => {
+            const client = await this.getClient(orgId, sourceId);
+            if (!client) {
+                throw new Error('Could not initialize Dropbox client');
+            }
+            const response = await client.filesCreateFolderV2({
+                path: path,
+                autorename: false
+            });
+            return response.result;
+        }, 'createFolder');
+    }
+    async createSharedLink(orgId, sourceId, path, settings) {
+        return this.executeWithRetry(async () => {
+            const client = await this.getClient(orgId, sourceId);
+            if (!client) {
+                throw new Error('Could not initialize Dropbox client');
+            }
+            const requestSettings = {
+                requested_visibility: 'public',
+                audience: 'public',
+                access: 'viewer',
+                allow_download: true,
+                ...settings
+            };
+            const response = await client.sharingCreateSharedLinkWithSettings({
+                path: path,
+                settings: requestSettings
+            });
+            return response.result;
+        }, 'createSharedLink');
+    }
+    async getSharedLinks(orgId, sourceId, path) {
+        return this.executeWithRetry(async () => {
+            const client = await this.getClient(orgId, sourceId);
+            if (!client) {
+                throw new Error('Could not initialize Dropbox client');
+            }
+            const response = await client.sharingListSharedLinks({
+                path: path
+            });
+            return response.result;
+        }, 'getSharedLinks');
+    }
+    async revokeSharedLink(orgId, sourceId, url) {
+        return this.executeWithRetry(async () => {
+            const client = await this.getClient(orgId, sourceId);
+            if (!client) {
+                throw new Error('Could not initialize Dropbox client');
+            }
+            const response = await client.sharingRevokeSharedLink({
+                url: url
+            });
+            return response.result;
+        }, 'revokeSharedLink');
+    }
+    async shareFolder(orgId, sourceId, path, members) {
+        return this.executeWithRetry(async () => {
+            const client = await this.getClient(orgId, sourceId);
+            if (!client) {
+                throw new Error('Could not initialize Dropbox client');
+            }
+            const shareResponse = await client.sharingShareFolder({
+                path: path,
+                member_policy: { '.tag': 'anyone' },
+                acl_update_policy: { '.tag': 'editors' },
+                shared_link_policy: { '.tag': 'anyone' },
+                force_async: false
+            });
+            if (members && members.length > 0) {
+                const membersToAdd = members.map(member => ({
+                    member: {
+                        '.tag': 'email',
+                        email: member.email
+                    },
+                    access_level: {
+                        '.tag': (member.access_level || 'viewer')
+                    }
+                }));
+                if ('shared_folder_id' in shareResponse.result) {
+                    await client.sharingAddFolderMember({
+                        shared_folder_id: shareResponse.result.shared_folder_id,
+                        members: membersToAdd,
+                        quiet: false
+                    });
+                }
+            }
+            return shareResponse.result;
+        }, 'shareFolder');
+    }
+    async getFolderSharingInfo(orgId, sourceId, sharedFolderId) {
+        return this.executeWithRetry(async () => {
+            const client = await this.getClient(orgId, sourceId);
+            if (!client) {
+                throw new Error('Could not initialize Dropbox client');
+            }
+            const response = await client.sharingGetFolderMetadata({
+                shared_folder_id: sharedFolderId
+            });
+            return response.result;
+        }, 'getFolderSharingInfo');
+    }
+    async listFolderMembers(orgId, sourceId, sharedFolderId) {
+        return this.executeWithRetry(async () => {
+            const client = await this.getClient(orgId, sourceId);
+            if (!client) {
+                throw new Error('Could not initialize Dropbox client');
+            }
+            const response = await client.sharingListFolderMembers({
+                shared_folder_id: sharedFolderId
+            });
+            return response.result;
+        }, 'listFolderMembers');
+    }
+    async removeFolderMember(orgId, sourceId, sharedFolderId, memberEmail) {
+        return this.executeWithRetry(async () => {
+            const client = await this.getClient(orgId, sourceId);
+            if (!client) {
+                throw new Error('Could not initialize Dropbox client');
+            }
+            const response = await client.sharingRemoveFolderMember({
+                shared_folder_id: sharedFolderId,
+                member: {
+                    '.tag': 'email',
+                    email: memberEmail
+                },
+                leave_a_copy: false
+            });
+            return response.result;
+        }, 'removeFolderMember');
+    }
+    async updateFolderMemberPermissions(orgId, sourceId, sharedFolderId, memberEmail, accessLevel) {
+        return this.executeWithRetry(async () => {
+            const client = await this.getClient(orgId, sourceId);
+            if (!client) {
+                throw new Error('Could not initialize Dropbox client');
+            }
+            const response = await client.sharingUpdateFolderMember({
+                shared_folder_id: sharedFolderId,
+                member: {
+                    '.tag': 'email',
+                    email: memberEmail
+                },
+                access_level: {
+                    '.tag': accessLevel
+                }
+            });
+            return response.result;
+        }, 'updateFolderMemberPermissions');
+    }
+    async batchDownloadFiles(orgId, sourceId, filePaths) {
+        const BATCH_SIZE = 10;
+        const results = [];
+        for (let i = 0; i < filePaths.length; i += BATCH_SIZE) {
+            const batch = filePaths.slice(i, i + BATCH_SIZE);
+            const batchPromises = batch.map(path => this.downloadFile(orgId, sourceId, path)
+                .catch(error => ({ error, path })));
+            const batchResults = await Promise.all(batchPromises);
+            results.push(...batchResults);
+            if (i + BATCH_SIZE < filePaths.length) {
+                await this.sleep(100);
+            }
         }
+        return results;
+    }
+    async batchUploadFiles(orgId, sourceId, files) {
+        const BATCH_SIZE = 5;
+        const results = [];
+        for (let i = 0; i < files.length; i += BATCH_SIZE) {
+            const batch = files.slice(i, i + BATCH_SIZE);
+            const batchPromises = batch.map(file => this.uploadFile(orgId, sourceId, file.path, file.buffer, file.contentType)
+                .catch(error => ({ error, path: file.path })));
+            const batchResults = await Promise.all(batchPromises);
+            results.push(...batchResults);
+            if (i + BATCH_SIZE < files.length) {
+                await this.sleep(500);
+            }
+        }
+        return results;
+    }
+    async batchDeleteFiles(orgId, sourceId, filePaths) {
+        return this.executeWithRetry(async () => {
+            const client = await this.getClient(orgId, sourceId);
+            if (!client) {
+                throw new Error('Could not initialize Dropbox client');
+            }
+            const entries = filePaths.map(path => ({ path }));
+            const response = await client.filesDeleteBatch({
+                entries: entries
+            });
+            const deleteLaunch = response.result;
+            if (deleteLaunch['.tag'] === 'async_job_id') {
+                return this.pollBatchJobStatus(client, deleteLaunch.async_job_id, 'delete_batch');
+            }
+            return response.result;
+        }, 'batchDeleteFiles');
+    }
+    async batchCopyFiles(orgId, sourceId, operations) {
+        return this.executeWithRetry(async () => {
+            const client = await this.getClient(orgId, sourceId);
+            if (!client) {
+                throw new Error('Could not initialize Dropbox client');
+            }
+            const entries = operations.map(op => ({
+                from_path: op.from_path,
+                to_path: op.to_path,
+                allow_shared_folder: true,
+                autorename: false,
+                allow_ownership_transfer: false
+            }));
+            const response = await client.filesCopyBatch({
+                entries: entries,
+                autorename: false
+            });
+            const copyLaunch = response.result;
+            if (copyLaunch['.tag'] === 'async_job_id') {
+                return this.pollBatchJobStatus(client, copyLaunch.async_job_id, 'copy_batch');
+            }
+            return response.result;
+        }, 'batchCopyFiles');
+    }
+    async batchMoveFiles(orgId, sourceId, operations) {
+        return this.executeWithRetry(async () => {
+            const client = await this.getClient(orgId, sourceId);
+            if (!client) {
+                throw new Error('Could not initialize Dropbox client');
+            }
+            const entries = operations.map(op => ({
+                from_path: op.from_path,
+                to_path: op.to_path
+            }));
+            const response = await client.filesMoveBatchV2({
+                entries: entries,
+                autorename: false
+            });
+            if ('async_job_id' in response.result) {
+                return this.pollBatchJobStatus(client, response.result.async_job_id, 'move_batch');
+            }
+            return response.result;
+        }, 'batchMoveFiles');
+    }
+    async pollBatchJobStatus(client, asyncJobId, jobType) {
+        const MAX_POLLS = 60;
+        const POLL_INTERVAL = 5000;
+        for (let i = 0; i < MAX_POLLS; i++) {
+            await this.sleep(POLL_INTERVAL);
+            let statusResponse;
+            switch (jobType) {
+                case 'delete_batch':
+                    statusResponse = await client.filesDeleteBatchCheck({
+                        async_job_id: asyncJobId
+                    });
+                    break;
+                case 'copy_batch':
+                    statusResponse = await client.filesCopyBatchCheckV2({
+                        async_job_id: asyncJobId
+                    });
+                    break;
+                case 'move_batch':
+                    statusResponse = await client.filesMoveBatchCheckV2({
+                        async_job_id: asyncJobId
+                    });
+                    break;
+                default:
+                    throw new Error(`Unknown job type: ${jobType}`);
+            }
+            const status = statusResponse.result['.tag'];
+            if (status === 'complete') {
+                return statusResponse.result;
+            }
+            else if (status === 'failed') {
+                throw new Error(`Batch ${jobType} job failed`);
+            }
+        }
+        throw new Error(`Batch ${jobType} job timed out`);
+    }
+    async listFolderWithPagination(orgId, sourceId, path = '', options = {}) {
+        return this.executeWithRetry(async () => {
+            const client = await this.getClient(orgId, sourceId);
+            if (!client) {
+                throw new Error('Could not initialize Dropbox client');
+            }
+            let response;
+            if (options.cursor) {
+                response = await client.filesListFolderContinue({
+                    cursor: options.cursor
+                });
+            }
+            else {
+                response = await client.filesListFolder({
+                    path: path,
+                    recursive: options.recursive || false,
+                    limit: options.limit || 100,
+                    include_media_info: options.include_media_info || true,
+                    include_deleted: options.include_deleted || false,
+                    include_has_explicit_shared_members: true
+                });
+            }
+            return {
+                entries: response.result.entries,
+                cursor: response.result.cursor,
+                has_more: response.result.has_more
+            };
+        }, 'listFolderWithPagination');
+    }
+    async getAllFilesInFolder(orgId, sourceId, path = '', options = {}) {
+        const allEntries = [];
+        let cursor;
+        let hasMore = true;
+        const maxFiles = options.maxFiles || 10000;
+        while (hasMore && allEntries.length < maxFiles) {
+            const result = await this.listFolderWithPagination(orgId, sourceId, path, {
+                ...options,
+                cursor,
+                limit: Math.min(1000, maxFiles - allEntries.length)
+            });
+            allEntries.push(...result.entries);
+            cursor = result.cursor;
+            hasMore = result.has_more;
+            this.emit('pagination_progress', {
+                operation: 'getAllFilesInFolder',
+                totalFetched: allEntries.length,
+                hasMore
+            });
+            if (hasMore) {
+                await this.sleep(100);
+            }
+        }
+        return allEntries;
+    }
+    async subscribeToChanges(orgId, sourceId, callback) {
+        this.emit('subscription_created', {
+            orgId,
+            sourceId,
+            callback
+        });
+        return {
+            success: true,
+            message: 'Webhook subscription created. Changes will be processed via DropboxWebhookHandler.'
+        };
     }
 }
 exports.DropboxService = DropboxService;
