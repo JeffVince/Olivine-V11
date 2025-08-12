@@ -137,6 +137,18 @@
                     <v-icon start size="small">{{ filter.icon }}</v-icon>
                     {{ filter.label }}
                   </v-chip>
+                  <v-menu>
+                    <template #activator="{ props }">
+                      <v-chip v-bind="props" size="small" variant="outlined" prepend-icon="mdi-filter">
+                        Classification
+                      </v-chip>
+                    </template>
+                    <v-list>
+                      <v-list-item v-for="s in classificationOptions" :key="s.value" @click="applyClassificationFilter(s.value)">
+                        <v-list-item-title>{{ s.label }}</v-list-item-title>
+                      </v-list-item>
+                    </v-list>
+                  </v-menu>
                 </v-chip-group>
               </div>
 
@@ -220,12 +232,31 @@
 
             <!-- Entity View -->
             <template v-else-if="viewMode === 'entity'">
-              <div class="pa-6 text-center">
-                <v-icon size="56" color="primary" class="mb-3">mdi-sitemap</v-icon>
-                <div class="text-h6 mb-2">Entity view not yet connected</div>
-                <div class="text-body-2 text-medium-emphasis">
-                  When entity links are available (e.g., Scenes, Shoot Days), files will be grouped by related entities here.
-                </div>
+              <div class="pa-4">
+                <v-tabs v-model="entityGroupBy" density="compact" class="mb-3">
+                  <v-tab value="project"><v-icon start>mdi-view-module</v-icon>By Project</v-tab>
+                  <v-tab value="source"><v-icon start>mdi-cloud</v-icon>By Source</v-tab>
+                </v-tabs>
+                <v-expansion-panels>
+                  <v-expansion-panel v-for="group in entityGroups" :key="group.key">
+                    <v-expansion-panel-title>
+                      <v-icon start>{{ entityGroupIcon }}</v-icon>
+                      <span class="ml-2">{{ group.label }}</span>
+                      <v-chip class="ml-3" size="x-small" label>{{ group.items.length }}</v-chip>
+                    </v-expansion-panel-title>
+                    <v-expansion-panel-text>
+                      <v-list density="compact">
+                        <v-list-item v-for="f in group.items" :key="f.id" @click="selectedFile = f">
+                          <template #prepend>
+                            <v-icon size="small">{{ mimeIcon(f.mimeType) }}</v-icon>
+                          </template>
+                          <v-list-item-title>{{ f.name }}</v-list-item-title>
+                          <v-list-item-subtitle>{{ f.path }}</v-list-item-subtitle>
+                        </v-list-item>
+                      </v-list>
+                    </v-expansion-panel-text>
+                  </v-expansion-panel>
+                </v-expansion-panels>
               </div>
             </template>
           </v-card-text>
@@ -234,6 +265,7 @@
 
       <!-- Right Panel - Inspector -->
       <v-col cols="12" lg="3">
+        <!-- Right Panel - Inspector / Facets -->
         <v-card v-if="selectedFile">
           <v-card-title>
             <v-icon class="mr-2">mdi-information</v-icon>
@@ -259,6 +291,12 @@
                 <v-list-item-title>MIME</v-list-item-title>
                 <v-list-item-subtitle class="text-wrap">{{ selectedFile.mimeType }}</v-list-item-subtitle>
               </v-list-item>
+              <v-list-item v-if="selectedFile.metadata?.preview || selectedFile.extractedText">
+                <v-list-item-title>Preview</v-list-item-title>
+                <v-list-item-subtitle class="text-wrap" style="white-space: pre-wrap; max-height: 240px; overflow: auto;">
+                  {{ selectedFile.metadata?.preview || selectedFile.extractedText }}
+                </v-list-item-subtitle>
+              </v-list-item>
                 <v-list-item>
                   <v-list-item-title>Classification</v-list-item-title>
                   <v-list-item-subtitle>
@@ -282,6 +320,12 @@
                 <v-btn color="secondary" prepend-icon="mdi-tag" @click="showClassify = true">
                   Classify
                 </v-btn>
+                <v-btn v-if="selectedFile.metadata?.downloadUrl" :href="selectedFile.metadata.downloadUrl" target="_blank" prepend-icon="mdi-download">
+                  Download
+                </v-btn>
+                <v-btn v-if="selectedFile.metadata?.previewUrl" :href="selectedFile.metadata.previewUrl" target="_blank" prepend-icon="mdi-open-in-new">
+                  Open Preview
+                </v-btn>
               </div>
           </v-card-text>
         </v-card>
@@ -290,6 +334,23 @@
         <v-card v-else class="text-center pa-8">
           <v-icon size="48" color="grey-lighten-1">mdi-cursor-default-click</v-icon>
           <p class="text-medium-emphasis mt-2">Select a file to view details</p>
+          <v-divider class="my-4" />
+          <div class="text-left">
+            <div class="text-subtitle-2 mb-2">Facets</div>
+            <v-list density="compact">
+              <v-list-subheader>Classification</v-list-subheader>
+              <v-list-item v-for="s in classificationOptions" :key="s.value" @click="applyClassificationFilter(s.value)">
+                <template #prepend><v-icon size="x-small">mdi-tag</v-icon></template>
+                <v-list-item-title>{{ s.label }}</v-list-item-title>
+              </v-list-item>
+              <v-divider class="my-2" />
+              <v-list-subheader>MIME Type</v-list-subheader>
+              <v-list-item v-for="m in mimeOptions" :key="m.value" @click="applyMimeFilter(m.value)">
+                <template #prepend><v-icon size="x-small">{{ mimeIcon(m.value) }}</v-icon></template>
+                <v-list-item-title>{{ m.label }}</v-list-item-title>
+              </v-list-item>
+            </v-list>
+          </div>
         </v-card>
       </v-col>
     </v-row>
@@ -342,6 +403,8 @@ interface FileItem {
   classificationStatus?: string
   classificationConfidence?: number
   canonicalSlot?: string
+  metadata?: Record<string, any>
+  extractedText?: string
 }
 
 interface FolderItem {
@@ -428,6 +491,22 @@ const filteredFiles = computed(() => {
   return filtered
 })
 
+// Entity grouping state
+const entityGroupBy = ref<'project' | 'source'>('project')
+const entityGroupIcon = computed(() => entityGroupBy.value === 'project' ? 'mdi-view-module' : 'mdi-cloud')
+const entityGroups = computed(() => {
+  const groups: Record<string, { key: string; label: string; items: FileItem[] }> = {}
+  const list = (items.value as any[])
+  const by = entityGroupBy.value
+  for (const f of list) {
+    const key = by === 'project' ? (f.project?.id || 'Unassigned') : (f.source?.id || 'Unassigned')
+    const label = by === 'project' ? (f.project?.name || 'Unassigned Project') : ((f.source?.name || 'Unassigned Source'))
+    if (!groups[key]) groups[key] = { key, label, items: [] }
+    groups[key].items.push(f as FileItem)
+  }
+  return Object.values(groups)
+})
+
 // File headers for table view (aligned to available data)
 const fileHeaders = [
   { title: 'Name', key: 'name', sortable: true },
@@ -441,6 +520,32 @@ const fileFilters = [
   { key: 'current', label: 'Current', icon: 'mdi-check-circle' },
   { key: 'deleted', label: 'Deleted', icon: 'mdi-delete' }
 ]
+// Backend-driven classification filter
+const classificationOptions = [
+  { value: 'PENDING', label: 'Pending' },
+  { value: 'CLASSIFIED', label: 'Classified' },
+  { value: 'MANUAL_REVIEW', label: 'Manual review' },
+  { value: 'FAILED', label: 'Failed' },
+]
+
+function applyClassificationFilter(status: string) {
+  variables.value.filter.classificationStatus = status
+  refetch()
+}
+
+const mimeOptions = [
+  { value: 'application/pdf', label: 'PDF' },
+  { value: 'image/jpeg', label: 'JPEG' },
+  { value: 'image/png', label: 'PNG' },
+  { value: 'text/plain', label: 'Text' },
+  { value: 'application/json', label: 'JSON' },
+]
+
+function applyMimeFilter(mime: string) {
+  variables.value.filter.mimeType = mime
+  refetch()
+}
+
 
 // Methods
 function getProviderColor(provider: string) {

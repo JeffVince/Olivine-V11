@@ -76,7 +76,6 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
     volumes:
-      - ./backend:/app
       - /app/node_modules
     depends_on:
       neo4j:
@@ -101,6 +100,7 @@ services:
       - /app/node_modules
     depends_on:
       - backend
+    command: npm run dev -- --host
 
 volumes:
   neo4j_data:

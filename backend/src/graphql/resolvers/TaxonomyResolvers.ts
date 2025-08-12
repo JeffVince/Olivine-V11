@@ -53,7 +53,7 @@ export class TaxonomyResolvers {
           return await this.taxonomyService.createTaxonomyRule(input, profileId, orgId);
         },
 
-        classifyFile: async (
+        classifyTaxonomyFile: async (
           _: any, 
           { fileId, orgId, userId }: { fileId: string; orgId: string; userId: string }
         ) => {

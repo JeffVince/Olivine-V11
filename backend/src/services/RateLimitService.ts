@@ -3,7 +3,7 @@ import { Redis } from 'ioredis';
 export class RateLimitService {
   private redis: Redis;
 
-  constructor(redisUrl: string = 'redis://localhost:6379') {
+  constructor(redisUrl: string = process.env.REDIS_URL || `redis://${process.env.REDIS_HOST || 'localhost'}:${process.env.REDIS_PORT || '6379'}/0`) {
     this.redis = new Redis(redisUrl, {
       maxRetriesPerRequest: null,
       enableReadyCheck: false,

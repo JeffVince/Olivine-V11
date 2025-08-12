@@ -74,7 +74,7 @@ const neoSchema = new Neo4jGraphQL({ typeDefs: 'type Placeholder { id: ID }', dr
 // TODO: Implementation Plan - 06-Agent-System-Implementation.md - Queue service initialization
 // TODO: Implementation Checklist - 07-Testing-QA-Checklist.md - Backend infrastructure service tests
 const queueService = new QueueService({
-  redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
+  redisUrl: process.env.REDIS_URL || `redis://${process.env.REDIS_HOST || 'localhost'}:${process.env.REDIS_PORT || '6379'}/0`,
   prefix: process.env.QUEUE_PREFIX || 'olivine',
 })
 new QueueMonitor(queueService).start()

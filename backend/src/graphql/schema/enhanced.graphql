@@ -723,7 +723,7 @@ type Mutation {
   createCanonicalSlot(input: JSON!, orgId: ID!): CanonicalSlot!
   createTaxonomyProfile(input: JSON!, orgId: ID!): TaxonomyProfile!
   createTaxonomyRule(input: JSON!, profileId: ID!, orgId: ID!): TaxonomyRule!
-  classifyFile(fileId: ID!, orgId: ID!, userId: ID!): Classification
+  classifyTaxonomyFile(fileId: ID!, orgId: ID!, userId: ID!): Classification
   applyManualClassification(fileId: ID!, slot: String!, confidence: Float, orgId: ID!, userId: ID!): Classification!
   
   # Content Ontology

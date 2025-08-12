@@ -229,7 +229,9 @@ export class GraphQLServer {
     });
 
     // Dynamically import useServer to avoid module resolution issues
-    const { useServer } = await import('graphql-ws/dist/use/ws.js');
+    // Using direct import with ts-ignore to suppress TypeScript error
+    // @ts-ignore - graphql-ws package exports are not properly resolved by TypeScript
+    const { useServer } = await import('graphql-ws/use/ws');
 
     useServer({
       schema,

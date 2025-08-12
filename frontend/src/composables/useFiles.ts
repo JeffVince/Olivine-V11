@@ -22,6 +22,8 @@ const FILES_QUERY = gql`
       canonicalSlot
       current
       deleted
+      project { id name }
+      source { id name provider }
     }
   }
 `
