@@ -2,6 +2,7 @@ import { createApp } from 'vue';
 import { createPinia } from 'pinia';
 import { ApolloClient, createHttpLink, InMemoryCache } from '@apollo/client/core';
 import { DefaultApolloClient } from '@vue/apollo-composable';
+import vuetify from './plugins/vuetify'
 
 import App from './App.vue';
 import router from './router';
@@ -30,6 +31,9 @@ app.provide(DefaultApolloClient, apolloClient);
 
 // Use router
 app.use(router);
+
+// Use Vuetify
+app.use(vuetify);
 
 // Mount the app
 app.mount('#app');

@@ -1,11 +1,20 @@
 <template>
-  <div id="app">
-    <router-view />
-  </div>
+  <v-app>
+    <AppHeader @toggle-drawer="drawer = !drawer" />
+    <AppSidebar v-model:open="drawer" />
+    <PageContainer>
+      <router-view />
+    </PageContainer>
+  </v-app>
 </template>
 
 <script setup lang="ts">
-// Olivine main application component
+import { ref } from 'vue'
+import AppHeader from '@components/layout/AppHeader.vue'
+import AppSidebar from '@components/layout/AppSidebar.vue'
+import PageContainer from '@components/layout/PageContainer.vue'
+
+const drawer = ref(true)
 </script>
 
 <style>

@@ -1,24 +1,19 @@
 import neo4j, { Driver, Session, Transaction } from 'neo4j-driver';
-import { config } from 'dotenv';
-
-// Load environment variables
-config();
+import { getNeo4jConfig, Neo4jConfig } from '../config/neo4j';
 
 export class Neo4jService {
   private driver: Driver;
+  private config: Neo4jConfig;
 
   constructor() {
+    this.config = getNeo4jConfig();
     this.driver = neo4j.driver(
-      process.env.NEO4J_URI || 'bolt://localhost:7687',
-      neo4j.auth.basic(
-        process.env.NEO4J_USER || 'neo4j',
-        process.env.NEO4J_PASSWORD || 'password'
-      ),
+      this.config.uri,
+      neo4j.auth.basic(this.config.user, this.config.password),
       {
-        maxConnectionPoolSize: parseInt(process.env.NEO4J_MAX_CONNECTION_POOL_SIZE || '10'),
-        connectionTimeout: parseInt(process.env.NEO4J_CONNECTION_TIMEOUT || '30000'),
-        // Add SSL/TLS configuration for production
-        encrypted: process.env.NEO4J_ENCRYPTED === 'true' ? 'ENCRYPTION_ON' : 'ENCRYPTION_OFF'
+        maxConnectionPoolSize: this.config.maxConnectionPoolSize,
+        connectionTimeout: this.config.connectionTimeout,
+        encrypted: this.config.encrypted ? 'ENCRYPTION_ON' : 'ENCRYPTION_OFF'
       }
     );
   }
