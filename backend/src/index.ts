@@ -38,18 +38,19 @@ const neoSchema = new Neo4jGraphQL({
 
 // Create Apollo Server
 const server = new ApolloServer({
-  schema: neoSchema.schema,
   context: ({ req }) => ({ req }),
 });
 
 // Start server function
 async function startServer() {
   try {
-    // Start the Apollo Server
-    await server.start();
-    
+    // Get the generated schema
+    const schema = await neoSchema.getSchema();
+    // Start the Apollo Server with the generated schema
+    const apolloServer = new ApolloServer({ schema });
+    await apolloServer.start();
     // Apply Apollo GraphQL middleware
-    server.applyMiddleware({ app, path: '/graphql' });
+    apolloServer.applyMiddleware({ app: app as any, path: '/graphql' });
     
     // Start the Express server
     const port = process.env.PORT || 8080;
