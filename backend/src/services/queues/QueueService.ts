@@ -1,5 +1,6 @@
 import { Queue, Worker, QueueOptions, JobsOptions, Processor, WorkerOptions, Job, QueueEvents } from 'bullmq'
-import IORedis, { Redis } from 'ioredis'
+import IORedis from 'ioredis'
+import type { Redis, RedisOptions } from 'ioredis'
 
 export type SupportedQueueName =
   | 'file-sync'
@@ -33,15 +34,27 @@ export class QueueService {
 
   constructor(config?: QueueServiceConfig) {
     const defaultConfig = {
-      redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
+      redisHost: process.env.REDIS_HOST || 'localhost',
+      redisPort: parseInt(process.env.REDIS_PORT || '6379', 10),
+      redisPassword: process.env.REDIS_PASSWORD || '',
+      redisDb: parseInt(process.env.REDIS_DB || '0', 10),
       prefix: 'olivine'
     };
     const finalConfig = { ...defaultConfig, ...config };
     
-    this.connection = new IORedis(finalConfig.redisUrl, {
+    const redisOptions: RedisOptions = {
+      host: finalConfig.redisHost,
+      port: finalConfig.redisPort,
+      db: finalConfig.redisDb,
       maxRetriesPerRequest: null,
       enableReadyCheck: false,
-    })
+    };
+    
+    if (finalConfig.redisPassword) {
+      redisOptions.password = finalConfig.redisPassword;
+    }
+    
+    this.connection = new IORedis(redisOptions)
     this.queues = new Map()
     this.queueEvents = new Map()
     this.prefix = finalConfig.prefix
