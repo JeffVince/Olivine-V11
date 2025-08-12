@@ -6,6 +6,8 @@ const OperationsOntologyService_1 = require("../../services/OperationsOntologySe
 const ProvenanceService_1 = require("../../services/provenance/ProvenanceService");
 const AgentOrchestrator_1 = require("../../services/AgentOrchestrator");
 const EnhancedFileProcessingService_1 = require("../../services/EnhancedFileProcessingService");
+const EventProcessingService_1 = require("../../services/EventProcessingService");
+const QueueService_1 = require("../../services/queues/QueueService");
 describe('Ontology Integration Tests', () => {
     let taxonomyService;
     let contentService;
@@ -22,7 +24,8 @@ describe('Ontology Integration Tests', () => {
         operationsService = new OperationsOntologyService_1.OperationsOntologyService();
         provenanceService = new ProvenanceService_1.ProvenanceService();
         orchestrator = new AgentOrchestrator_1.AgentOrchestrator();
-        fileProcessingService = new EnhancedFileProcessingService_1.EnhancedFileProcessingService();
+        const eventProcessingService = new EventProcessingService_1.EventProcessingService(null, new QueueService_1.QueueService());
+        fileProcessingService = new EnhancedFileProcessingService_1.EnhancedFileProcessingService(eventProcessingService);
         await orchestrator.start();
     });
     afterAll(async () => {

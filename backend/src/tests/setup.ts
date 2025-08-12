@@ -95,3 +95,6 @@ declare global {
     }
   }
 }
+
+// This export makes the file an external module, which is required for global declarations
+export {};

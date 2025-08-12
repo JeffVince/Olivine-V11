@@ -5,11 +5,12 @@ import { useOrganizationStore } from '@/stores/organizationStore'
 import { useProjectStore } from '@/stores/projectStore'
 
 const FILES_QUERY = gql`
-  query GetFiles($organizationId: ID!, $sourceId: ID, $limit: Int) {
-    getFiles(organizationId: $organizationId, sourceId: $sourceId, limit: $limit) {
+  query Files($filter: FileFilter, $limit: Int, $offset: Int) {
+    files(filter: $filter, limit: $limit, offset: $offset) {
       id
-      organizationId
+      orgId
       sourceId
+      projectId
       path
       name
       size
@@ -17,6 +18,32 @@ const FILES_QUERY = gql`
       updatedAt
       metadata
       classificationStatus
+      classificationConfidence
+      canonicalSlot
+      current
+      deleted
+    }
+  }
+`
+
+const FILE_UPDATED_SUB = gql`
+  subscription OnFileUpdated($orgId: ID!) {
+    fileUpdated(orgId: $orgId) {
+      id
+      orgId
+      sourceId
+      projectId
+      path
+      name
+      size
+      mimeType
+      updatedAt
+      metadata
+      classificationStatus
+      classificationConfidence
+      canonicalSlot
+      current
+      deleted
     }
   }
 `
@@ -27,22 +54,45 @@ export function useFiles() {
   const orgStore = useOrganizationStore()
   const projectStore = useProjectStore()
 
-  const variables = ref({ organizationId: orgStore.currentOrg?.id || '', sourceId: undefined as string | undefined, limit: 100 })
+  const variables = ref({
+    filter: {
+      orgId: orgStore.currentOrg?.id || '',
+      sourceId: undefined as string | undefined,
+      classificationStatus: undefined as string | undefined,
+      mimeType: undefined as string | undefined,
+      path: undefined as string | undefined,
+      name: undefined as string | undefined,
+    },
+    limit: 200,
+    offset: 0,
+  })
 
   const { result, loading, refetch, onError } = useQuery(FILES_QUERY, variables)
   const items = ref<any[]>([])
 
   watchEffect(() => {
-    variables.value.organizationId = orgStore.currentOrg?.id || ''
+    variables.value.filter.orgId = orgStore.currentOrg?.id || ''
   })
 
   watchEffect(() => {
     if (result.value?.files) items.value = result.value.files
   })
 
-  // Subscription can be re-enabled once backend publishes file updates
+  // Live updates for file changes
+  useSubscription(FILE_UPDATED_SUB, () => ({ orgId: orgStore.currentOrg?.id || '' }), {
+    onResult: (res) => {
+      const updated = res.data?.fileUpdated
+      if (!updated) return
+      const idx = items.value.findIndex((f) => f.id === updated.id)
+      if (idx >= 0) {
+        items.value[idx] = { ...items.value[idx], ...updated }
+      } else {
+        items.value.unshift(updated)
+      }
+    },
+  })
 
-  return { items, loading, refetch, onError }
+  return { items, loading, refetch, onError, variables }
 }
 
 

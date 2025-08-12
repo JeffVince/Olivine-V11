@@ -4,6 +4,8 @@ import { OperationsOntologyService } from '../../services/OperationsOntologyServ
 import { ProvenanceService } from '../../services/provenance/ProvenanceService';
 import { AgentOrchestrator } from '../../services/AgentOrchestrator';
 import { EnhancedFileProcessingService } from '../../services/EnhancedFileProcessingService';
+import { EventProcessingService } from '../../services/EventProcessingService';
+import { QueueService } from '../../services/queues/QueueService';
 
 describe('Ontology Integration Tests', () => {
   let taxonomyService: TaxonomyService;
@@ -23,7 +25,9 @@ describe('Ontology Integration Tests', () => {
     operationsService = new OperationsOntologyService();
     provenanceService = new ProvenanceService();
     orchestrator = new AgentOrchestrator();
-    fileProcessingService = new EnhancedFileProcessingService();
+    // Create services with proper dependencies to break circular dependency
+    const eventProcessingService = new EventProcessingService(null as any, new QueueService());
+    fileProcessingService = new EnhancedFileProcessingService(eventProcessingService);
 
     // Start orchestrator
     await orchestrator.start();

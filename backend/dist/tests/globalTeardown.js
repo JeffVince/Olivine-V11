@@ -15,14 +15,13 @@ async function globalTeardown() {
         await queueService.connect();
         console.log('🗑️ Cleaning up test data...');
         await neo4jService.run('MATCH (n) DETACH DELETE n');
-        await queueService.clearAllQueues();
         await neo4jService.close();
         await postgresService.close();
         await queueService.close();
         console.log('✅ Global test teardown completed successfully');
     }
     catch (error) {
-        console.error('❌ Global test teardown failed:', error);
+        console.error('❌ Global test teardown failed:', error instanceof Error ? error.message : String(error));
     }
     setTimeout(() => {
         process.exit(0);

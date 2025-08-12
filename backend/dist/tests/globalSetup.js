@@ -29,10 +29,9 @@ async function globalSetup() {
                 await postgresService.executeQuery(`TRUNCATE TABLE ${table} CASCADE`);
             }
             catch (error) {
-                console.warn(`Could not truncate table ${table}:`, error.message);
+                console.warn(`Could not truncate table ${table}:`, error instanceof Error ? error.message : String(error));
             }
         }
-        await queueService.clearAllQueues();
         console.log('🏗️ Setting up test database schema...');
         const neo4jConstraints = [
             'CREATE CONSTRAINT test_org_unique IF NOT EXISTS FOR (o:Organization) REQUIRE o.id IS UNIQUE',

@@ -132,7 +132,7 @@ describe('Enhanced Agent System Integration Tests', () => {
         { orgId: testOrgId }
       );
 
-      const folderPaths = folderResult.records.map(r => r.get('path'));
+      const folderPaths = folderResult.records.map((r: any) => r.get('path'));
       expect(folderPaths).toContain('/projects');
       expect(folderPaths).toContain('/projects/feature-film');
       expect(folderPaths).toContain('/projects/feature-film/scripts');

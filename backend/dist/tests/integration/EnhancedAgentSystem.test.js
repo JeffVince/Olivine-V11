@@ -96,7 +96,7 @@ const OperationsOntologyService_1 = require("../../services/OperationsOntologySe
             await fileStewardAgent.processSyncEvent(testFileData);
             await new Promise(resolve => setTimeout(resolve, 1500));
             const folderResult = await neo4jService.run('MATCH (f:Folder {org_id: $orgId}) RETURN f.path as path ORDER BY f.path', { orgId: testOrgId });
-            const folderPaths = folderResult.records.map(r => r.get('path'));
+            const folderPaths = folderResult.records.map((r) => r.get('path'));
             (0, globals_1.expect)(folderPaths).toContain('/projects');
             (0, globals_1.expect)(folderPaths).toContain('/projects/feature-film');
             (0, globals_1.expect)(folderPaths).toContain('/projects/feature-film/scripts');

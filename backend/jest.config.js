@@ -23,7 +23,7 @@ module.exports = {
     'lcov',
     'html'
   ],
-  // setupFilesAfterEnv: ['<rootDir>/src/tests/setup.ts'],
+  setupFilesAfterEnv: ['<rootDir>/src/tests/setup.ts'],
   testTimeout: 30000,
   maxWorkers: 4,
   testSequencer: '<rootDir>/src/tests/testSequencer.js',

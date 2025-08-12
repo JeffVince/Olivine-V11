@@ -152,6 +152,16 @@
                   <div class="d-flex align-center">
                     <v-icon class="mr-2" size="small">mdi-file</v-icon>
                     <span>{{ item.name }}</span>
+                    <v-chip
+                      v-if="item.classificationStatus && item.classificationStatus !== 'PENDING'"
+                      class="ml-2"
+                      :color="classificationColor(item.classificationStatus)"
+                      size="x-small"
+                      label
+                      variant="tonal"
+                    >
+                      {{ item.classificationStatus }}
+                    </v-chip>
                   </div>
                 </template>
                 <template v-slot:item.size="{ item }">
@@ -160,20 +170,51 @@
                 <template v-slot:item.updatedAt="{ item }">
                   {{ formatDate(item.updatedAt) }}
                 </template>
+                <template v-slot:item.mimeType="{ item }">
+                  <div class="d-flex align-center">
+                    <v-icon class="mr-1" size="x-small">{{ mimeIcon(item.mimeType) }}</v-icon>
+                    <span>{{ item.mimeType }}</span>
+                  </div>
+                </template>
               </v-data-table>
             </template>
 
-            <!-- Canonical View -->
+             <!-- Canonical View -->
             <template v-else-if="viewMode === 'canonical'">
-              <div class="pa-6 text-center">
+              <div v-if="Object.keys(filesByCanonical.value).length === 0" class="pa-6 text-center">
                 <v-icon size="56" color="primary" class="mb-3">mdi-folder-star</v-icon>
-                <div class="text-h6 mb-2">Canonical view requires file classifications</div>
+                <div class="text-h6 mb-2">No canonical groupings yet</div>
                 <div class="text-body-2 text-medium-emphasis mb-4">
                   Configure taxonomy rules and classifications in Mapping Studio to enable canonical slot grouping.
                 </div>
                 <v-btn color="primary" prepend-icon="mdi-map" @click="openMappingStudio">
                   Open Mapping Studio
                 </v-btn>
+              </div>
+              <div v-else class="pa-4">
+                <v-expansion-panels variant="accordion">
+                  <v-expansion-panel v-for="group in filesByCanonicalList" :key="group.key">
+                    <v-expansion-panel-title>
+                      <v-icon start>mdi-folder-star</v-icon>
+                      <span class="ml-2">{{ group.key || 'Unassigned' }}</span>
+                      <v-chip class="ml-3" size="x-small" label>{{ group.items.length }}</v-chip>
+                    </v-expansion-panel-title>
+                    <v-expansion-panel-text>
+                      <v-list density="compact">
+                        <v-list-item v-for="f in group.items" :key="f.id" @click="selectedFile = f">
+                          <template #prepend>
+                            <v-icon size="small">{{ mimeIcon(f.mimeType) }}</v-icon>
+                          </template>
+                          <v-list-item-title>{{ f.name }}</v-list-item-title>
+                          <v-list-item-subtitle>{{ f.path }}</v-list-item-subtitle>
+                          <template #append>
+                            <v-chip size="x-small" :color="classificationColor(f.classificationStatus)" variant="tonal">{{ f.classificationStatus }}</v-chip>
+                          </template>
+                        </v-list-item>
+                      </v-list>
+                    </v-expansion-panel-text>
+                  </v-expansion-panel>
+                </v-expansion-panels>
               </div>
             </template>
 
@@ -199,7 +240,7 @@
             Inspector
           </v-card-title>
           
-          <v-card-text>
+            <v-card-text>
             <h4 class="text-subtitle-2 mb-2">{{ selectedFile.name }}</h4>
             <v-list density="compact">
               <v-list-item>
@@ -218,7 +259,30 @@
                 <v-list-item-title>MIME</v-list-item-title>
                 <v-list-item-subtitle class="text-wrap">{{ selectedFile.mimeType }}</v-list-item-subtitle>
               </v-list-item>
+                <v-list-item>
+                  <v-list-item-title>Classification</v-list-item-title>
+                  <v-list-item-subtitle>
+                    <v-chip :color="classificationColor(selectedFile.classificationStatus)" size="small" label variant="tonal">
+                      {{ selectedFile.classificationStatus }}
+                    </v-chip>
+                    <span v-if="selectedFile.classificationConfidence" class="ml-2 text-medium-emphasis">
+                      {{ (selectedFile.classificationConfidence * 100).toFixed(0) }}%
+                    </span>
+                  </v-list-item-subtitle>
+                </v-list-item>
+                <v-list-item v-if="selectedFile.canonicalSlot">
+                  <v-list-item-title>Canonical Slot</v-list-item-title>
+                  <v-list-item-subtitle>{{ selectedFile.canonicalSlot }}</v-list-item-subtitle>
+                </v-list-item>
             </v-list>
+              <div class="mt-4 d-flex gap-2">
+                <v-btn color="primary" prepend-icon="mdi-refresh" @click="triggerReprocess" :loading="actionLoading">
+                  Reprocess
+                </v-btn>
+                <v-btn color="secondary" prepend-icon="mdi-tag" @click="showClassify = true">
+                  Classify
+                </v-btn>
+              </div>
           </v-card-text>
         </v-card>
         
@@ -229,14 +293,41 @@
         </v-card>
       </v-col>
     </v-row>
+
+    <!-- Classify Dialog -->
+    <v-dialog v-model="showClassify" max-width="500">
+      <v-card>
+        <v-card-title>
+          <v-icon class="mr-2">mdi-tag</v-icon>
+          Classify File
+        </v-card-title>
+        <v-card-text>
+          <v-select
+            :items="canonicalSlots"
+            item-title="key"
+            item-value="key"
+            label="Canonical Slot"
+            v-model="form.canonicalSlot"
+          />
+          <v-slider v-model="form.confidence" min="0" max="1" step="0.01" label="Confidence" class="mt-4" />
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn variant="text" @click="showClassify = false">Cancel</v-btn>
+          <v-btn color="primary" :loading="actionLoading" @click="submitClassification">Save</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useNotificationStore } from '@/stores/notificationStore'
 import { useFiles } from '@/composables/useFiles'
+import { useMutation } from '@vue/apollo-composable'
+import gql from 'graphql-tag'
 
 interface FileItem {
   id: string
@@ -247,6 +338,10 @@ interface FileItem {
   updatedAt: string
   current?: boolean
   deleted?: boolean
+  orgId?: string
+  classificationStatus?: string
+  classificationConfidence?: number
+  canonicalSlot?: string
 }
 
 interface FolderItem {
@@ -279,7 +374,32 @@ const currentProvider = ref('Unknown')
 const folderTree = ref<FolderItem[]>([])
 
 // Real data
-const { items, loading } = useFiles()
+const { items, loading, variables, refetch } = useFiles()
+
+// Search wiring -> backend filters
+watch(searchQuery, (q) => {
+  variables.value.filter.name = q || undefined
+  variables.value.filter.path = q || undefined
+  refetch()
+})
+
+// Canonical grouping
+const filesByCanonical = computed(() => {
+  const groups: Record<string, FileItem[]> = {}
+  ;(items.value as FileItem[]).forEach((f) => {
+    const key = f.canonicalSlot || 'Unassigned'
+    groups[key] = groups[key] || []
+    groups[key].push(f)
+  })
+  return groups
+})
+
+const filesByCanonicalList = computed(() => {
+  const out: { key: string; items: FileItem[] }[] = []
+  const groups = filesByCanonical.value
+  Object.keys(groups).forEach((k) => out.push({ key: k, items: groups[k] }))
+  return out
+})
 
 // Computed
 const filteredFiles = computed(() => {
@@ -350,6 +470,29 @@ function formatDate(dateString: string): string {
   return new Date(dateString).toLocaleDateString()
 }
 
+function classificationColor(status?: string) {
+  switch ((status || '').toUpperCase()) {
+    case 'CLASSIFIED':
+      return 'green'
+    case 'MANUAL_REVIEW':
+      return 'orange'
+    case 'FAILED':
+      return 'red'
+    default:
+      return 'grey'
+  }
+}
+
+function mimeIcon(mime?: string) {
+  if (!mime) return 'mdi-file'
+  if (mime.startsWith('image/')) return 'mdi-file-image'
+  if (mime.startsWith('video/')) return 'mdi-file-video'
+  if (mime.startsWith('audio/')) return 'mdi-file-music'
+  if (mime === 'application/pdf') return 'mdi-file-pdf-box'
+  if (mime.startsWith('text/')) return 'mdi-file-document'
+  return 'mdi-file'
+}
+
 function onFolderSelect(folders: unknown) {
   // Handle folder selection
   console.log('Selected folders:', folders)
@@ -359,16 +502,117 @@ function onFileSelect(event: any, { item }: { item: FileItem }) {
   selectedFile.value = item
 }
 
-function triggerSync() {
-  syncStatus.value = 'syncing'
-  setTimeout(() => {
-    syncStatus.value = 'idle'
-    notificationStore.add('success', 'Files synced successfully')
-  }, 2000)
-}
+// (legacy triggerSync removed; using GraphQL-driven trigger below)
 
 function openMappingStudio() {
   const projectId = route.params.id as string
   router.push({ name: 'MappingStudio', params: { id: projectId } })
+}
+
+// Actions
+const actionLoading = ref(false)
+const showClassify = ref(false)
+
+const REPROCESS_MUTATION = gql`
+  mutation TriggerFileReprocessing($fileId: ID!, $orgId: ID!) {
+    triggerFileReprocessing(fileId: $fileId, orgId: $orgId)
+  }
+`
+
+const CLASSIFY_MUTATION = gql`
+  mutation ClassifyFile($input: ClassifyFileInput!) {
+    classifyFile(input: $input) {
+      id
+      classificationStatus
+      classificationConfidence
+      canonicalSlot
+      updatedAt
+    }
+  }
+`
+
+const { mutate: triggerReprocessMutate } = useMutation(REPROCESS_MUTATION)
+const { mutate: classifyMutate } = useMutation(CLASSIFY_MUTATION)
+
+async function triggerReprocess() {
+  if (!selectedFile.value) return
+  actionLoading.value = true
+  try {
+    await triggerReprocessMutate({ fileId: selectedFile.value.id, orgId: (items.value[0] && items.value[0].orgId) || '' })
+    notificationStore.add('success', 'Reprocessing triggered')
+  } catch (e:any) {
+    notificationStore.add('error', e.message || 'Failed to trigger reprocessing')
+  } finally {
+    actionLoading.value = false
+  }
+}
+
+// Load canonical slots for classification dialog
+const CANONICAL_SLOTS_QUERY = gql`
+  query CanonicalSlots($orgId: ID!) {
+    canonicalSlots(orgId: $orgId) { key }
+  }
+`
+
+const canonicalSlots = ref<Array<{ key: string }>>([])
+watch(
+  () => variables.value.filter.orgId,
+  async (orgId) => {
+    if (!orgId) return
+    try {
+      const res: any = await (await import('@apollo/client/core')).ApolloClient.prototype.query.call(
+        (await import('@/graphql/client')).apolloClient,
+        { query: CANONICAL_SLOTS_QUERY, variables: { orgId } }
+      )
+      const data = (res as any).data as any
+      canonicalSlots.value = data?.canonicalSlots || []
+    } catch (e) {
+      // noop
+    }
+  },
+  { immediate: true }
+)
+
+const form = ref({ canonicalSlot: '', confidence: 0.9 })
+async function submitClassification() {
+  if (!selectedFile.value) return
+  actionLoading.value = true
+  try {
+    await classifyMutate({
+      input: {
+        fileId: selectedFile.value.id,
+        orgId: (items.value[0] && items.value[0].orgId) || variables.value.filter.orgId,
+        canonicalSlot: form.value.canonicalSlot,
+        confidence: form.value.confidence,
+      },
+    })
+    notificationStore.add('success', 'File classified')
+    showClassify.value = false
+    refetch()
+  } catch (e:any) {
+    notificationStore.add('error', e.message || 'Failed to classify file')
+  } finally {
+    actionLoading.value = false
+  }
+}
+
+// Sync Now triggers full org sync
+const TRIGGER_FULL_SYNC = gql`
+  mutation TriggerFullSync($orgId: ID!) { triggerFullSync(orgId: $orgId) }
+`
+const { mutate: triggerFullSync } = useMutation(TRIGGER_FULL_SYNC)
+async function triggerSync() {
+  syncStatus.value = 'syncing'
+  try {
+    await triggerFullSync({ orgId: variables.value.filter.orgId as string })
+    notificationStore.add('success', 'Sync triggered')
+  } catch (e:any) {
+    notificationStore.add('error', e.message || 'Sync failed')
+    syncStatus.value = 'error'
+    return
+  }
+  setTimeout(() => {
+    syncStatus.value = 'idle'
+  }, 1500)
 }
 </script>

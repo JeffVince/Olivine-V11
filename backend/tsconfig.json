@@ -22,6 +22,7 @@
     "noFallthroughCasesInSwitch": true,
     "moduleResolution": "node",
     "baseUrl": "./",
+    "types": ["jest", "node"],
     "paths": {
       "@/*": ["src/*"],
       "@agents/*": ["src/agents/*"],
@@ -38,8 +39,6 @@
   ],
   "exclude": [
     "node_modules",
-    "dist",
-    "tests",
-    "src/tests"
+    "dist"
   ]
 }
