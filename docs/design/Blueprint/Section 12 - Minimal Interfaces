@@ -1,0 +1,47 @@
+## **11\. Minimal Interfaces (Events & API)**
+
+While the heart is the graph, we expose integration points for other services or UI frontends:
+
+### **11.1 Event Bus Integration**
+
+We use a message queue (e.g., RabbitMQ or AWS SNS/SQS topics) to broadcast important events within the system. External systems or internal components can subscribe to these:
+
+* **source.file.changed** – published when a file is added or updated in storage. Payload might include {source: "Dropbox", file\_id: ..., path: "...", checksum: ..., event\_id: ...}. This is what triggers the File Steward agent, for instance.
+
+* **graph.mapping.request\_review** – when the system cannot confidently classify a file, it emits this event with {file\_id, filename, suggestions: \[{slot, confidence}, ...\]} to notify that human input is needed. A UI could listen and present a dashboard of “Files to Review”.
+
+* **graph.schema.proposal** – emitted when a new TypeDefProposal is created, containing the details. This could alert a developer or ontology manager to review it if the curator agent doesn’t auto-approve.
+
+* **artifact.generated** – when an agent generates an artifact (like a call sheet), an event with {type: "CALLSHEET", file\_id: ..., shoot\_day: ..., commit\_id: ...} is sent. This could be used to automatically send an email with the PDF attached, or just log that it happened. (It’s also useful if we want an external system to pick up the generated file for further processing.)
+
+These events ensure the system can be extended and monitored externally, and they decouple the processing (e.g., the File Steward doesn’t directly call the Composer; instead, once files are mapped, maybe an event triggers the Composer if conditions are right).
+
+### **11.2 REST/GraphQL API Sketch**
+
+We will also provide APIs for client applications (like a web frontend or integration partners):
+
+* **POST /commit** – allows pushing a manual commit with a set of actions. This might be used by a UI that lets a user edit some data: the UI collects the changes and sends them as a commit (with a message and list of actions like “user.updated Scene 5 props”). This goes through validation then applies to the graph.
+
+* **GET /shoot-day/{date}/view** – returns a consolidated JSON view of everything scheduled for that date (scenes, cast, etc.), essentially what you’d need to render a call sheet or a dashboard. This would internally query the graph (or use the cached view).
+
+* **POST /mapping/override** – allows a user to correct a file classification. Payload could be {file\_id: 123, slot: "SCRIPT\_REVISION"} for example. The backend would then update the graph (link that file to the chosen slot, perhaps invalidate the old guess if any, and log a commit that a human override happened). It could also trigger the learning mechanism to update the profile.
+
+* **GET /project/{id}/search?q=...** – search endpoint that harnesses the graph to find matches (like search across file names and content, or find all scenes at a location X, etc.). This might use Neo4j full-text search on certain fields or vector search if we index text.
+
+We might also expose a GraphQL endpoint directly on the Neo4j graph (since Neo4j has GraphQL integrations), which would allow clients to query the ontologies as needed in a flexible way, with the security rules applied.
+
+### **11.3 Minimal UI thoughts**
+
+Though not a focus here, minimal UIs would include:
+
+* A **Timeline or History UI** showing commits and changes (with diff views).
+
+* A **File Mapper UI** for reviewing unmapped files and seeing how the system categorized files (with options to override).
+
+* A **Production Dashboard** showing upcoming ShootDays, with indicators if something’s missing (like “call sheet not yet generated for tomorrow”).
+
+* **Detail pages** for Scenes, Props, Crew, etc., showing their linked info (pulled straight from the graph via API).
+
+All these are enabled by the unified graph – the heavy lifting of relating everything is done on the backend, so the frontend just needs to display and allow edits through the APIs.
+
+---

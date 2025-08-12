@@ -1,0 +1,123 @@
+{
+  "dashboard": {
+    "title": "Storage Providers Monitoring",
+    "description": "Dashboard for monitoring storage provider integrations",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Overall Storage Operations",
+        "type": "graph",
+        "metrics": [
+          "storage_operations_total",
+          "storage_operations_success",
+          "storage_operations_errors"
+        ],
+        "timeRange": "24h"
+      },
+      {
+        "id": 2,
+        "title": "Storage Provider Latency",
+        "type": "graph",
+        "metrics": [
+          "storage_operation_duration_seconds{provider=\"dropbox\"}",
+          "storage_operation_duration_seconds{provider=\"gdrive\"}",
+          "storage_operation_duration_seconds{provider=\"supabase\"}"
+        ],
+        "timeRange": "24h"
+      },
+      {
+        "id": 3,
+        "title": "Error Rates by Provider",
+        "type": "graph",
+        "metrics": [
+          "storage_errors_total{provider=\"dropbox\"}",
+          "storage_errors_total{provider=\"gdrive\"}",
+          "storage_errors_total{provider=\"supabase\"}"
+        ],
+        "timeRange": "24h"
+      },
+      {
+        "id": 4,
+        "title": "OAuth Token Refreshes",
+        "type": "graph",
+        "metrics": [
+          "storage_token_refresh_total{provider=\"dropbox\"}",
+          "storage_token_refresh_total{provider=\"gdrive\"}",
+          "storage_token_refresh_total{provider=\"supabase\"}"
+        ],
+        "timeRange": "24h"
+      },
+      {
+        "id": 5,
+        "title": "Webhook Processing",
+        "type": "graph",
+        "metrics": [
+          "storage_webhook_processed_total{provider=\"dropbox\"}",
+          "storage_webhook_processed_total{provider=\"gdrive\"}",
+          "storage_webhook_processed_total{provider=\"supabase\"}"
+        ],
+        "timeRange": "24h"
+      },
+      {
+        "id": 6,
+        "title": "Sync Operations",
+        "type": "graph",
+        "metrics": [
+          "storage_sync_operations_total",
+          "storage_sync_operations_success",
+          "storage_sync_operations_errors"
+        ],
+        "timeRange": "24h"
+      },
+      {
+        "id": 7,
+        "title": "File Operations by Type",
+        "type": "pie",
+        "metrics": [
+          "storage_files_uploaded_total",
+          "storage_files_downloaded_total",
+          "storage_files_deleted_total",
+          "storage_files_listed_total"
+        ],
+        "timeRange": "24h"
+      },
+      {
+        "id": 8,
+        "title": "Real-time Subscriptions",
+        "type": "graph",
+        "metrics": [
+          "storage_subscriptions_active{provider=\"dropbox\"}",
+          "storage_subscriptions_active{provider=\"gdrive\"}",
+          "storage_subscriptions_active{provider=\"supabase\"}"
+        ],
+        "timeRange": "24h"
+      }
+    ],
+    "alerts": [
+      {
+        "name": "High Error Rate",
+        "condition": "storage_errors_total > 10",
+        "severity": "warning",
+        "description": "Storage provider error rate is above threshold"
+      },
+      {
+        "name": "High Latency",
+        "condition": "storage_operation_duration_seconds > 5",
+        "severity": "warning",
+        "description": "Storage operation latency is above threshold"
+      },
+      {
+        "name": "Token Refresh Failure",
+        "condition": "storage_token_refresh_failures_total > 0",
+        "severity": "critical",
+        "description": "Storage provider token refresh has failed"
+      },
+      {
+        "name": "Webhook Processing Delay",
+        "condition": "storage_webhook_processing_delay_seconds > 300",
+        "severity": "warning",
+        "description": "Storage webhook processing is delayed"
+      }
+    ]
+  }
+}

@@ -1,0 +1,164 @@
+## **8\. Handling Mid-Project Changes Safely (Branch & Merge)**
+
+**Overview:** To accommodate mid-project schedule changes without disrupting ongoing work, Olivine treats schedule updates like version-controlled code changes. Instead of overwriting the “main” schedule immediately, the system creates an alternate branch of the production graph, applies and verifies changes there, then merges them back when approved. This ensures continuity and traceability: the old plan remains intact for reference, and the new plan is introduced in a controlled, auditable manner. We detail below how the branching and merging mechanism is implemented in the graph data model and workflow.
+
+### **8.1 Branch Creation for Schedule Updates**
+
+When a significant schedule change arises (e.g. shooting days rearranged due to weather or script rewrites), a *Scheduler* agent or user initiates a “branch” for the new version of the schedule. Internally, this operation corresponds to creating new versioned nodes and relationships in Neo4j under a branch identifier, without touching the primary timeline (main branch):
+
+* **Fork Point & Commit:** The system determines the current commit on the main branch as the fork point. A new commit (e.g. `Commit#1234`) is created to represent the branching event, with its parent set to the latest main commit. This commit is labeled with the new branch name (e.g. `"schedule_alt_B"`) and a message like “Imported alternate schedule B”. *GAP:* The codebase does not yet create explicit `:Commit` nodes – changes are currently applied in place with no commit log. **FIX:** Extend the sync or orchestration logic to instantiate a `Commit` node at branch creation (with properties `id`, `branch="schedule_alt_B"`, `author`, `timestamp`, `message`) and link it to its parent commit via a `PARENT` relationship. This will serve as the branch’s HEAD commit going forward.
+
+* **Versioned Copy of Shoot Days:** All relevant scheduling entities on the main branch are *copied as new versions* onto the new branch. In practice, for each `:ShootDay` node in the project’s schedule (each shooting date entry), the system creates a new `:ShootDay` node on the branch with identical properties (e.g. date, index “Day 5 of filming”, etc.). Each new node is linked to its original via a version-control relationship:
+
+```
+// Pseudocode for branching a ShootDay
+MATCH (d_main:ShootDay {id: $origId, project_id: $projId})
+CREATE (d_branch:ShootDay { …copied properties… }) 
+CREATE (d_branch)-[:PARENT_VERSION {branch_name: "schedule_alt_B"}]->(d_main);
+```
+
+*   
+  This `PARENT_VERSION` relationship records that `d_branch` is a descendant of the original day on branch **schedule\_alt\_B**. By indexing `branch_name`, the system can later retrieve all nodes/version-chains belonging to a given branch efficiently. (*Note:* If the concept of a distinct `Branch` node is introduced in the future, we would instead create a `Branch` node “schedule\_alt\_B” and point it to the new commit. But for now, branch identity is captured as a property on the version link.)
+
+* **Replicating Scene Assignments:** Along with ShootDay nodes, the relationships that define the schedule are cloned onto the branch. In the content ontology, shoot days are linked to the scenes scheduled on that day via a relationship (designed as `(:ShootDay)-[:COVERS_SCENE]->(:Scene)`). During branch creation, for each scene assignment on the main schedule, a corresponding relationship is created on the branch: the new `ShootDay` node on the branch gets a `COVERS_SCENE` edge to the same `Scene` node, mirroring the main branch’s assignment. This effectively duplicates the entire shooting schedule subgraph under the new branch. For example, if on main branch *Scene 5* was connected to *ShootDay(Aug-09-2025)*, then on branch **schedule\_alt\_B**, *Scene 5* will be connected to the new *ShootDay(Aug-09-2025)* node (the branched version). All such branch relationships are initialized with the same properties (call times, etc.) as the originals. They remain distinct graph relationships (with different internal IDs) so they can be independently changed on the branch.
+
+* **Applying the Schedule Changes:** Once the baseline is copied, the new schedule data (from the imported file or user edits) is applied **on the branch nodes only**. The Scheduler agent will adjust the branch’s graph to reflect the update:
+
+  * For any scene that moved to a different day, the agent **moves its relationship** under the branch: e.g. *Scene 5* is removed from branch’s Aug 9 node and added to branch’s Aug 12 node. Concretely, the `(:ShootDay{Aug9})-[:COVERS_SCENE]->(:Scene5)` relationship is **not created** on the branch copy (or deleted if it was copied), and a new `(:ShootDay{Aug12})-[:COVERS_SCENE]->(:Scene5)` is created on the branch. Other scenes on those days are similarly updated if their shooting order changed (order may be recorded via an index property or sequence in relationships).
+
+  * If the new schedule introduces a **new shoot day** (e.g. an added filming day), a new `ShootDay` node is created on the branch with no `PARENT_VERSION` (it has no counterpart in main). Conversely, if a day was removed entirely, the branch simply won’t have a corresponding node for that date (the original will remain only on main until merged).
+
+  * These modifications on the branch are captured as additional commit(s) on that branch’s timeline (e.g. a commit per import operation). For instance, the initial branch commit might include all these changes, or the agent could create one commit per file import vs. manual adjustment. Since commit logging is a **GAP** in the current implementation, the system likely records these changes in an audit trail or memory for now. **FIX:** Once commit nodes are in place, the branch update operation should wrap all graph changes in a new `Commit` (child of the branch’s fork commit), with a descriptive message like “Schedule version B applied: moved Scene 5 to Aug 12, etc.”. This commit would enumerate the specific graph diffs (possibly via attached `:Action` nodes for each atomic change).
+
+At this stage, the main production schedule (on the `main` branch) is untouched – all official tools and views still see the old schedule. The new schedule exists in parallel on **schedule\_alt\_B**, isolated from end-user impact. The branch’s data is fully traceable to its origins: each branched ShootDay “knows” its original via the `PARENT_VERSION` link, and each changed scene assignment can be compared to the original through those connections and timestamps.
+
+### **8.2 Isolated Artifact Regeneration on the Branch**
+
+With the updated schedule in place on the alternate branch, the system proactively regenerates all derived artifacts *within that branch context*. This step is crucial to validate the impact of changes before they go live. The **Composer** agents (e.g. Call Sheet generator, Daily Crew Report maker) are directed to use the **schedule\_alt\_B** data when producing documents:
+
+* **Branch-Scoped Queries:** The agents query the graph specifying the branch’s state. Because the knowledge graph is versioned, agents must ensure they fetch data from the branch’s latest commit instead of the main line. In practice, this can be achieved by including branch conditions in Cypher queries. For example, to retrieve the scenes scheduled on a given date in the alt schedule, an agent can traverse via the branch’s ShootDay nodes:
+
+```
+MATCH (d:ShootDay)-[:PARENT_VERSION {branch_name:"schedule_alt_B"}]->(d_main:ShootDay)
+ WHERE d_main.date = date("2025-08-12")
+MATCH (d)-[:COVERS_SCENE]->(s:Scene)
+RETURN s.scene_number, s.name, d.date;
+```
+
+*   
+  This query finds the branched shoot-day for Aug 12 and the scenes linked to it on **schedule\_alt\_B**. In general, the `branch_name` property on `PARENT_VERSION` edges acts like a branch tag for version filtering. *Future Improvement:* when explicit `Branch` nodes and HEAD pointers are implemented, agents could simply specify a target branch or commit ID, and the system would resolve the correct version of each entity (e.g. via a custom Cypher procedure or by using `(:Branch)-[:HEAD]->(:Commit)` to contextually join the data). This is planned but not yet in code (branching logic is a known **GAP**). For now, the branch-specific filtering approach suffices.
+
+* **Generating Documents in Isolation:** Using the branched data, the system regenerates all time-sensitive documents:
+
+  * **Call Sheets:** For each ShootDay on the alt branch that was changed (e.g. Aug 9 and Aug 12 in our scenario), a new call sheet is composed by the Call Sheet generator agent. It pulls the updated scene schedule, crew call times, locations, etc., and produces a PDF or structured output. These outputs are ingested into the graph as new `:File` nodes (likely in the File ontology, under a “Daily Call Sheets” folder for the project). They may be tagged as draft or branch-specific versions – for example, using a naming convention or a metadata flag indicating they were generated on branch **schedule\_alt\_B**. (The system might also leverage *Canonical Slots* to categorize these files as call sheets for specific dates; e.g., a file could be linked to a `CanonicalSlot` like CALLSHEET\_DRAFT for Aug-12-2025. Canonical slots are not fully implemented yet – another **GAP** – but planned.)
+
+  * **Crew Itineraries / Reports:** Similarly, any crew-facing reports (like who is needed on which days) are regenerated on the branch. For instance, a *Daily Crew Assignment* report for Aug 12 will now include Scene 5’s crew, and the Aug 9 report will have Scene 5’s crew removed. These too would be represented as File nodes on the branch (or perhaps as structured data nodes) attached to a commit.
+
+  * **Other Derived Data:** If the schedule change affects other systems (budgeting, equipment bookings, etc.), their corresponding data can be recomputed. In our scope, primarily scheduling documents are affected. The key is that none of these new artifacts overwrite the current official documents – they exist only in the branch’s context. For example, the branch’s call sheet for Aug 12 might be stored as *“CallSheet\_Aug12\_v2\_draft.pdf”* in storage, distinct from the official *“CallSheet\_Aug12.pdf”*.
+
+Each generation action can be logged as part of the branch’s history. Ideally, the creation of these files triggers branch commits: e.g. a commit on **schedule\_alt\_B** with message “Generated draft call sheets for revised schedule” and relationships linking the new File nodes to that commit (via something like `(:Commit)-[:INCLUDES]->(:Action)-[:TOUCHED]->(:File)` for each generated file). In the current implementation, there isn’t a granular Action log, but the files themselves (with timestamps and possibly agent metadata) provide evidence of the generation. The new artifacts live alongside the branch’s data, and are not visible to end-users on the main application since they are not yet merged.
+
+**Verification:** At this point, the production manager or other stakeholders can inspect the branch outputs through an internal interface or preview mode. They might use a specialized UI that loads data from a specific branch/commit (similar to how one might check a feature branch in a code review). The branch’s call sheets and schedules can be reviewed for correctness – ensuring, for example, that moving Scene 5 to Aug 12 did not overbook that day or create crew conflicts. The system can also present an explicit *diff*: since each `ShootDay` node on the branch has a `PARENT_VERSION` link to the original, a comparison can be made node-by-node:
+
+* The app could highlight that **ShootDay(Aug 9\)** on main vs on branch differ by one scene (Scene 5 is present on main, absent on branch), and **ShootDay(Aug 12\)** gained Scene 5 on the branch.
+
+* A Cypher query could automatically find such differences. For example: to find scenes that moved days, one could match patterns of a scene connected to different days on main vs branch. Pseudocode:
+
+```
+MATCH (d_main:ShootDay)-[:COVERS_SCENE]->(s:Scene)
+OPTIONAL MATCH (d_branch:ShootDay)-[:PARENT_VERSION {branch_name:"schedule_alt_B"}]->(d_main)
+       -[:COVERS_SCENE]->(s)
+WHERE (d_branch IS NULL)  // scene covered on main day, but not on branch day
+   OR (d_branch IS NOT NULL AND d_main IS NOT NULL AND d_branch.id <> d_main.id)
+```
+
+*   
+  and similarly check for scenes that appear on a branch day whose parent doesn’t cover them. The result yields scenes with mismatched day assignments. This automated diff is not trivial, but feasible given the data model. The design anticipates such queries; in fact, by storing old and new states side by side, the system can answer questions like “which scenes moved to a different day?” directly.
+
+If any issues are found on the branch (e.g. an agent-generated document looks wrong or a scheduling conflict is introduced), the team can decide to **not merge** and either adjust the branch or abandon it. Because the branch is isolated, scrapping it has no effect on the main schedule – one could simply delete the branch nodes/edges or leave them as an historical “what-if” that is not merged. This is analogous to closing a feature branch that didn’t get merged in Git.
+
+### **8.3 Merging the Schedule Changes into Main**
+
+Once the branch changes are validated, merging them makes the new schedule official. A merge in our versioned graph corresponds to creating a special commit on the main branch that incorporates the branch’s updates. The merge operation has two primary effects: (1) update the **commit graph** to reflect the merge history, and (2) update the **domain data** (schedule nodes/relationships) on the main timeline to match the branch.
+
+* **Merge Commit in Commit DAG:** The system creates a new `:Commit` node on the main branch (e.g. `Commit#1250`) that has **two parents**: one parent is the previous head of `main`, and the other is the head commit of `schedule_alt_B`. In Neo4j terms, if `C_main_prev` is the last commit on main before merge and `C_alt_tip` is the branch’s tip, the merge commit will have:
+
+```
+(Commit#1250)-[:PARENT]->(C_main_prev)  
+(Commit#1250)-[:PARENT]->(C_alt_tip)  
+```
+
+*   
+  This models the converging history. The merge commit’s metadata includes a message (e.g. “Merge schedule\_alt\_B into main”), the user who approved it, and a timestamp. In the provenance ontology, this commit would also carry references to the changes merged – possibly as a set of `Action` nodes or a summary diff (e.g. “5 scenes rescheduled, 2 new call sheets generated”). The repository has an index for `MERGED_FROM` relationships, suggesting we may explicitly annotate which branch was merged; for example, `Commit#1250` might have a `:MERGED_FROM {merge_date}` relationship back to `C_alt_tip`. This is a design detail – the primary representation is the two parent links, which implicitly mark it as a merge commit. *GAP:* Neither commit nodes nor merge logic is active in the current code. **FIX:** Implement the commit DAG as per design – ensure that creating a merge commit results in multiple `PARENT` edges and update any commit indices or branch head pointers accordingly.
+
+* **Promoting Branch Data to Main:** With the commit created, the actual schedule data on main is updated to mirror the branch’s state. Because we used new versioned nodes on the branch, promoting them involves **re-pointing the active references** from old to new:
+
+  * For each `ShootDay` that was modified or added on the branch, the branch version becomes the canonical one on main. Concretely, suppose we had `d_main_old:ShootDay (Aug 12)` on main and `d_branch_new:ShootDay (Aug 12)` on the branch (with `d_branch_new -[:PARENT_VERSION]-> d_main_old`). At merge, we mark the old node as retired and elevate the new node. One way to achieve this is to update the `PARENT_VERSION` relationship to effectively flip branch attribution: we could add a new `PARENT_VERSION` edge from a copy of `d_branch_new` back to `d_main_old` with `branch_name:"main"` – but that would duplicate nodes unnecessarily. A simpler approach is to consider that by merging, `d_branch_new` *becomes* part of main’s history. Since it already has the pointer to `d_main_old`, we interpret that as `d_branch_new` superseding `d_main_old`. We then **close out the old node’s validity**. In the relational mirror, this corresponds to setting `d_main_old`’s records as expired: for example, if `project_entities` had a status or `valid_to` field (not explicitly present for entities, but relationships do carry `valid_to`), we can mark that old ShootDay is no longer active. In Neo4j, we might tag the node with a property `status: "archived"` or simply rely on the fact it has a child version now. Any queries for the “current” schedule will need to fetch the latest version of each entity (the system may implement this by always taking the node with no outgoing `PARENT_VERSION` in a version chain as the current one). After merge, `d_main_old` has an outgoing `PARENT_VERSION` (to the new node) and thus would be excluded from current results. Meanwhile, `d_branch_new` has no outgoing version link (until any future change), so it’s considered the head version for that ShootDay. This matches the versioning model described in Section 5 (Entity Versions) – each entity forms a version chain, and the head is the live version.
+
+  * For each **scene assignment change**, update the relationships: on main, any `COVERS_SCENE` edges that are no longer valid are terminated, and new ones from the branch are introduced. The system uses the `valid_from`/`valid_to` fields in the relational `project_entity_relationships` table to record this change-over. For example, the link (Old Aug9)–\[:COVERS\_SCENE\]-\>(Scene5) gets a `valid_to` timestamp of the merge time, indicating it’s no longer effective after this commit. The new link (Aug12)–\[:COVERS\_SCENE\]-\>(Scene5), which existed on the branch, is inserted into the `project_entity_relationships` table with a `valid_from` of the merge time (and `valid_to = NULL` since it’s now the active link). The Neo4j sync worker will then ensure the graph reflects these relationships properly. In effect, the branch’s `COVERS_SCENE` relationship now appears on main, and the old one is archived. Because the branch’s ShootDay node is now active on main, its edges (which we created earlier) come with it – likely the sync process will recognize the new ShootDay and its edges as new inserts to Neo4j (if the merge is orchestrated via the DB). If the merge is done purely in Neo4j first, then we’d need to propagate those changes back to Postgres (the system might bypass the outbox for merges and apply DB updates directly as part of the merge transaction).
+
+  * **New Entities:** Any brand new entities on the branch (e.g. a ShootDay that didn’t exist before, or perhaps a new Scene if the schedule somehow introduced one) are simply inserted into main. They have no predecessor, so they are just added to the project. These will show up as new rows (with no historical link except being part of the merge commit context). Conversely, any entities that were removed in the branch should be retired on main: e.g. if the branch dropped a day, we set that day’s `valid_to` on main to the merge time (meaning no scenes are scheduled on it anymore and it’s effectively not in use moving forward).
+
+* **Finalizing the Merge:** The merge commit is saved and the main branch’s HEAD is updated to this new commit (the branch pointer “main” now refers to `Commit#1250`). The merged branch **schedule\_alt\_B** can be considered closed. In Git terms, one might delete the feature branch or leave it for record. In our system, since all data now lives in the main timeline as well, the branch nodes are effectively duplicates. The system could delete the branch copies to avoid confusion (except the ones that became main). However, deleting might not be trivial if those nodes were directly reused as main versions. More elegantly, we simply mark the branch as merged and disallow further writes to it. The `Commit#1250` in the DAG, having two parents, inherently marks the convergence; any attempt to continue on **schedule\_alt\_B** could either be prevented or would create a new divergence past a point already merged. In practice, we expect the branch to be short-lived and not reused after merge (the user could always start a new branch for subsequent changes). The branch’s commit and nodes remain in the history graph for audit purposes, so we retain full traceability that those nodes originated in an alternate branch and were merged.
+
+Throughout the merge, **traceability is maintained**. The commit metadata notes that it merged `schedule_alt_B`, and because we didn’t overwrite data in place, the graph still contains the pre-merge nodes and relationships (now historical) alongside the new ones. One can traverse the `PARENT_VERSION` links or use time-travel queries to reconstruct the schedule as it was before the merge versus after. For example, to get the schedule as of last week, one could query the graph at the commit before merge, and to get the new schedule, query after. The provenance log (once implemented) would make this even easier by tagging the state of each entity with commit IDs.
+
+### **8.4 Post-Merge Updates and Notifications**
+
+After merging, the new schedule becomes the single source of truth on the main branch. Several follow-up actions occur to ensure a smooth transition:
+
+* **Activating New Artifacts:** The documents that were prepared on the branch (call sheets, etc.) can now be published as official. If the branch’s call sheet for Aug 12 is identical in content to what is needed, the system can simply mark it as the latest version and distribute it. There are a couple of ways this might be handled:
+
+  * The branch-generated file nodes could be **relinked or copied** into main. Since our data model includes file versioning (the graph supports `:File -[:HAS_VERSION]-> :File` to track file revisions), the system could attach the branch file as a new version of the previous call sheet. For instance, *CallSheet\_Aug12.pdf (v1)* which was for the old plan gets a new version node *CallSheet\_Aug12.pdf (v2)* via `HAS_VERSION` relationship. The v2 node in this case is actually the one generated on the branch (we simply add the version link after merge). This way, the file retains continuity – anyone querying the latest call sheet for Aug 12 will find version 2\. The old call sheet remains accessible through version history.
+
+  * Alternatively, the system might choose to regenerate fresh official documents on main as a sanity check. This is redundant but straightforward: now that the main graph is updated, the Composer agents can run one more time on main to produce the call sheets. Because the inputs are the same as what was on the branch, the outputs should match. If using this approach, the branch’s draft files could either be discarded or stored as temporary records.  
+     In either case, **the old artifacts are not lost** – they’re either preserved as previous versions or archived with timestamps. For example, the previous call sheet PDF might get a name change or move to an archive folder (or simply exist as version 1 in the version graph).
+
+* **External Notifications:** With schedule changes official, the system triggers notifications to relevant parties. This can include:
+
+  * **Crew Notifications:** Each crew member whose schedule changed should be informed. The system knows which scenes moved and which crew (cast, camera, etc.) are associated with those scenes or that shoot day. For example, if Scene 5 moved from Aug 9 to Aug 12, all crew marked to work on Scene 5 or on Shoot Day Aug 9/Aug 12 will have their work dates updated. Olivine’s data model likely links crew to scenes or days through relationships like `(:Crew)-[:SCHEDULED_FOR {date,…}]->(:ShootDay)` or via crew call sheet entries. The presence of `SCHEDULED_FOR` relationships indexed by role and timesuggests a crew-day assignment relationship exists. Upon merge, those relationships would be updated (crew who were tied to Aug 9 for Scene 5 get that link closed out, and new links for Aug 12 are added). The system can query these deltas to produce a list of people affected. For each person, an automated agent can send an email or message: e.g. “**Schedule Update:** Your call for Scene 5 has moved from Aug 9 to Aug 12\. Please confirm availability.”
+
+  * **Department Heads:** If locations changed, notify location managers; if equipment schedule changed, notify the rental providers or internal departments. The knowledge graph can drive this since it connects everything (e.g., if Scene 5 involves a special camera rig, the Ops ontology might have a booking for that rig on Aug 9 – which now needs to shift to Aug 12).
+
+  * The **Notification service** in Olivine (noted by webhook endpoints in orchestrator) can handle outbound alerts. This may involve generating tasks in the system (e.g., an “Alert” node or an entry in an `admin_alerts` table) and sending emails via integration. These notifications are considered part of the automated agent actions: they occur only after the merge is completed and confirmed, ensuring people aren’t spammed about tentative changes.
+
+  * The system could also flag required follow-ups: for instance, *“Re-distribute call sheet for Aug 12 to all recipients with the new date.”* Since call sheets are often emailed, an agent can automatically resend the updated PDF to the mailing list of that shoot day. This ensures everyone has the latest info without manual coordination.
+
+All these post-merge operations are likewise logged for audit. In the provenance ontology, sending a notification or regenerating a doc could be captured as an `Action` on the merge commit (or a subsequent commit). Though granular logging of that is a **future enhancement**, the current design anticipates having a full history of who/what was notified and when (for example, by writing entries to an `admin_audit_log` table which tracks user actions and system events).
+
+### **8.5 Traceability and Historical Queries**
+
+The branch-and-merge strategy provides a robust historical record. Because we never directly edited the original nodes and relationships in place, the **state of the world at any prior point** is preserved. The old schedule remains queryable even after the merge:
+
+* Each old `COVERS_SCENE` relationship that was superseded still exists in the graph with a `valid_to` timestamp. By filtering by a date or commit ID, one can retrieve the schedule as it was before the change. For example, a query for scene assignments with `valid_to` not set or after a certain date will include Scene 5 on Aug 9 *if* you look at a time just before the merge. After the merge’s timestamp, that relationship is excluded and the new one (Scene 5 on Aug 12\) is included. This effectively gives a bitemporal ability on the relational side, and the Neo4j version/commit graph provides the same on the graph side.
+
+* We can ask questions like “what changed in this merge?” and get precise answers. Because the new branch nodes had links to their predecessors, one can traverse those to identify differences. A tailored diff query or tool could report:
+
+  * **Modified Entities:** ShootDay Aug 9 (node X) was superseded by ShootDay Aug 9 (node X’) on branch – comparing their scene lists shows Scene 5 was removed. ShootDay Aug 12 (node Y) superseded by node Y’ – scene list shows Scene 5 added.
+
+  * **New Entities:** (If any new day or other entity was added on branch, it will show up with no parent on main, clearly marking it as an addition).
+
+  * **Retired Entities:** Any node on main that got no new version on branch (e.g. an eliminated day) can be identified by the absence of a branch counterpart; those would be marked as retired at merge time.
+
+  * **Documentation Changes:** List of new call sheet versions generated.
+
+* In the fully realized system, the commit itself would carry this diff. As per the design, a `Commit` node can have relationships to the exact entities it added/modified/removed via intermediate `Action` nodes. For example, the merge commit might include an action “Update ShootDay Aug 9” and link to the old and new ShootDay nodes, etc. While this isn’t in place yet, the groundwork is laid in the schema to support querying commit history to get such info. The vision is that every change is a first-class entity in the graph, enabling queries like *“Why is Scene 5 on Aug 12 now?”* which would trace to a commit and show *“Merged alternate schedule B on 2025-08-01 by user X”* along with the rationale (perhaps stored in the commit message or an attached comment node). This satisfies the requirement of an audit trail “in a box,” where each update is contextualized.
+
+* **Branch History Preservation:** The alternate branch **schedule\_alt\_B** itself remains in the system’s history. Even though it’s merged, one could query the commits on that branch to see the sequence of changes and experiments before merge. For instance, if multiple iterations were done on the branch (maybe the manager tweaked a few things before finalizing), those intermediate states are still accessible by examining the branch’s commit log. This is analogous to reviewing a merged pull request’s commit history. The system could label the branch as merged to avoid confusion, but not erase it. In Neo4j terms, the `Branch` node “schedule\_alt\_B” (if we implement explicit branch nodes) could have a property `status: "merged"` and still point to its last commit, which is now also an ancestor of main’s head.
+
+In summary, after the merge the production graph achieves the new truth (Scene 5 on Aug 12\) while the old truth (Scene 5 on Aug 9\) is not lost – it’s just closed off and linked to the new version. Any automation or query can be made time-aware or version-aware to retrieve either state. This strategy of treating data changes like code merges provides strong guarantees of consistency and reversibility. If somehow the new schedule turned out to be problematic, one could even “roll back” by reverting the merge commit (in practice, that would mean re-opening the old schedule branch or creating a new branch from the pre-merge commit and perhaps re-merging that – a complex operation, but feasible in the model). The approach minimizes disruption (nothing changes until the final approval), and it **preserves the lineage** of changes: one can always trace *who* initiated the change, *why* (commit messages/provenance), and *what exactly* changed, fulfilling both operational needs and compliance/audit requirements.
+
+---
+
+**Implementation Status & Next Steps:** The branching and merging capability described is forward-looking. The current codebase has the schema support (e.g. placeholder relationships for versioning) but not the full implementation of commit nodes or branch management (confirmed by the absence of `Commit`/`Branch` node creation in the migrations and code – GAP). To realize this design, upcoming development will focus on:
+
+* Creating commit and branch entities in Neo4j and modifying the Sync Worker or Orchestrator to log changes as commits rather than in-place updates.
+
+* Implementing the logic to duplicate nodes and relationships for a branch (possibly as a Neo4j stored procedure or a series of Cypher queries executed when an “import new schedule version” API is called).
+
+* Building UI/UX support for viewing branch proposals and diffs, and for approving merges.
+
+* Ensuring the bidirectional sync with Supabase can handle versioned data (likely by only writing to Supabase on merge commits, and keeping branch data in Neo4j transiently to avoid inconsistent states in the relational DB).
+
+Once in place, Olivine will handle mid-project pivots with the same rigor as code changes – empowering productions to adapt on the fly with confidence that all changes are tracked, reviewed, and can be rolled back if needed. This mechanism is a key part of making the production knowledge graph **resilient to change**.
+

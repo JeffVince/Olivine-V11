@@ -1,0 +1,57 @@
+enum SourceType { dropbox google_drive onedrive local }
+
+type Source {
+  id: ID!
+  organizationId: ID!
+  name: String!
+  type: SourceType!
+  config: JSON
+  active: Boolean!
+  createdAt: String!
+  updatedAt: String!
+}
+
+type FileMeta {
+  id: ID!
+  organizationId: ID!
+  sourceId: ID!
+  path: String!
+  name: String!
+  extension: String
+  mimeType: String
+  size: Int
+  createdAt: String!
+  updatedAt: String!
+  modifiedAt: String
+  deletedAt: String
+  versionId: String
+  metadata: JSON
+  classificationStatus: String!
+  extractedText: String
+}
+
+type FileStats {
+  total: Int!
+  byStatus: JSON!
+  byMimeType: JSON!
+}
+
+type Query {
+  getSources(organizationId: ID!): [Source!]!
+  getSource(sourceId: ID!, organizationId: ID!): Source
+  getFiles(organizationId: ID!, sourceId: ID, limit: Int): [FileMeta!]!
+  getFile(fileId: ID!, organizationId: ID!): FileMeta
+  getFileStats(organizationId: ID!): FileStats!
+  getSourceStats(sourceId: ID!, organizationId: ID!): JSON!
+}
+
+type Mutation {
+  createSource(organizationId: ID!, name: String!, type: SourceType!, config: JSON): Source!
+  updateSourceConfig(sourceId: ID!, organizationId: ID!, config: JSON!): Boolean!
+  updateSourceStatus(sourceId: ID!, organizationId: ID!, active: Boolean!): Boolean!
+  deleteSource(sourceId: ID!, organizationId: ID!): Boolean!
+  triggerSourceResync(sourceId: ID!, organizationId: ID!): Boolean!
+  reprocessFile(fileId: ID!, organizationId: ID!): Boolean!
+}
+
+

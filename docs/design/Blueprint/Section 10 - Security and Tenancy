@@ -1,0 +1,541 @@
+# **9\. Security & Tenancy (Authoritative, Implementation‑Ready)**
+
+## **9.1 Tenancy model (authoritative intent)**
+
+* **Tenants** are studios/organizations using the platform. Each tenant’s data must be isolated end‑to‑end. (Doc §9.) ([Google Docs](https://docs.google.com/document/d/e/2PACX-1vR_LQJv-StsiPJbVYUCFcFA3gLPyBrRjt5Q3c_nL_bQe9-klAvt5deljrx1Q6UuwcbXq1D3NPLe0yTK/pub))
+
+* **Postgres/Supabase**: enforce **Row‑Level Security (RLS)** using a `tenant_id` taken from JWT claims on every table that stores tenant‑scoped data. (Doc §9.) ([Google Docs](https://docs.google.com/document/d/e/2PACX-1vR_LQJv-StsiPJbVYUCFcFA3gLPyBrRjt5Q3c_nL_bQe9-klAvt5deljrx1Q6UuwcbXq1D3NPLe0yTK/pub))
+
+* **Graph (Neo4j)**: represent each tenant as `(:Tenant {id})`, with every top‑level node hanging off the tenant (`(:Tenant)-[:OWNS]->(:Project|:Source|...)`). Application queries are always scoped by tenant, with **no cross‑tenant edges** by design. (Doc §9.) ([Google Docs](https://docs.google.com/document/d/e/2PACX-1vR_LQJv-StsiPJbVYUCFcFA3gLPyBrRjt5Q3c_nL_bQe9-klAvt5deljrx1Q6UuwcbXq1D3NPLe0yTK/pub))
+
+* **Storage**: no sharing of buckets between tenants; one bucket per tenant. (Doc §9.) ([Google Docs](https://docs.google.com/document/d/e/2PACX-1vR_LQJv-StsiPJbVYUCFcFA3gLPyBrRjt5Q3c_nL_bQe9-klAvt5deljrx1Q6UuwcbXq1D3NPLe0yTK/pub))
+
+* **Secrets/PII**: minimally stored; use a secure vault for per‑tenant integrations; redact/anonymize when invoking external AIs. (Doc §9.) ([Google Docs](https://docs.google.com/document/d/e/2PACX-1vR_LQJv-StsiPJbVYUCFcFA3gLPyBrRjt5Q3c_nL_bQe9-klAvt5deljrx1Q6UuwcbXq1D3NPLe0yTK/pub))
+
+* **Audit & roles**: log all user/agent actions; intra‑tenant RBAC for least privilege (e.g., assistants can see call sheets, not financials). (Doc §9.) ([Google Docs](https://docs.google.com/document/d/e/2PACX-1vR_LQJv-StsiPJbVYUCFcFA3gLPyBrRjt5Q3c_nL_bQe9-klAvt5deljrx1Q6UuwcbXq1D3NPLe0yTK/pub))
+
+**GAP (repo verification):** I don’t have access to the `Olivine‑V10` GitHub repository, so I cannot tie these to specific files/line ranges yet.  
+ **FIX:** Grant read access; I will annotate each assertion with `path:line‑range` (e.g., `supabase/migrations/2025XXXX_rls.sql:1–200`, `backend/graph/tenant_guard.py:12–98`) and remove the GAP tags.
+
+---
+
+## **9.2 Identity, claims, and tenant context (JWT)**
+
+**Requirement:** RLS depends on a trustworthy **`tenant_id`** claim in the JWT and app‑layer scoping for Neo4j queries. (Doc §9.) ([Google Docs](https://docs.google.com/document/d/e/2PACX-1vR_LQJv-StsiPJbVYUCFcFA3gLPyBrRjt5Q3c_nL_bQe9-klAvt5deljrx1Q6UuwcbXq1D3NPLe0yTK/pub))
+
+**Implementation (Supabase Auth):**
+
+* Add a **custom claim** `tenant_id` in access tokens via **Auth Hooks / Custom Access Token (JWT) Claims**, so Postgres policies can read it with `auth.jwt()` in RLS. ([Supabase](https://supabase.com/docs/guides/auth/auth-hooks?utm_source=chatgpt.com))
+
+* RLS policies should read **`(auth.jwt() ->> 'tenant_id')::uuid`** (not user‑modifiable metadata). ([Supabase](https://supabase.com/docs/guides/database/postgres/row-level-security?utm_source=chatgpt.com))
+
+**SQL (install once):**
+
+```sql
+-- Helper for cleaner RLS predicates
+create or replace function public.current_tenant_id() returns uuid
+language sql stable as $$
+  select (auth.jwt() ->> 'tenant_id')::uuid
+$$;
+
+-- Optional helper for role checks (see §9.7)
+create or replace function public.has_role(role_text text) returns boolean
+language sql stable as $$
+  select exists (
+    select 1
+    where role_text = any ( string_to_array( coalesce(auth.jwt() ->> 'roles', ''), ',' ) )
+  )
+$$;
+```
+
+**GAP:** I cannot confirm you already set the custom claim hook.  
+ **FIX:** In Supabase Studio, enable **Auth → Hooks → Customize Access Token (JWT) Claims** to inject `tenant_id` (and optionally a comma‑separated `roles`) on sign‑in. Policy examples that depend on this are in §9.4 and §9.6. ([Supabase](https://supabase.com/docs/guides/auth/auth-hooks?utm_source=chatgpt.com))
+
+---
+
+## **9.3 Tenancy invariants (system‑wide)**
+
+1. Every tenant‑scoped table/row in Postgres **must** have `tenant_id uuid not null`.
+
+2. Every graph node/edge created by the app **must** carry `tenantId` and be owned by exactly one `(:Tenant)`.
+
+3. All storage objects live in **one bucket per tenant**; object keys are path‑scoped beneath that tenant’s bucket.
+
+4. Any API request hitting Postgres or Neo4j **must** carry a resolved `tenant_id` from JWT; server refuses to operate without it.
+
+**GAP:** I cannot check existing schema/contracts.  
+ **FIX:** Run the cross‑checks in §9.12 after applying the migrations below.
+
+---
+
+## **9.4 Supabase/Postgres tenancy**
+
+### **9.4.1 Schema changes (authoritative contracts)**
+
+Add/normalize `tenant_id uuid not null` across tenant‑scoped tables (examples: `projects`, `sources`, `folders`, `files`, `events`, `crew_members`, `artifacts`, `integrations`).
+
+```sql
+-- Pattern for ensuring tenant_id is set on INSERT/UPDATE
+alter table public.projects
+  add column if not exists tenant_id uuid not null default public.current_tenant_id();
+
+alter table public.projects
+  alter column tenant_id drop default;
+
+-- Enforce referential integrity if you maintain a tenants table
+create table if not exists public.tenants (
+  id uuid primary key,
+  slug text unique not null,
+  name text not null,
+  created_at timestamptz not null default now()
+);
+
+alter table public.projects
+  add constraint projects_tenant_fk foreign key (tenant_id) references public.tenants(id) on delete restrict;
+```
+
+**GAP:** I haven’t verified exact table names/columns in your repo.  
+ **FIX:** Once I have repo access, I’ll produce per‑table `ALTER TABLE` diffs and apply them via `supabase/migrations/*` with exact file paths and line ranges.
+
+### **9.4.2 RLS policies (read/write)**
+
+**Enable RLS on every tenant table** and use the common pattern `tenant_id = current_tenant_id()` for **USING**/**WITH CHECK**.
+
+```sql
+alter table public.projects enable row level security;
+
+-- READ
+create policy projects_tenant_read
+on public.projects
+for select
+to authenticated
+using (tenant_id = public.current_tenant_id());
+
+-- WRITE (insert/update/delete)
+create policy projects_tenant_write
+on public.projects
+for all
+to authenticated
+using (tenant_id = public.current_tenant_id())
+with check (tenant_id = public.current_tenant_id());
+```
+
+Rationale and primitives: Postgres RLS \+ Supabase helpers `auth.uid()` / `auth.jwt()` are the supported path for multitenancy. ([Supabase](https://supabase.com/docs/guides/database/postgres/row-level-security?utm_source=chatgpt.com))
+
+### **9.4.3 Storage isolation (Supabase Storage)**
+
+**One bucket per tenant** (no sharing). Enforce via RLS on `storage.objects` using `bucket_id` and (optionally) prefix rules:
+
+```sql
+-- Example: allow authenticated users to operate only within their tenant bucket
+-- Bucket naming: tenant_${uuid}  (see §9.8 for automation)
+create policy "tenant can select own bucket objects"
+on storage.objects
+for select
+to authenticated
+using (
+  bucket_id = ('tenant_' || public.current_tenant_id()::text)
+);
+
+create policy "tenant can upsert own bucket objects"
+on storage.objects
+for insert
+to authenticated
+with check (
+  bucket_id = ('tenant_' || public.current_tenant_id()::text)
+);
+
+create policy "tenant can update own bucket objects"
+on storage.objects
+for update
+to authenticated
+using (
+  bucket_id = ('tenant_' || public.current_tenant_id()::text)
+);
+
+create policy "tenant can delete own bucket objects"
+on storage.objects
+for delete
+to authenticated
+using (
+  bucket_id = ('tenant_' || public.current_tenant_id()::text)
+);
+```
+
+This follows Supabase’s documented approach for securing `storage.objects` via RLS (bucket scoping and foldername helpers). ([Supabase](https://supabase.com/docs/guides/storage/security/access-control))
+
+**GAP:** I cannot verify existing bucket policy SQL in your repo.  
+ **FIX:** I’ll place these in `supabase/migrations/2025XXXX_storage_rls.sql` and list the exact file/line ranges.
+
+### **9.4.4 Service‑role guardrail**
+
+Supabase **service keys bypass RLS**. Ensure any code path using the service key is **server‑only** and adds an explicit `tenant_id` filter in SQL, never sent to browsers/clients. ([Supabase](https://supabase.com/docs/guides/storage/security/access-control))
+
+---
+
+## **9.5 Neo4j tenancy**
+
+### **9.5.1 Graph model rules (authoritative intent)**
+
+* A single **`(:Tenant {id})`** node per tenant.
+
+* All **top‑level nodes** (`:Project`, `:Source`, etc.) are owned via **`(:Tenant)-[:OWNS]->(:X ...)`** and **carry `tenantId`** property.
+
+* **No cross‑tenant edges** exist; start and end nodes of any relationship must have the same `tenantId`. (Doc §9.) ([Google Docs](https://docs.google.com/document/d/e/2PACX-1vR_LQJv-StsiPJbVYUCFcFA3gLPyBrRjt5Q3c_nL_bQe9-klAvt5deljrx1Q6UuwcbXq1D3NPLe0yTK/pub))
+
+### **9.5.2 Constraints & indexes (enforce uniqueness and existence)**
+
+Use **composite key constraints** and property existence/type constraints to lock the invariants. (Neo4j supports composite uniqueness and node keys.) ([Graph Database & Analytics](https://neo4j.com/docs/cypher-manual/current/constraints/syntax/?utm_source=chatgpt.com))
+
+```
+// One Tenant per id
+CREATE CONSTRAINT tenant_id_unique IF NOT EXISTS
+FOR (t:Tenant)
+REQUIRE t.id IS UNIQUE;
+
+// Every Project must have id and tenantId, unique together
+CREATE CONSTRAINT project_key IF NOT EXISTS
+FOR (p:Project)
+REQUIRE (p.id, p.tenantId) IS NODE KEY;
+
+// Similar for other labels you own per tenant
+CREATE CONSTRAINT source_key IF NOT EXISTS
+FOR (s:Source)
+REQUIRE (s.id, s.tenantId) IS NODE KEY;
+
+// Require tenantId present for all tenant-scoped labels
+CREATE CONSTRAINT project_tenant_required IF NOT EXISTS
+FOR (p:Project)
+REQUIRE p.tenantId IS NOT NULL;
+
+// (repeat for File, Folder, CrewMember, etc.)
+```
+
+### **9.5.3 App‑layer scoping (must‑not‑bypass rule)**
+
+All read/write Cypher **must** include `WHERE n.tenantId = $tenantId` (or begin from `(:Tenant {id: $tenantId})`). The DAL enforces this by construction:
+
+```
+// Typical pattern: anchor on Tenant then traverse
+MATCH (t:Tenant {id: $tenantId})-[:OWNS]->(p:Project {id: $projectId})
+MATCH (p)-[:CONTAINS]->(f:File)
+RETURN f
+```
+
+**GAP:** I haven’t verified a DAL wrapper exists.  
+ **FIX:** Introduce a graph client wrapper (e.g., `GraphSession(tenant_id)`) that only exposes methods requiring `$tenantId`. Calls that omit `$tenantId` raise immediately. (We can enforce this even in Python/TS via a no‑bare‑session lint rule.)
+
+### **9.5.4 Prevent cross‑tenant edges**
+
+Neo4j cannot express “edge must not connect nodes with different `tenantId`” as a native constraint; enforce with a write‑time trigger (APOC) or only allow writes that anchor under `(:Tenant)`.
+
+**APOC trigger (write‑time guard):**
+
+```
+// Requires APOC; runs on relationship creation/update
+CALL apoc.trigger.add(
+  'block_cross_tenant_edges',
+  '
+  UNWIND $createdRelationships AS r
+  WITH startNode(r) AS a, endNode(r) AS b, r
+  WHERE a.tenantId IS NOT NULL AND b.tenantId IS NOT NULL AND a.tenantId <> b.tenantId
+  CALL apoc.util.validate(true, "Cross-tenant relationship not allowed", [a.tenantId, b.tenantId]) YIELD value
+  RETURN value
+  ',
+  {phase:"after"}
+);
+```
+
+**GAP:** I cannot confirm APOC is enabled.  
+ **FIX:** Enable APOC and add this trigger; or perform the guard purely in the DAL.
+
+### **9.5.5 Optional physical isolation**
+
+If/when needed, use **separate Neo4j databases per tenant** or clusters per cohort. Neo4j supports multiple databases and RBAC for fine‑grained access control. ([Graph Database & Analytics](https://neo4j.com/neoassets/support/Multi%2BDB%2BConsiderations.pdf?utm_source=chatgpt.com))
+
+---
+
+## **9.6 PII & secrets handling**
+
+### **9.6.1 PII minimization & masking**
+
+* Only store required PII fields; store **references** to documents (contracts/IDs) in Neo4j; keep full text in secure blob storage. (Doc §9.) ([Google Docs](https://docs.google.com/document/d/e/2PACX-1vR_LQJv-StsiPJbVYUCFcFA3gLPyBrRjt5Q3c_nL_bQe9-klAvt5deljrx1Q6UuwcbXq1D3NPLe0yTK/pub))
+
+* Create **masked views** in Postgres to expose limited columns for roles like “assistant”.
+
+```sql
+-- Example: mask PII in a restricted view
+create or replace view public.crew_members_masked as
+select
+  id,
+  tenant_id,
+  name,
+  role,
+  case when public.has_role('finance') then email else null end as email
+from public.crew_members
+where tenant_id = public.current_tenant_id();
+
+-- Deny direct SELECT on table to app role; allow SELECT on view
+revoke select on table public.crew_members from authenticated;
+grant select on table public.crew_members_masked to authenticated;
+```
+
+### **9.6.2 Secrets at rest (per‑tenant integrations)**
+
+* Use **Supabase Vault** (database extension) for tenant‑specific tokens/credentials. Access via SQL using key IDs; data is encrypted at rest and in dumps. ([Supabase](https://supabase.com/docs/guides/database/vault?utm_source=chatgpt.com), [GitHub](https://github.com/supabase/vault?utm_source=chatgpt.com))
+
+```sql
+-- Create a per-tenant secret (Dropbox token example)
+select vault.create_secret(
+  'DROPBOX_ACCESS_TOKEN=<value>',
+  ('tenant_' || public.current_tenant_id()::text),  -- namespace
+  'Dropbox OAuth token for this tenant'
+) as key_id;
+
+/* Access pattern:
+   1) Store only the returned key_id in your tenant-scoped table (e.g., integrations.secret_key_id).
+   2) Server-side functions (SECURITY DEFINER) can read via vault.decrypted_secrets, not clients.
+*/
+```
+
+**Note:** Supabase “Edge Function Secrets” are project‑level vars, **not** per‑tenant. Use **Vault** for per‑tenant secrets. ([Supabase](https://supabase.com/features/vault?utm_source=chatgpt.com))
+
+**GAP:** The doc says “Supabase secrets” are the vault; I cannot confirm current usage or tables.  
+ **FIX:** Add an `integrations` table with `tenant_id`, `provider`, `secret_key_id` (Vault key id), and RLS per §9.4.2.
+
+---
+
+## **9.7 Intra‑tenant RBAC (roles/scopes)**
+
+**Requirement:** Assistants may view call sheets but not financials. (Doc §9.) ([Google Docs](https://docs.google.com/document/d/e/2PACX-1vR_LQJv-StsiPJbVYUCFcFA3gLPyBrRjt5Q3c_nL_bQe9-klAvt5deljrx1Q6UuwcbXq1D3NPLe0yTK/pub))
+
+**Implementation:**
+
+* Inject **`roles`** as a custom JWT claim (comma‑separated or JSON array). ([Supabase](https://supabase.com/docs/guides/auth/auth-hooks?utm_source=chatgpt.com))
+
+* Use RLS predicates like `public.has_role('finance')` for finance tables, or expose masked views (see §9.6.1).
+
+```sql
+-- Finance tables (example payroll)
+alter table public.payroll enable row level security;
+
+create policy payroll_read_finance
+on public.payroll
+for select
+to authenticated
+using (tenant_id = public.current_tenant_id() and public.has_role('finance'));
+
+create policy payroll_write_finance
+on public.payroll
+for all
+to authenticated
+using (tenant_id = public.current_tenant_id() and public.has_role('finance'))
+with check (tenant_id = public.current_tenant_id() and public.has_role('finance'));
+```
+
+**GAP:** Concrete role taxonomy isn’t listed in code/doc.  
+ **FIX:** Define minimal roles: `admin`, `editor`, `viewer`, `finance`. Map UI capabilities to roles and encode them in JWT.
+
+---
+
+## **9.8 Data partitioning & storage operations**
+
+**Bucket naming convention:** `tenant_<UUID>` (lowercase, hyphenless UUID).  
+ **Lifecycle:**
+
+1. On tenant creation, create bucket `tenant_<UUID>`.
+
+2. Service writes are scoping object keys under logical prefixes per project.
+
+3. RLS on `storage.objects` blocks access outside the tenant bucket (§9.4.3). ([Supabase](https://supabase.com/docs/guides/storage/security/access-control))
+
+```sql
+-- Create bucket for a new tenant (run from service role)
+insert into storage.buckets (id, name, public)
+values ('tenant_' || '<uuid>', 'tenant_' || '<uuid>', false)
+on conflict do nothing;
+```
+
+---
+
+## **9.9 Audit logging & provenance**
+
+**Authoritative intent:** “All user and agent actions are logged; provenance exists anyway.” (Doc §9.) ([Google Docs](https://docs.google.com/document/d/e/2PACX-1vR_LQJv-StsiPJbVYUCFcFA3gLPyBrRjt5Q3c_nL_bQe9-klAvt5deljrx1Q6UuwcbXq1D3NPLe0yTK/pub))
+
+**GAP:** Not implemented yet.  
+ **FIX (Postgres \+ Graph):**
+
+* **Postgres**: add `audit_log` (tenant‑scoped) for API edges not reflected in the commit graph (auth events, storage operations, external callbacks).
+
+* **Graph**: represent operations as `(:Commit)-[:UPDATES]->(:EntityVersion)` (your §5 versioning model); every API write path must emit a commit \+ link to inputs/actor. (You describe this model earlier in the doc.)
+
+```sql
+create table if not exists public.audit_log (
+  id bigserial primary key,
+  tenant_id uuid not null,
+  actor_type text not null check (actor_type in ('user','agent','system')),
+  actor_id uuid,
+  action text not null,
+  target_type text,
+  target_id text,
+  request_id uuid,
+  payload jsonb,
+  created_at timestamptz not null default now()
+);
+alter table public.audit_log enable row level security;
+
+create policy audit_tenant_read on public.audit_log
+for select to authenticated
+using (tenant_id = public.current_tenant_id());
+
+create policy audit_tenant_write on public.audit_log
+for insert to authenticated
+with check (tenant_id = public.current_tenant_id());
+```
+
+---
+
+## **9.10 Encryption, transport, and secrets hygiene**
+
+* **Transport:** require TLS to Postgres and Neo4j. Use `neo4j+s://` (or `bolt+s://`) endpoints to enforce TLS to the graph.
+
+* **At rest:** Vault‑encrypted secrets (per §9.6.2). ([Supabase](https://supabase.com/docs/guides/database/vault?utm_source=chatgpt.com))
+
+* **Key rotation:** rotate OAuth/token secrets by writing a new Vault key; keep old keys disabled but retrievable for incident forensics.
+
+* **Service key custody:** lock in server‑only env and never in client bundles (RLS bypass risk). ([Supabase](https://supabase.com/docs/guides/storage/security/access-control))
+
+**GAP:** I cannot confirm current TLS config for Neo4j/Postgres.  
+ **FIX:** Document and enforce TLS in deployment manifests; fail startup if `NEO4J_URI` is non‑TLS.
+
+---
+
+## **9.11 Neo4j RBAC (optional hardening, Enterprise)**
+
+If you deploy Neo4j Enterprise, configure RBAC to restrict reads by label/type and confine app roles to their database(s). ([Graph Database & Analytics](https://neo4j.com/docs/operations-manual/current/authentication-authorization/manage-privileges/?utm_source=chatgpt.com))
+
+Example (conceptual; applied at DBMS level):
+
+```
+// Create minimal app role and grant limited privileges on tenant graph
+CREATE ROLE app_reader;
+GRANT MATCH {*} ON GRAPH `olivine` NODES Project, File, Folder, Source TO app_reader;
+GRANT TRAVERSE ON GRAPH `olivine` RELATIONSHIPS OWNS, CONTAINS TO app_reader;
+```
+
+---
+
+## **9.12 Verification checks (must pass before “secure by default”)**
+
+**Postgres (psql)**
+
+```sql
+-- 1) JWT visible and tenant_id resolves
+select auth.jwt(), public.current_tenant_id();
+
+-- 2) No table missing tenant_id
+select t.table_schema, t.table_name
+from information_schema.tables t
+join information_schema.columns c on c.table_name=t.table_name and c.table_schema=t.table_schema
+where t.table_schema='public'
+  and t.table_type='BASE TABLE'
+group by 1,2
+having bool_or(c.column_name='tenant_id') = false;
+
+-- 3) RLS enabled everywhere (public schema)
+select schemaname, tablename, rowsecurity from pg_tables where schemaname='public' and rowsecurity=false;
+
+-- 4) Storage RLS acts as expected (try cross-tenant select/insert; should fail)
+```
+
+**Neo4j (Cypher)**
+
+```
+// 1) Cross-tenant reachability (should be zero)
+MATCH (a {tenantId: $t1})--(b {tenantId: $t2})
+RETURN count(*) as crossTenantEdges;
+
+// 2) Orphaned nodes (no :Tenant owner)
+MATCH (n)
+WHERE n.tenantId IS NOT NULL AND NOT ( (:Tenant {id: n.tenantId})-[:OWNS]->(n) )
+RETURN labels(n) as lbl, n.id as id LIMIT 10;
+```
+
+---
+
+## **9.13 Threat model (STRIDE) and mitigations (mapped to code/config)**
+
+| Threat | Vector | Mitigation |
+| ----- | ----- | ----- |
+| **S**poofing | Forged tenant context | JWT custom claim provisioned by Auth Hook; RLS checks `auth.jwt()->>'tenant_id'`; graph DAL requires `$tenantId`. ([Supabase](https://supabase.com/docs/guides/auth/auth-hooks?utm_source=chatgpt.com)) |
+| **T**ampering | Cross‑tenant writes | Postgres RLS WITH CHECK; Neo4j DAL scoping \+ APOC trigger to block cross‑tenant edges. |
+| **R**epudiation | “I didn’t do that” | `audit_log` table \+ commit graph provenance with actor and request id. |
+| **I**nformation disclosure | PII overexposure | Masked views; role‑gated RLS; store only references in graph; secrets in Vault. ([Supabase](https://supabase.com/docs/guides/database/vault?utm_source=chatgpt.com)) |
+| **D**enial of service | Tenant‑wide hot paths | Rate limits at API; per‑tenant quotas; queue isolation (out of scope here). |
+| **E**levation of privilege | Service key misuse | Server‑only custody; rotate and monitor; service key not available to clients (Storage doc warns it bypasses RLS). ([Supabase](https://supabase.com/docs/guides/storage/security/access-control)) |
+
+---
+
+## **9.14 Gaps & targeted fixes (repo‑verified once access granted)**
+
+1. **GAP:** GitHub repo `Olivine‑V10` not accessible to me → cannot pin file paths or line ranges.  
+    **FIX:** Share read access; I’ll annotate every policy and guard with `path:lines`.
+
+2. **GAP:** JWT `tenant_id` and `roles` custom claims not confirmed.  
+    **FIX:** Enable **Auth Hook** to inject `tenant_id` and `roles` on token mint; update RLS to use `auth.jwt()`. ([Supabase](https://supabase.com/docs/guides/auth/auth-hooks?utm_source=chatgpt.com))
+
+3. **GAP:** Postgres tables needing `tenant_id` not enumerated.  
+    **FIX:** Run §9.12 check (2) and add `tenant_id` \+ FKs to `tenants(id)`, then enable RLS \+ policies per §9.4.2.
+
+4. **GAP:** Storage bucket policy SQL not present/verified.  
+    **FIX:** Add §9.4.3 policies and bucket creation flow; name buckets `tenant_<UUID>`. ([Supabase](https://supabase.com/docs/guides/storage/security/access-control))
+
+5. **GAP:** DAL wrapper enforcing `$tenantId` for Neo4j not confirmed.  
+    **FIX:** Introduce a **single entrypoint** for Cypher calls that requires `tenantId`; prohibit raw sessions.
+
+6. **GAP:** APOC trigger for cross‑tenant guard not installed.  
+    **FIX:** Enable APOC and install the `block_cross_tenant_edges` trigger (or enforce solely in DAL).
+
+7. **GAP:** Vault usage for per‑tenant secrets not verified.  
+    **FIX:** Use **Supabase Vault** to store per‑tenant integration tokens; persist only `secret_key_id` in tenant tables. ([Supabase](https://supabase.com/docs/guides/database/vault?utm_source=chatgpt.com), [GitHub](https://github.com/supabase/vault?utm_source=chatgpt.com))
+
+8. **GAP:** Audit log table not implemented.  
+    **FIX:** Create `public.audit_log` with RLS per §9.9 and integrate logging in each write path.
+
+9. **GAP:** TLS enforcement for Neo4j/Postgres not documented.  
+    **FIX:** Require `neo4j+s://` URIs and TLS to Postgres; fail fast on non‑TLS configs.
+
+---
+
+## **9.15 What this delivers once applied**
+
+* **Hard tenant isolation** in Postgres (RLS by JWT claim) and Storage (per‑tenant buckets \+ RLS). ([Supabase](https://supabase.com/docs/guides/database/postgres/row-level-security?utm_source=chatgpt.com))
+
+* **No‑escape graph access** in Neo4j (anchored by `(:Tenant)` \+ constraints \+ DAL guard; optional APOC for write‑time blocks).
+
+* **Minimum PII footprint** and **secrets at rest** in Vault (auditable, encrypted). ([Supabase](https://supabase.com/docs/guides/database/vault?utm_source=chatgpt.com))
+
+* **Role‑aware reads** (masked views \+ role checks) and **full provenance** for every change.
+
+---
+
+### **Appendix A — Minimal migration bundle (proposed layout; will be path/line‑referenced after repo access)**
+
+* `supabase/migrations/2025XXXX_00_claim_helpers.sql` → functions `current_tenant_id()`, `has_role()`.
+
+* `supabase/migrations/2025XXXX_01_schema_tenant_id.sql` → per‑table `tenant_id` \+ FKs.
+
+* `supabase/migrations/2025XXXX_02_rls_policies.sql` → enable RLS \+ per‑table policies.
+
+* `supabase/migrations/2025XXXX_03_storage_rls.sql` → Storage RLS for `storage.objects`.
+
+* `supabase/migrations/2025XXXX_04_audit_log.sql` → audit table \+ RLS.
+
+* `graph/constraints/001_tenant_constraints.cypher` → Neo4j constraints.
+
+* `graph/triggers/001_block_cross_tenant_edges.cypher` → APOC trigger (optional).
+
+* `backend/graph/tenant_session.*` → DAL wrapper that requires `$tenantId`.
+
+---
+

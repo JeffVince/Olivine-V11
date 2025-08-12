@@ -1,0 +1,207 @@
+import { PostgresService } from '../services/PostgresService';
+import { Neo4jService } from '../services/Neo4jService';
+
+export interface SourceMetadata {
+  id: string;
+  organizationId: string;
+  name: string;
+  type: 'dropbox' | 'google_drive' | 'onedrive' | 'local';
+  config: any;
+  active: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface SourceConfig {
+  // Common fields
+  accessToken?: string;
+  refreshToken?: string;
+  expiresAt?: number;
+  
+  // Dropbox specific
+  dropboxAccountId?: string;
+  dropboxTeamMemberId?: string;
+  dropboxIsTeamAccount?: boolean;
+  dropboxRootNamespaceId?: string;
+  dropboxHomeNamespaceId?: string;
+  
+  // Google Drive specific
+  googleClientId?: string;
+  googleClientSecret?: string;
+  googleScope?: string[];
+  
+  // Other provider specific configs
+  [key: string]: any;
+}
+
+export class SourceModel {
+  // TODO: Implementation Plan - 02-Data-Ingestion-Implementation.md - Source model implementation with PostgreSQL and Neo4j
+  // TODO: Implementation Plan - 03-Knowledge-Graph-Implementation.md - Source model Neo4j integration
+  // TODO: Implementation Plan - 04-Data-Storage-Implementation.md - Source model PostgreSQL integration
+  // TODO: Implementation Checklist - 07-Testing-QA-Checklist.md - Backend source model tests
+  private postgresService: PostgresService;
+  private neo4jService: Neo4jService;
+
+  constructor() {
+    this.postgresService = new PostgresService();
+    this.neo4jService = new Neo4jService();
+  }
+
+  /**
+   * Create a new source
+   */
+  async createSource(sourceData: Omit<SourceMetadata, 'id' | 'createdAt' | 'updatedAt'>): Promise<SourceMetadata> {
+    const query = `
+      INSERT INTO sources (organization_id, name, type, config, active, created_at, updated_at)
+      VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
+      RETURNING *
+    `;
+
+    const values = [
+      sourceData.organizationId,
+      sourceData.name,
+      sourceData.type,
+      JSON.stringify(sourceData.config),
+      sourceData.active
+    ];
+
+    const result = await this.postgresService.executeQuery(query, values);
+    return this.mapRowToSource(result.rows[0]);
+  }
+
+  /**
+   * Get a source by ID and organization
+   */
+  async getSource(sourceId: string, organizationId: string): Promise<SourceMetadata | null> {
+    const query = `
+      SELECT * FROM sources 
+      WHERE id = $1 AND organization_id = $2
+    `;
+    
+    const result = await this.postgresService.executeQuery(query, [sourceId, organizationId]);
+    return result.rows.length > 0 ? this.mapRowToSource(result.rows[0]) : null;
+  }
+
+  /**
+   * Get all sources for an organization
+   */
+  async getSourcesByOrganization(organizationId: string): Promise<SourceMetadata[]> {
+    const query = `
+      SELECT * FROM sources 
+      WHERE organization_id = $1
+      ORDER BY created_at DESC
+    `;
+    
+    const result = await this.postgresService.executeQuery(query, [organizationId]);
+    return result.rows.map(row => this.mapRowToSource(row));
+  }
+
+  /**
+   * Update source configuration
+   */
+  async updateSourceConfig(sourceId: string, organizationId: string, config: SourceConfig): Promise<boolean> {
+    const query = `
+      UPDATE sources 
+      SET config = $3, updated_at = NOW()
+      WHERE id = $1 AND organization_id = $2
+    `;
+    
+    const result = await this.postgresService.executeQuery(query, [
+      sourceId, 
+      organizationId, 
+      JSON.stringify(config)
+    ]);
+    
+    return (result.rowCount || 0) > 0;
+  }
+
+  /**
+   * Update source active status
+   */
+  async updateSourceStatus(sourceId: string, organizationId: string, active: boolean): Promise<boolean> {
+    const query = `
+      UPDATE sources 
+      SET active = $3, updated_at = NOW()
+      WHERE id = $1 AND organization_id = $2
+    `;
+    
+    const result = await this.postgresService.executeQuery(query, [sourceId, organizationId, active]);
+    return (result.rowCount || 0) > 0;
+  }
+
+  /**
+   * Delete a source
+   */
+  async deleteSource(sourceId: string, organizationId: string): Promise<boolean> {
+    const query = `
+      DELETE FROM sources 
+      WHERE id = $1 AND organization_id = $2
+    `;
+    
+    const result = await this.postgresService.executeQuery(query, [sourceId, organizationId]);
+    return (result.rowCount || 0) > 0;
+  }
+
+  /**
+   * Create or update source node in Neo4j knowledge graph
+   */
+  async syncToGraph(sourceData: SourceMetadata): Promise<void> {
+    const query = `
+      MERGE (s:Source {id: $sourceId, organizationId: $orgId})
+      SET s.name = $name,
+          s.type = $type,
+          s.active = $active,
+          s.createdAt = datetime($createdAt),
+          s.updatedAt = datetime($updatedAt),
+          s.config = $config
+      
+      // Create relationship to organization
+      WITH s
+      MERGE (o:Organization {id: $orgId})
+      MERGE (s)-[:BELONGS_TO]->(o)
+      
+      RETURN s
+    `;
+
+    const params = {
+      sourceId: sourceData.id,
+      orgId: sourceData.organizationId,
+      name: sourceData.name,
+      type: sourceData.type,
+      active: sourceData.active,
+      createdAt: sourceData.createdAt.toISOString(),
+      updatedAt: sourceData.updatedAt.toISOString(),
+      config: JSON.stringify(sourceData.config)
+    };
+
+    await this.neo4jService.executeQuery(query, params);
+  }
+
+  /**
+   * Remove source node from Neo4j knowledge graph
+   */
+  async removeFromGraph(sourceId: string, organizationId: string): Promise<void> {
+    const query = `
+      MATCH (s:Source {id: $sourceId, organizationId: $orgId})
+      DETACH DELETE s
+    `;
+
+    await this.neo4jService.executeQuery(query, { sourceId, orgId: organizationId });
+  }
+
+  /**
+   * Map database row to SourceMetadata interface
+   */
+  private mapRowToSource(row: any): SourceMetadata {
+    return {
+      id: row.id,
+      organizationId: row.organization_id,
+      name: row.name,
+      type: row.type,
+      config: row.config,
+      active: row.active,
+      createdAt: new Date(row.created_at),
+      updatedAt: new Date(row.updated_at)
+    };
+  }
+}

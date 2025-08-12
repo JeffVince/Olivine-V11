@@ -1,0 +1,125 @@
+## **13\. Example: Concrete Graph Updates in Action**
+
+To illustrate with actual Cypher, imagine the production of a new call sheet on a new shoot day:
+
+* First, we add a new ShootDay and link Scenes to it (this could happen via schedule ingest or user input):
+
+```
+MERGE (p:Project {slug: $projId})
+MERGE (d:ShootDay {date: date('2025-08-09')})<-[:HAS_DAY]-(p)
+WITH d
+UNWIND $scene_ids AS sid
+  MERGE (s:Scene {id: sid})
+  MERGE (d)-[:COVERS_SCENE]->(s);
+```
+
+This ensures the Project has a ShootDay node for 2025-08-09, and then links all the given scene IDs to that day (creating Scene nodes if they don’t exist yet).
+
+* Next, say we have generated a final call sheet PDF for that day and uploaded it. We map that file to the graph:
+
+```
+MATCH (f:File {checksum: $finalPdfChecksum})
+MERGE (slot:CanonicalSlot {key: 'CALLSHEET_FINAL'})
+MERGE (f)-[:CANONICAL_SLOT]->(slot)
+MERGE (d:ShootDay {date: date('2025-08-09')})
+MERGE (d)-[:REFERENCED_BY]->(f);
+```
+
+We find the file by a known checksum or ID, tag it as a CALLSHEET\_FINAL, and link it to the ShootDay (d) it corresponds to.
+
+* Finally, we record a commit that represents the call sheet generation:
+
+```
+CREATE (c:Commit {
+    id: $commitId,
+    author: 'ComposerAgent',
+    message: 'Call sheet v3 for 2025-08-09',
+    created_at: datetime(),
+    branch: 'main',
+    parent_ids: $parents
+})
+WITH c
+UNWIND $actions AS actData
+  CREATE (act:Action {
+     tool: actData.tool, 
+     inputs: actData.inputs, 
+     outputs: actData.outputs, 
+     status: actData.status
+  })
+  MERGE (c)-[:INCLUDES]->(act)
+  FOREACH (entId IN actData.touchedEntities | 
+     MERGE (e) WHERE id(e) = entId 
+     MERGE (act)-[:TOUCHED]->(e)
+  );
+```
+
+(This is pseudo-Cypher for clarity – Neo4j might not allow MERGE on bound relationship variables directly, but conceptually it’s linking each Action to the commit and to entities.)
+
+Here $actions might be a list of actions like \[ {tool: "weather.api", inputs: "{loc: XYZ}", outputs: "{forecast: ...}", status:"success", touchedEntities:\[nodeIdOfShootDay\]}, {... another action ...} \]. We unwind those to create Action nodes and connect them.
+
+The commit’s parent\_ids would list the previous commit(s) it builds on.
+
+After running these queries, we have updated the graph with the new production info and we can query it to verify, for example: find the call sheet file for Aug 9, or list all actions in the commit that updated Aug 9\.
+
+
+# **7\. End-to-End Example: Call Sheet Generation**
+
+To solidify how the pieces come together, let’s walk through how a **Call Sheet** (the daily shooting plan document) is automatically generated using the graph. The magic here is that the system can do this **regardless of how the source files are organized**, because it relies on the unified knowledge graph and canonical slots.
+
+**Prerequisites/Inputs:** The system assumes we have ingested and mapped the following:
+
+* A script file marked as SCRIPT\_PRIMARY (so Scenes and other content have been parsed or entered into the Content ontology).
+
+* A shooting schedule file or data marked as SCHEDULE\_MASTER (so we have ShootDay nodes each linked to Scenes planned that day).
+
+* A call sheet template (could be a fillable PDF or document template) linked in the graph as a Template for call sheets.
+
+* Up-to-date crew/talent info (CrewRole assignments, contact info, etc.) in the graph.
+
+* Weather integration ready (the agent has a way to fetch weather for locations).
+
+Now, suppose the date is approaching August 9, 2025, and we need the call sheet for that day.
+
+**Automation Flow:**
+
+1. **Gather Data via Graph Query:** The Call Sheet Composer agent queries the graph for all necessary information for the shoot on 2025-08-09. It would do something like: find the ShootDay node for that date, get all Scenes it covers, get the Locations for those Scenes, the required Props, the CrewRoles involved and which crew members are assigned, etc. In Cypher, for example:
+
+```
+MATCH (d:ShootDay {date: date("2025-08-09")})-[:COVERS_SCENE]->(s:Scene)
+OPTIONAL MATCH (s)-[:SET_AT]->(loc:Location)
+OPTIONAL MATCH (s)-[:NEEDS_PROP]->(p:Prop)
+RETURN d, collect(s) AS scenes, collect(DISTINCT loc) AS locations, collect(DISTINCT p) AS props;
+```
+
+1.   
+   This would return the ShootDay node and collections of its scenes, locations, props. The agent would further gather who’s needed that day (from the scenes, find which Characters/Talents are in them, which CrewRoles are involved, etc.), typically by additional queries or traversals in memory. Essentially, the graph is a **one-stop shop** for all the data that will go on the call sheet (scene schedule, cast, crew, location, special requirements).
+
+2. **Validate prerequisites:** The agent ensures that all required inputs are present. For instance, if a call sheet template is not found in the graph (no Template of type CallSheet), it can throw an alert or request one to be uploaded. If the schedule data is incomplete (say a scene on that day has no start time or no location set), it might flag an error or request user input. These validations prevent garbage-in scenarios—ensuring when we generate the document, it’s complete. If a key file is missing (like no script or schedule), the system could even search the File ontology for the best candidate (e.g., find a PDF that looks like a schedule) and suggest mapping it before proceeding.
+
+3. **Fetch weather and other external data:** The agent uses external tools as needed. A common need on call sheets is the weather forecast for each shoot location. The agent will use the Locations for that ShootDay (from step 1\) – perhaps with their GPS coordinates or city names stored as properties – and call a weather API for the forecast on 2025-08-09. This action is logged (with input \= location and date, output \= forecast details). The forecast data might be added to the ShootDay node (like d.weather \= "Cloudy, 75°F" as a property) or just kept in memory to populate the PDF. **Provenance:** The weather fetch is an Action node linked to the ShootDay and included in the commit for this generation.
+
+4. **Assemble Call Sheet content:** The agent now compiles all the info into the call sheet format. It might use a template system or even an LLM to format it nicely. For example, if using a template PDF, it fills in fields (date, crew call time, scenes summary, cast list with call times, location address and weather, hospital info, etc.). If using an AI, it might have a prompt like “Generate a call sheet in JSON given this data: …” Regardless, this step produces the **call sheet document** content.
+
+5. **Write Call Sheet to File and Graph:** The generated call sheet (say as a PDF binary) is then written to the connected storage (e.g., a Dropbox folder for call sheets). We choose the folder according to either a default or the TaxonomyProfile (the profile might specify that call sheets go in ProjectName/Call Sheets/). We upload the file via API. Once that succeeds, a new :File node is created in the graph (via the same ingestion pipeline, or directly by the agent). We tag this file with, for example, CALLSHEET\_DRAFT slot (unless it’s final). We also link it to the ShootDay node with (:ShootDay)-\[:REFERENCED\_BY\]-\>(file) so we know this file is the call sheet for that day.
+
+6. **Log the Commit:** Finally, the agent creates a Commit node that ties together all these actions and changes. The commit might be labeled “Generated Call Sheet for 2025-08-09”. Its parent is the latest commit on the main branch. It includes the weather fetch action, the document generation action, and any graph updates (like new File node, new relationships). All input hashes (like the exact versions of scene data used, the template version, etc.) are recorded, as well as the output file’s hash. This way, the call sheet is reproducible: if we needed to regenerate the exact same one, we know what data to use. Modern call sheet software like SetHero use similar automation (auto-inserting weather forecasts, etc.) to save time , and our system provides that capability with the added benefit of end-to-end traceability.
+
+To illustrate the data gathering step in Cypher (from above):
+
+```
+MATCH (d:ShootDay {date: $targetDate})-[:COVERS_SCENE]->(s:Scene)
+OPTIONAL MATCH (s)-[:SET_AT]->(loc:Location)
+OPTIONAL MATCH (s)-[:NEEDS_PROP]->(p:Prop)
+OPTIONAL MATCH (s)-[:FEATURES_CHARACTER]->(c:Character)-[:PLAYED_BY]->(t:Talent)
+RETURN d.date AS shootDate,
+       collect(DISTINCT s) AS scenes,
+       collect(DISTINCT loc.name) AS locations,
+       collect(DISTINCT p.name) AS props,
+       collect(DISTINCT t.name) AS cast;
+```
+
+The result of such a query gives a structured overview of the day’s shoot, which the agent then formats. After generation, the call sheet PDF is available in the shared drive for the crew, and because it’s in our system, we can even send it out or notify people automatically (though that’s beyond our core scope here).
+
+The major takeaway is that **the same process would work no matter how the user organized their files initially**. Whether the schedule was an Excel sheet in one folder or a Notion doc or a Final Draft file, as long as its information made it into the graph (via ingestion or direct input), the call sheet agent doesn’t care about the original file format or location – it queries the standardized graph. This fulfills our promise of consistent automation across chaos.
+
+---

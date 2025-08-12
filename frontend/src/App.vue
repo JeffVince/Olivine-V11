@@ -9,12 +9,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import AppHeader from '@components/layout/AppHeader.vue'
 import AppSidebar from '@components/layout/AppSidebar.vue'
 import PageContainer from '@components/layout/PageContainer.vue'
+import { useProjectStore } from '@/stores/projectStore'
 
 const drawer = ref(true)
+const projectStore = useProjectStore()
+
+// Initialize project store when app starts
+onMounted(() => {
+  projectStore.initializeProject()
+})
 </script>
 
 <style>

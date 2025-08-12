@@ -2,6 +2,8 @@ import neo4j, { Driver, Session, Transaction } from 'neo4j-driver';
 import { getNeo4jConfig, Neo4jConfig } from '../config/neo4j';
 
 export class Neo4jService {
+  // TODO: Implementation Plan - 03-Knowledge-Graph-Implementation.md - Neo4j service implementation
+  // TODO: Implementation Checklist - 07-Testing-QA-Checklist.md - Backend Neo4j service tests
   private driver: Driver;
   private config: Neo4jConfig;
 
@@ -22,8 +24,22 @@ export class Neo4jService {
    * Get a Neo4j session
    * @returns Neo4j session
    */
-  getSession(): Session {
-    return this.driver.session();
+  getSession(orgId?: string): Session {
+    // TODO: Implementation Checklist - 07-Testing-QA-Checklist.md - Backend Neo4j service tests
+    return this.driver.session({
+      database: 'neo4j',
+      defaultAccessMode: 'READ'
+    });
+  }
+
+  /**
+   * Run a Neo4j query (wrapper for executeQuery to match agent expectations)
+   * @param query - Cypher query string
+   * @param params - Query parameters
+   * @returns Query result
+   */
+  async run(query: string, params: Record<string, any> = {}): Promise<any> {
+    return this.executeQuery(query, params);
   }
 
   /**
@@ -32,9 +48,15 @@ export class Neo4jService {
    * @param params Query parameters
    * @param orgId Organization ID for multi-tenant filtering
    * @returns Query result
+   * 
+   * // TODO: Implementation Plan - 03-Knowledge-Graph-Implementation.md - Neo4j query execution with multi-tenant filtering
+   * // TODO: Implementation Checklist - 07-Testing-QA-Checklist.md - Backend database query tests
    */
   async executeQuery(query: string, params: Record<string, any> = {}, orgId?: string): Promise<any> {
-    const session = this.getSession();
+    const session = this.driver.session({
+      database: 'neo4j',
+      defaultAccessMode: 'READ'
+    });
     try {
       // Add org_id to params if provided for multi-tenant filtering
       if (orgId) {
@@ -59,21 +81,75 @@ export class Neo4jService {
    * @returns Query result
    */
   async executeQueryInTransaction(query: string, params: Record<string, any> = {}, orgId?: string): Promise<any> {
+    // TODO: Implementation Checklist - 07-Testing-QA-Checklist.md - Backend Neo4j service tests
     const session = this.getSession();
-    const transaction = session.beginTransaction();
-    
+    try {
+      const result = await session.executeWrite(tx => tx.run(query, params));
+      return result;
+    } finally {
+      await session.close();
+    }
+  }
+
+  /**
+   * Execute a write query
+   * @param query The query to execute
+   * @param params Query parameters
+   * @param orgId Organization ID for multi-tenancy
+   * @returns Query result
+   */
+  async executeWriteQuery(query: string, params: Record<string, any> = {}, orgId?: string): Promise<any> {
+    // TODO: Implementation Checklist - 07-Testing-QA-Checklist.md - Backend Neo4j service tests
+    const session = this.driver.session({
+      database: 'neo4j',
+      defaultAccessMode: 'WRITE'
+    });
     try {
       // Add org_id to params if provided for multi-tenant filtering
       if (orgId) {
         params.orgId = orgId;
       }
       
-      const result = await transaction.run(query, params);
-      await transaction.commit();
+      const result = await session.run(query, params);
       return result;
     } catch (error) {
-      await transaction.rollback();
-      console.error('Error executing Neo4j query in transaction:', error);
+      console.error('Error executing Neo4j write query:', error);
+      throw error;
+    } finally {
+      await session.close();
+    }
+  }
+
+  /**
+   * Execute multiple queries in a transaction
+   * @param queries Array of queries to execute
+   * @param orgId Organization ID for multi-tenancy
+   * @returns Array of query results
+   */
+  async executeTransaction(queries: Array<{query: string, params?: Record<string, any>}>, orgId?: string): Promise<any[]> {
+    // TODO: Implementation Checklist - 07-Testing-QA-Checklist.md - Backend Neo4j service tests
+    const session = this.driver.session({
+      database: 'neo4j',
+      defaultAccessMode: 'WRITE'
+    });
+    const results: any[] = [];
+    let tx: Transaction | null = null;
+    
+    try {
+      tx = await session.beginTransaction();
+      
+      for (const {query, params = {}} of queries) {
+        const result = await tx.run(query, params);
+        results.push(result.records);
+      }
+      
+      await tx.commit();
+      return results;
+    } catch (error) {
+      if (tx) {
+        await tx.rollback();
+      }
+      console.error('Error executing Neo4j transaction:', error);
       throw error;
     } finally {
       await session.close();
@@ -88,11 +164,16 @@ export class Neo4jService {
    * @returns Array of results
    */
   async executeBatch(queries: string[], paramsArray: Record<string, any>[] = [], orgId?: string): Promise<any[]> {
-    const session = this.getSession();
-    const transaction = session.beginTransaction();
-    const results = [];
+    const session = this.driver.session({
+      database: 'neo4j',
+      defaultAccessMode: 'WRITE'
+    });
+    const results: any[] = [];
+    let tx: Transaction | null = null;
     
     try {
+      tx = await session.beginTransaction();
+      
       for (let i = 0; i < queries.length; i++) {
         const params = paramsArray[i] || {};
         // Add org_id to params if provided for multi-tenant filtering
@@ -100,14 +181,16 @@ export class Neo4jService {
           params.orgId = orgId;
         }
         
-        const result = await transaction.run(queries[i], params);
-        results.push(result);
+        const result = await tx.run(queries[i], params);
+        results.push(result.records);
       }
       
-      await transaction.commit();
+      await tx.commit();
       return results;
     } catch (error) {
-      await transaction.rollback();
+      if (tx) {
+        await tx.rollback();
+      }
       console.error('Error executing Neo4j batch operations:', error);
       throw error;
     } finally {
@@ -120,16 +203,21 @@ export class Neo4jService {
    * @returns Boolean indicating if connection is healthy
    */
   async healthCheck(): Promise<boolean> {
-    const session = this.getSession();
+    // TODO: Implementation Checklist - 07-Testing-QA-Checklist.md - Backend Neo4j service tests
     try {
-      await session.run('RETURN 1');
+      await this.driver.verifyConnectivity();
       return true;
     } catch (error) {
       console.error('Neo4j health check failed:', error);
       return false;
-    } finally {
-      await session.close();
     }
+  }
+
+  /**
+   * Connect to Neo4j (verify connectivity)
+   */
+  async connect(): Promise<void> {
+    await this.driver.verifyConnectivity();
   }
 
   /**

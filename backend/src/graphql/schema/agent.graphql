@@ -1,0 +1,89 @@
+scalar JSON
+
+enum JobStatus { queued active completed failed stalled delayed waiting }
+enum JobType { reindexProject reclassifyLowConfidence generateCallSheet extractContent custom }
+
+type AgentJob {
+  id: ID!
+  orgId: ID!
+  type: JobType!
+  target: String
+  status: JobStatus!
+  priority: Int
+  attemptsMade: Int
+  retries: Int
+  worker: String
+  startedAt: String
+  finishedAt: String
+  durationMs: Int
+  params: JSON
+}
+
+type Runbook {
+  id: ID!
+  orgId: ID!
+  name: String!
+  description: String
+  spec: JSON!
+  createdAt: String!
+  updatedAt: String!
+}
+
+type QueueStats {
+  name: String!
+  waiting: Int!
+  active: Int!
+  completed: Int!
+  failed: Int!
+  delayed: Int!
+}
+
+type AgentHealth {
+  status: String!
+  agents: [String!]!
+}
+
+input EnqueueAgentJobInput {
+  orgId: ID!
+  type: JobType!
+  target: String
+  priority: Int
+  params: JSON
+}
+
+input SaveRunbookInput {
+  id: ID
+  orgId: ID!
+  name: String!
+  description: String
+  spec: JSON!
+}
+
+type Query {
+  agentJobs(orgId: ID!, status: JobStatus, type: JobType, limit: Int, offset: Int): [AgentJob!]!
+  agentJob(orgId: ID!, id: ID!): AgentJob
+  runbooks(orgId: ID!): [Runbook!]!
+  agentHealth(orgId: ID!): AgentHealth!
+  queues(orgId: ID!): [QueueStats!]!
+}
+
+type Mutation {
+  enqueueAgentJob(input: EnqueueAgentJobInput!): AgentJob!
+  cancelAgentJob(orgId: ID!, id: ID!): Boolean!
+  executeRunbook(orgId: ID!, id: ID!, params: JSON): AgentJob!
+  saveRunbook(orgId: ID!, input: SaveRunbookInput!): Runbook!
+}
+
+type LogEntry {
+  jobId: ID!
+  timestamp: String!
+  level: String!
+  message: String!
+}
+
+type Subscription {
+  jobUpdated(orgId: ID!): AgentJob!
+  jobLogAppended(jobId: ID!): LogEntry!
+}
+
+

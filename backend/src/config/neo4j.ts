@@ -4,6 +4,8 @@ import { config } from 'dotenv';
 config();
 
 export interface Neo4jConfig {
+  // TODO: Implementation Plan - 03-Knowledge-Graph-Implementation.md - Neo4j configuration interface
+  // TODO: Implementation Checklist - 01-Foundation-Setup-Checklist.md - Neo4j configuration validation
   uri: string;
   user: string;
   password: string;

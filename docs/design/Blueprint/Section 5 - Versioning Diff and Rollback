@@ -1,0 +1,514 @@
+## **5\. Versioning, Diff, and Rollback**
+
+Every piece of data in the knowledge graph is **versioned** to preserve history. This section explains how we manage the version graph (the commit history) as a directed acyclic graph (DAG), how we compute diffs between versions, and how rollbacks or alternate timelines are handled. The design is inspired by Git-style version control and database auditing best practices, ensuring that no changes are lost and any past state can be reconstructed. All graph writes MUST use the Provenance Write Path API, including ingestion, LangGraph agents, and user API writes.
+
+### **Canonical Provenance Write Path Transaction**
+
+The following is the **single atomic Cypher transaction** that every writer must use. It creates commits, versions entities, versions temporal edges (EdgeFacts), logs actions with precise lineage, and maintains idempotency:
+
+**Parameters:**
+```json
+{
+  "commit": {
+    "id": "<uuid>",
+    "dedupe_key": "<stable-idempotency-key>",
+    "author": "<user-or-agent>",
+    "ts": "<ISO-8601>",               // e.g. "2025-08-11T12:00:00Z"
+    "branch": "main",
+    "message": "Human readable message"
+  },
+
+  "entities": [
+    { "label": "Scene", "id": "scene-5", "new_props": { "location": "Warehouse" } },
+    ...
+  ],
+
+  "edges": [
+    {
+      "type": "COVERS_SCENE",
+      "key": "COVERS_SCENE:ShootDay(2025-08-09)->Scene(scene-5)",
+      "src": { "label": "ShootDay", "id": "2025-08-09" },
+      "dst": { "label": "Scene",    "id": "scene-5" },
+      "new_props": { "order": 2 }
+    },
+    ...
+  ],
+
+  "actions": [
+    {
+      "tool": "scheduler.update",
+      "inputs": { "from": "Aug-09", "to": "Aug-12" },
+      "outputs": { "moved": ["scene-5"] },
+
+      // For precise lineage, attach TOUCHED to both old and new:
+      "touched_entities": [ { "label": "Scene", "id": "scene-5" } ],
+      "touched_edges":    [ "COVERS_SCENE:ShootDay(2025-08-09)->Scene(scene-5)" ]
+    }
+  ]
+}
+```
+
+**Complete Cypher Transaction:**
+```cypher
+// 0) Branch & parent
+MERGE (b:Branch {name: $commit.branch})
+  ON CREATE SET b.created_at = datetime()
+
+OPTIONAL MATCH (b)-[:HEAD]->(parent:Commit)
+
+// 1) Idempotent Commit envelope
+MERGE (c:Commit {dedupe_key: $commit.dedupe_key})
+  ON CREATE SET
+    c.id      = $commit.id,
+    c.author  = $commit.author,
+    c.ts      = datetime($commit.ts),
+    c.branch  = $commit.branch,
+    c.message = $commit.message,
+    c.applied = false
+
+// If this dedupe was already applied, do nothing (safe no-op)
+WITH b, parent, c
+WHERE c.applied = false
+
+CALL {
+  // everything happens inside this guarded subquery
+  WITH b, parent, c
+
+  // 2) Link parent and advance HEAD (parent may be null)
+  FOREACH (_ IN CASE WHEN parent IS NULL THEN [] ELSE [1] END |
+    MERGE (c)-[:PARENT]->(parent)
+  )
+  OPTIONAL MATCH (b)-[old:HEAD]->(:Commit)
+  DELETE old
+  MERGE (b)-[:HEAD]->(c)
+
+  // 3) ENTITY VERSIONS
+  WITH c
+  UNWIND coalesce($entities, []) AS e
+  MATCH (n)
+    WHERE n.id = e.id AND e.label IN labels(n)
+
+  OPTIONAL MATCH (n)-[:HAS_VERSION]->(prev:EntityVersion)
+    WHERE prev.entity_label = e.label
+      AND prev.entity_id    = e.id
+      AND prev.branch       = c.branch
+      AND prev.valid_to     IS NULL
+
+  // close previous version if present
+  FOREACH (_ IN CASE WHEN prev IS NULL THEN [] ELSE [1] END |
+    SET prev.valid_to = c.ts
+  )
+
+  // create new immutable version
+  CREATE (v:EntityVersion {
+    vid: randomUUID(),
+    entity_label: e.label,
+    entity_id:    e.id,
+    props:        e.new_props,
+    valid_from:   c.ts,
+    valid_to:     null,
+    branch:       c.branch
+  })
+  MERGE (n)-[:HAS_VERSION]->(v)
+
+  // update live node for fast "current" reads
+  SET n += e.new_props
+
+  WITH c, collect({k: e.label + ':' + e.id, old: prev, new: v}) AS entity_pairs
+
+  // 4) EDGE FACTS (temporal relationships)
+  UNWIND coalesce($edges, []) AS ed
+  // find anchors
+  MATCH (src) WHERE src.id = ed.src.id AND ed.src.label IN labels(src)
+  MATCH (dst) WHERE dst.id = ed.dst.id AND ed.dst.label IN labels(dst)
+
+  // close previous fact if any
+  OPTIONAL MATCH (fprev:EdgeFact {edge_key: ed.key, branch: c.branch})
+    WHERE fprev.valid_to IS NULL
+  FOREACH (_ IN CASE WHEN fprev IS NULL THEN [] ELSE [1] END |
+    SET fprev.valid_to = c.ts
+  )
+
+  // create new fact
+  CREATE (f:EdgeFact {
+    fid:        randomUUID(),
+    edge_key:   ed.key,
+    type:       ed.type,
+    src_label:  ed.src.label,  src_id: ed.src.id,
+    dst_label:  ed.dst.label,  dst_id: ed.dst.id,
+    props:      ed.new_props,
+    valid_from: c.ts,
+    valid_to:   null,
+    branch:     c.branch
+  })
+
+  // (re)materialize live relationship for current graph
+  // Remove any live rel of same type+edge_key, then create fresh with new props
+  OPTIONAL MATCH (src)-[r]->(dst)
+    WHERE type(r) = ed.type AND coalesce(r.edge_key,'') = ed.key
+  DELETE r
+
+  CALL apoc.create.relationship(src, ed.type, ed.new_props + {edge_key: ed.key, fact_id: f.fid}, dst)
+    YIELD rel
+
+  WITH c, entity_pairs, collect({key: ed.key, old: fprev, new: f}) AS edge_pairs
+
+  // 5) ACTIONS (tool invocations) + TOUCHED to both old & new
+  UNWIND coalesce($actions, []) AS a
+  CREATE (act:Action {
+    id: randomUUID(),
+    tool: a.tool,
+    inputs: a.inputs,
+    outputs: a.outputs,
+    ts: c.ts
+  })
+  MERGE (c)-[:INCLUDES]->(act)
+
+  // Touch entities
+  FOREACH (te IN coalesce(a.touched_entities, []) |
+    FOREACH (pair IN [p IN entity_pairs WHERE p.k = te.label + ':' + te.id | p] |
+      FOREACH (_ IN CASE WHEN pair.old IS NULL THEN [] ELSE [1] END |
+        MERGE (act)-[:TOUCHED {mode: 'read'}]->(pair.old)
+      )
+      MERGE (act)-[:TOUCHED {mode: 'write'}]->(pair.new)
+    )
+  )
+
+  // Touch edges (by edge_key)
+  FOREACH (ek IN coalesce(a.touched_edges, []) |
+    FOREACH (pair IN [p IN edge_pairs WHERE p.key = ek | p] |
+      FOREACH (_ IN CASE WHEN pair.old IS NULL THEN [] ELSE [1] END |
+        MERGE (act)-[:TOUCHED {mode: 'read'}]->(pair.old)
+      )
+      MERGE (act)-[:TOUCHED {mode: 'write'}]->(pair.new)
+    )
+  )
+
+  // 6) Mark commit as applied (the idempotency latch)
+  SET c.applied = true
+
+  RETURN count(*) // noop; just to scope CALL
+}
+
+RETURN c.id AS commit_id;
+```
+
+> **Without APOC:** replace the relationship creation with explicit `MERGE` per known type (e.g., `MERGE (src)-[r:COVERS_SCENE]->(dst) SET r = ed.new_props + {edge_key: ed.key, fact_id: f.fid}`), branching on `ed.type`. Document both options and recommend APOC for maintainability.
+
+* `Commit.dedupe_key` uniqueness + `applied` guard = **idempotent**; replays safely no‑op.
+
+**Idempotency Policy:**
+Writers MUST supply a stable `dedupe_key`:
+* **Sync Worker:** the Supabase outbox `event_id`.
+* **LangGraph agents:** a workflow `run_id` + step id.
+* **User API batch:** a server‑generated UUID persisted with the request.
+
+If the same operation is retried, `MERGE (c:Commit {dedupe_key})` hits the existing commit; the `WHERE c.applied = false` guard prevents duplicate side‑effects.
+
+**TELEMETRY:** The provenance system emits observability metrics (detailed in Section 7): `commit_creation_rate{org_id, branch}` tracks commit frequency, `provenance_write_path_duration_seconds{org_id}` measures atomic transaction latency, `entity_version_count{org_id, entity_type}` monitors versioned entities, and `edge_fact_operations_total{org_id, edge_type, operation}` counts EdgeFact lifecycle operations. These metrics support SLO monitoring for 95th percentile transaction completion within 200ms and maintaining ACID properties with 100% consistency.
+
+### **5.1 Commit DAG (Directed Acyclic Graph)**
+
+**Commit Nodes:** All commits form a directed acyclic graph (DAG) much like Git commits. Each `:Commit` node represents a **logical transaction** or batch of changes applied to the graph. Key properties of a Commit node include: a unique `id` (could be a timestamp-based UUID or hash), an `author` (user ID or system ID that made the change), a `timestamp` (when the commit was created), and a `message` describing the change. In the current implementation, there is no explicit Commit node being created for changes (**GAP**; design-only). **FIX:** Introduce a `Commit` node type in Neo4j (with a unique constraint on `Commit.id`) and modify the sync or API logic to create a Commit node for every group of changes. For example, when the sync worker processes an update from Supabase, it should create a new Commit node (author \= `"sync_worker"`, message \= `"Synced changes from Supabase"`, timestamp \= now) *before* applying any data mutations.
+
+**Parent Relationships:** Each Commit node links to its parent commit(s), forming the history graph. Most commits have exactly one parent (a linear history), while merge commits will have two (or more) parents. We model this by adding relationships like `(:Commit)-[:PARENT]->(:Commit)` to point from a newer commit to the commit(s) it is based on. The very first commit (genesis or initial import) has no parent. This graph structure naturally supports branching and merging without special cases: a branch is simply a commit that diverges from another, and a merge is a commit with multiple PARENT links (two incoming history lines). In implementation, when creating a new commit node, the system would attach it to the current “head” commit of the relevant branch via a `PARENT` relationship. Ensuring *acyclicity* is inherent since a new commit always points to an earlier commit (usually the latest commit at time of creation).
+
+**Branching (Parallel Timelines):** We support branching by assigning commits to a **branch name** or using explicit Branch nodes. For example, the primary timeline could be branch `"main"`, and an alternate schedule experiment could be branch `"schedule_alt_B"`. In the design, a **Branch** node (with a `name` property) can serve as a pointer to the latest commit on that branch, via a relationship `(:Branch)-[:HEAD]->(:Commit)`. Alternatively, the branch name can be stored as a property on each Commit (and we maintain a mapping of branch heads in application state). Using explicit Branch nodes is cleaner: e.g., a node `Branch{name:"main"}` that *HEAD*\-\>(Commit123) means Commit123 is the tip of “main”. Creating a new branch would involve taking an existing commit (the fork point) and assigning a new branch node pointing to it, then allowing new commits with that branch label. **GAP:** Branching and merge logic is not present in the current code (no Branch nodes or branch properties exist – confirmed by absence in migrations and models). **FIX:** Add a `Branch` node type or a commit `branch` property. For a Branch node approach, update write operations so that when a commit is created, the corresponding Branch’s HEAD pointer is advanced to that commit (and for merges, multiple parent links are recorded). For now, all changes happen effectively on a single main timeline.
+
+**Linear History vs. Merge Commits:** In normal operation, commits form a linear chain on "main". When a feature like branching is implemented, a commit might have multiple parents. For example, if two separate branches "A" and "B" both diverged from an earlier commit, and later we merge them, the merge commit would have two parent relationships (one to the head of branch A and one to the head of branch B). In Neo4j, this would be represented by that merge commit node having two incoming `PARENT` edges. The system would generate a new commit with combined changes and set its parents accordingly. **Merges are explicit commits with two parents (three‑way merge against the LCA)**. Branch heads are tracked; schema commits occur only on `main`. **Conflict resolution** during merges would likely be a manual or application-level process (deciding which version of an entity to take if both branches edited it), resulting in the merged state being another new set of EntityVersions (see below). This merge commit's `message` can indicate it's a merge of branches, and its author might be the user or system performing the merge.
+
+**Commit Content:** Each Commit node will be linked to the specific changes it encompasses. In the provenance design, a commit *groups* one or more lower-level **Action** events (each Action might be an atomic operation like an API call, an AI tool invocation, or a single CRUD operation). We capture that by `(:Commit)-[:INCLUDES]->(:Action)` relationships. For example, a commit with message “User updated Scene 5 and generated call sheet” might include an Action for the Scene edit and another Action for the document generation. Each `Action` node would further document what it touched (via `-[:TOUCHED]->` relationships to Entities). In practice, implementing Action logs is an additional layer of audit detail – currently the codebase does not log Actions as graph nodes (**GAP**). **FIX:** Extend the commit creation process to also create `Action` nodes for each significant operation. For example, when the sync worker updates a File node, create an Action like “sync\_worker.file\_update” with details of the file, and link it to the Commit and the File (via TOUCHED). This yields fine-grained lineage (you could later ask “which commit and action caused this Scene’s location to be ‘Warehouse’?” and trace it).
+
+**Audit and Uniqueness:** By having every change result in a commit, we ensure an *append-only audit log*. No two commits share the same ID; we might use a timestamp plus a sequence or a GUID to generate commit IDs. It’s advisable to create a unique index or constraint on `Commit.id` in Neo4j. Each commit’s timestamp and parent link impose a natural order of events (the commit graph is partially ordered by parent relationships and totally ordered along each branch). This makes queries like “what is the latest commit?” straightforward (the latest commit on main branch is the one with no child on that branch, or as tracked by Branch HEAD). Service-level objectives (SLOs) for versioning might include minimal latency in writing commits (since every data change triggers a commit write, the overhead must be low) – Neo4j can handle this with proper indexing on IDs and maybe batching of fine-grained changes into one commit. **Current Performance Note:** Since commit nodes are not yet implemented, there is no performance impact now, but once enabled, we should monitor commit creation overhead. Batched commits (grouping many small changes into one commit node) can help keep the commit graph from growing too rapidly; for example, ingesting 50 new files in one operation could be recorded as a single commit with 50 file creation actions, rather than 50 commits.
+
+### **5.2 Entity Versions and Diffing**
+
+**Version Nodes per Entity:** Each domain entity in the graph (e.g. `Project`, `Scene`, `ShootDay`, `File`, etc.) will *not* store mutable properties directly on its primary node. Instead, every change to an entity’s data creates a new `:EntityVersion` node that captures the state of that entity at a point in time. The primary entity node remains as a stable identity (with minimal info, like an immutable ID and perhaps references to current version), and it will have a `HAS_VERSION` relationship to each of its version nodes. For example, a `Scene` node with id "Scene5" might have multiple `SceneVersion` nodes hanging off of it. The first version node represents the initial state (scene 5 as originally imported or created), and subsequent versions represent updates (rewrites, schedule changes, etc.).
+
+**Version Node Schema:** An `EntityVersion` node contains all the relevant properties of the entity for that version, as well as validity timestamps. We may use a generic label `EntityVersion` for all types (with a property like `entity_label` or `entity_type` to denote what kind of entity it is), or use type-specific labels like `SceneVersion`, `FileVersion` for convenience. The design leans toward a generic version node with a **properties map** field. For instance, a SceneVersion node might have properties:
+
+* `entity_id`: the stable ID of the entity (e.g. `"scene_5"`),
+
+* `entity_type` (or label): e.g. `"Scene"`,
+
+* `props`: a **JSON or map** of the scene’s attributes at that time (scene\_number, script\_pages, location, etc.),
+
+* `valid_from`: timestamp when this version became valid,
+
+* `valid_to`: timestamp when this version was superseded (or `null` if it’s the current version), and
+
+* `tx_time`: the commit timestamp when this version was recorded (often equal to valid\_from unless we allow recording retroactive data).
+
+By storing a full snapshot of properties in `props`, we guarantee that querying a historical version returns exactly the data as it was. This is simpler for bitemporal queries than storing only diffs. *(Alternative:* we could store each property as separate fields on the version node; however, using a single map allows a uniform schema for all entity types and is easier to maintain as entities evolve.)
+
+**Immutability and Current State:** Once created, an EntityVersion node is **immutable** – it represents truth for an interval of time. The only thing that might change later is setting its `valid_to` when it is no longer current. To get an entity’s current state, we find the version with `valid_to = null` (meaning it hasn’t ended) or the version with the greatest `valid_from` that is \<= now. Historical queries can filter by date: e.g., “what was Scene5 on 2025-08-04?” translates to finding the SceneVersion where `scene_id = 5` and `valid_from <= '2025-08-04' < valid_to`. Because relationships from other entities likely point to the stable entity node (not to versions), we maintain the stable node as the anchor in the graph and use version nodes mainly for data properties. We may choose to also keep a pointer on the stable node to the current version (for quick access), or even duplicate the latest properties on the stable node for performance. This is a pragmatic hybrid approach (**Option (b)** in the design): update the entity’s main node for quick reads *and* create a new version node for the audit trail. This duplicates data but ensures that most of the application can read current values without complex joins, while historical queries are still possible. For example, if Scene5’s location changes, we might do: `MATCH (s:Scene {id:5}) SET s.location="Warehouse"` (so the UI and queries see the new value directly on `Scene`), *and* create a new `SceneVersion` node with the full state and link it. The pure immutable approach (**Option (a)**) would leave the `Scene` node with essentially no mutable properties (maybe just an ID and type), and always require joining through the latest version node to get current data. That is cleaner in theory, but less efficient to query. We will likely implement the pragmatic hybrid: stable nodes with current snapshots, plus version nodes for history.
+
+**Creating New Versions (Write Path):** Whenever an entity changes, the system will create a new EntityVersion and retire the old version:
+
+1. **Prepare for change:** The service handling the update (e.g., the sync worker or an API endpoint) first fetches the entity’s current version node (the one with `valid_to = null`). If none exists (first change), we treat the existing stable node data as the “old version.”
+
+2. **End old version:** Set the `valid_to` timestamp on the old version node to the current time, indicating that as of now, it is no longer the active state. This is a minor mutation on an otherwise immutable node – effectively “closing out” that version’s validity interval. In Neo4j/Cypher, this would be a simple `MATCH (ent:Scene {id:5})-[:HAS_VERSION]->(v:SceneVersion {valid_to: null}) SET v.valid_to = datetime()` (or the commit’s timestamp).
+
+3. **Create new version:** Construct a new EntityVersion node with `valid_from = now` and `valid_to = null`, containing the updated properties. This new node represents the entity *after* applying the change. For instance, if we are changing Scene5’s `script_pages` from 3 to 4, the new SceneVersion’s `props` might show `"script_pages":4` (and also include all other properties like scene\_number, etc., copied from the old version with modifications as needed).
+
+4. **Link to entity and commit:** Attach the new version to the stable entity: `MERGE (s:Scene {id:5})-[:HAS_VERSION]->(newVersion)` and link the version to the commit that is recording this change: `MERGE (commit)-[:UPDATES]->(newVersion)`. The commit node (from 5.1) should already exist (or be created) encompassing this operation. This way, the commit “knows” it produced that new version, and the stable entity knows about all its versions. We also record the actor via the commit-\>author, and if needed, an Action node can be linked (Action-\>TOUCHED-\>Scene, etc.) for more detail.
+
+5. **Update stable node (if using hybrid approach):** If we choose to keep the latest state on the main entity node for quick reads, we now also update the Scene node’s properties to reflect the new state. In the example, set `Scene.script_pages = 4`. This step is what the current code actually does by default via an `MERGE ... SET n += $props` query. We would modify that logic to *also* do steps 1–4. In practice, the write would be done in a single Neo4j transaction: find and set old version’s `valid_to`, create new version node, update entity’s property, create relationships to commit, etc., all in one atomic transaction so that the graph remains consistent.
+
+**GAP – Current Implementation:** The present sync logic **does not create** version nodes; it simply upserts the entity node in place, overwriting properties. For example, the sync worker’s generic handler merges on the node and sets new properties directly. This means historical values are lost in the current system. It also deletes nodes outright on removal, rather than marking them inactive. **FIX:** Refactor the sync worker (e.g., in `services/sync_worker/handlers/entity_handler.py`) to implement the versioning steps above. Specifically, instead of `MERGE (n:Entity {id:$id}) SET n += $props` for updates, do:
+
+* `MERGE (n:Entity {id:$id})` (ensure the stable node exists without immediately setting props),
+
+* find the current version (if any) and mark its `valid_to`,
+
+* create the new version node with the updated data,
+
+* link it via HAS\_VERSION and UPDATES,
+
+* and then optionally update `n` with new props for current state.  
+   Likewise, replace hard deletes (`DETACH DELETE n`) with *soft deletes*: e.g., set an `is_deleted=true` flag or create a final version indicating deletion (perhaps setting an entity’s `status` to “deleted” and leaving it as the last version). This aligns with the design principle that we “never lose information” – even deletions are recorded rather than the node vanishing. In the Neo4j schema, we might add a constraint that only one version per entity can have `valid_to = null` (to ensure a single current version). We already plan in the design for “previous versions are immutable” and “only one current version”, which such changes would enforce.
+
+**Diffing Between Commits:** With discrete version snapshots and commit groupings, we can generate a **diff** between any two points in history. A diff answers "what changed in the data between commit X and commit Y?" **Diffs are computed per (entity\_id, property) and per EdgeFact against the LCA, not just adjacent commits. Include EdgeFacts in the diff surface.** To compute this, the system would:
+
+1. Identify the two commit nodes in question, ensuring they are on the same branch or have a common lineage (if not, diffing becomes a comparison of two different branch states, similar approach but one must pick a common baseline).
+
+2. For each entity, find the version that was current at commit X and the version current at commit Y.
+
+3. Compare those versions’ properties to detect changes.
+
+Thanks to the Commit→Version links, we can optimize this. Each commit node has outgoing `UPDATES` relationships to the new EntityVersion nodes it created. So one way to get a diff from commit X to Y (assuming X is an ancestor of Y on a branch) is:
+
+* Traverse the commit graph from X’s child to Y, collecting all `EntityVersion` nodes introduced in that range.
+
+* For each affected entity, take the earliest version *just after* X and the latest version *at* Y, and compare.
+
+A simplified Cypher example (conceptual) was given in the design:
+
+```
+MATCH (c1:Commit {id:$commitA})-[:UPDATES]->(v1:EntityVersion)<-[:HAS_VERSION]-(ent)
+MATCH (c2:Commit {id:$commitB})-[:UPDATES]->(v2:EntityVersion)<-[:HAS_VERSION]-(ent)
+WHERE ent.id = v1.entity_id = v2.entity_id
+RETURN ent.entity_type AS entityType, ent.id AS entityId, 
+       v1.props AS propertiesBefore, v2.props AS propertiesAfter;
+```
+
+This assumes commit A and B each have a version for the same entity (i.e. that entity was updated in both those commits). In practice, if an entity wasn’t touched by commit B, we’d need to find the latest version of that entity as of B anyway (which might have come from an earlier commit). A more complete diff algorithm might:
+
+* For each entity that exists in the system, find Version\_A (the version with `valid_from` \<= commitA.time \< `valid_to` or the one created by the last commit \<= A) and Version\_B (the version with `valid_from` \<= commitB.time \< `valid_to`). Then compare their `props`.
+
+* Or, restrict to entities that actually changed between A and B by looking at the commits in between. Because every new version is linked to a commit, one approach is to get all EntityVersion nodes with `valid_from` time between commit A’s time and commit B’s time (these are the ones introduced in that interval). For each such version, look at the prior version of the same entity (the one that was valid before), and output the difference.
+
+The outcome of a diff would be a set of changed entities with before/after values for each changed property. New entities (created after A) would appear with “before \= none, after \= props”, and entities that were ended or deleted would have “before \= old props, after \= none”. Because our system favors soft deletes, “deletion” might manifest as an entity getting a `status: ended` or similar in its final version rather than disappearing entirely.
+
+**Deletion and Diff:** Since we rarely hard-delete, if an entity was “deleted” (say, a scene removed from the schedule) between commit A and B, the diff should show that as well. In our model, that likely means the entity has a version that ended in that range (its `valid_to` set by some commit in between). A diff query could be extended to catch entities whose last version was ended. For example, if commit B is the point where a deletion happened, that commit’s Action/commit message might mark the entity as removed. We might treat removal as just another property change (e.g., `is_active: true -> false`) or a version that carries a flag. Either way, the audit trail is preserved: we can see that as of commit B, the entity is no longer active.
+
+**Current Capability:** Until version nodes and commit tracking are implemented, the system cannot provide true diffs between arbitrary points in time via the graph. At best, one could compare timestamps or use the Supabase row-level replication log to infer changes, but that’s outside the graph. Once we implement the above, the application could offer a “Show Changes” feature for any two commits or dates. This is analogous to a `git diff`. For example, users could select two versions of the shooting schedule and the system would list all scenes or shoot days that differ, highlighting added/removed/modified fields.
+
+### **5.3 Rollback and Revert**
+
+**Rollback Definition:** In this context, a **rollback** (or revert) means taking the data back to a previous state by applying a new change that undoes others. Importantly, we do **not** erase history or literally turn back the commit pointer as one might in Git; instead, we create a new commit that *reapplies an old state* as the current state. This forward-only approach ensures the audit trail remains intact – the fact that something was changed and later undone is fully recorded.
+
+**Process of Reverting Changes:** Suppose a user wants to undo the changes made in commit 150 and go back to the state of commit 100\. The rollback procedure would be:
+
+1. **Determine scope:** Identify what changes occurred between commit 100 and commit 150\. This could be done by computing a diff between commit 100 and 150 (as described above). Let’s say commits 101–150 introduced changes to a set of entities (e.g., Scene5’s schedule, a few Files, etc.).
+
+2. **Gather old versions:** For each affected entity, find the version that was current at commit 100 (the state we want to restore). This is effectively the “before” state from the diff – either an EntityVersion node from commit 100 itself or the latest version prior to commit 101\.
+
+3. **Apply new versions with old data:** Create a new commit (call it 151\) with a message like “Revert to state of commit 100”. This commit will create new EntityVersion nodes for each affected entity, copying the properties from the commit-100 versions. In other words, we *clone* the old version data into a fresh version node (with `valid_from = now` \= time of commit 151). We do **not** reuse the old version nodes, since those represent historical times – instead we create new ones that just happen to have identical props to the old state. Each of these new versions is linked to commit 151 via `UPDATES`, and linked to the respective entity via `HAS_VERSION`. The previously current versions (from commit 150\) are now superseded, so we set their `valid_to = now` (the time of revert) if not already set.
+
+4. **Branch ancestry:** Commit 151’s parent will typically be commit 150 (the latest commit on that branch), not commit 100\. We are not “rewinding” history; we’re adding a new point on the timeline that just mirrors an earlier state. This avoids altering the historical record. Conceptually, it’s like a new commit on the main branch that coincidentally makes things look like commit 100 again. (In Git terms, this is akin to a “revert” commit, not a reset).
+
+5. **Optional metadata:** We might mark commit 151 with a flag or metadata indicating it’s a rollback (e.g., `commit.tags = ["revert"]` or an `is_revert: true` property) to easily identify such commits. The commit message should also reference the commit it’s reverting (we could even link Commit 151 to Commit 100 via a custom relationship like `REVERTS` for traceability).
+
+After commit 151, the latest state of the graph matches what it was at commit 100 for the reverted entities. Anything introduced after commit 100 that is not explicitly reverted in 151 would remain (unless we also decided to remove those as part of the rollback). In a full rollback scenario, we likely revert all changes from 101 through 150 inclusive. That means if some entities were created in that range, commit 151 should mark them as removed (e.g., by setting a `deleted` flag or ending their last version). Conversely, if some were deleted in that range, commit 151 might recreate them (by adding a new version identical to the old one from commit 100).
+
+**Outcome and Audit Trail:** The commit graph now shows that we had commit 150 (with the undesired changes), and then commit 151 which brings things back. Nothing is lost: commit 150 is still in the history, but its changes are no longer reflected in the current versions. Auditors can see that commit 150 happened and then was reverted by commit 151, including who performed the revert and when. Downstream systems or subscribers to the graph can be designed to simply treat commit 151 as just another update. For instance, if commit 150 had triggered document generation (like a call sheet PDF based on the new data), then commit 151 would trigger the same mechanisms – an agent could detect the schedule changed (back to the old one) and regenerate the PDF. In fact, we would associate any regenerated artifacts with commit 151 to note that they were produced due to the rollback event.
+
+**No Destructive Undo:** We emphasize that rollback is achieved via **additive changes** (new commits and versions) rather than removing prior commits or data. This aligns with best practices in audit logging: never delete or mutate the audit log, just append a compensating transaction. Even if an error or unwanted edit occurred, it remains in the log; the rollback just adds an entry that “at time T, user X reverted these fields to a previous state.” This provides a complete story if someone later asks “why does this data look like it skipped from version 100 to 151?” – the answer is in the commits.
+
+**Alternate Timelines via Branches:** Another way to handle “undo” scenarios or what-if experiments is the branching mechanism. Rather than immediately overwriting the main branch with a rollback commit, the system could support creating a new branch from commit 100, allowing the user to inspect or modify that alternate timeline. For example, branch “schedule\_alt\_B” forked at commit 100 would allow edits going forward from that point without disturbing main. If that alternate path is approved, it might then be merged back into main as a new commit (merge commit). This approach can sometimes avoid needing a revert on main if caught early – you could abandon the experimental branch instead. However, implementing full multi-branch support is complex (especially in a graph DB where merging means reconciling potentially divergent subgraphs). Currently, we have not implemented branching or merging in code (they remain design concepts – **GAP**). The initial rollback strategy will use the single timeline with explicit revert commits.
+
+**Mechanics of Automated Rollback:** To implement a rollback feature in the application, one could create a utility that automates the above steps. For instance, a `rollback_to(commitId)` function would:
+
+* Ensure the target commit (commitId) exists and is an ancestor of the current head (to avoid complex scenarios of partial rollbacks).
+
+* Compute the diff between that commit and head.
+
+
+One must be careful with side effects: if external systems or integrations have consumed the now-reverted data (for example, if an email was sent based on a schedule that was later rolled back), those won’t magically undo. Operationally, we might log that a rollback happened and require some manual steps outside the system (e.g., send a correction email). But within the system’s data stores, the rollback commit will make it appear as if those changes never happened (from the perspective of queries on current state).
+
+**Integrity Considerations:** After a rollback, the graph’s integrity constraints should still hold. Because we might be re-introducing older data, we need to ensure no uniqueness constraints are violated. In Neo4j, if we had a uniqueness constraint on something like `Project.name` or an identifier that was reused, the rollback commit’s insertion of an old version might conflict if the “deleted” entity wasn’t fully removed. However, since our approach is to soft-delete (not actually remove nodes), an entity that was “deleted” after commit 100 would still exist in the graph (just marked ended), so reusing its ID is not an issue – we would instead *reactivate* it by adding a new version. No new node with duplicate ID is created; we attach a new version to the existing node. Similarly, for entities created after commit 100 that we want to consider removed at 151, we wouldn’t delete them outright in rollback – we might set a `deleted_at` on them or otherwise mark their last version ended. The constraints (like uniqueness of IDs) remain satisfied.
+
+In summary, rollback is implemented as a **forward event** that nullifies prior changes, rather than a time-travel or deletion of history. The system always moves ahead, and any reversal of state is itself part of the immutable history. **Reverts are applied by creating new EdgeFacts that restore the earlier relationship state (and by closing any currently‑open EdgeFacts), never by deleting historical EdgeFacts.** This approach guarantees auditability and aligns with the concept that our knowledge graph is a **bitemporal ledger** of the production's data. Users gain the ability to "undo" while we as architects maintain a complete record of everything that happened, which is crucial for trust and compliance.
+
+### **5.4 Branch & Merge Semantics**
+
+**Goal.** Deterministic, auditable merges for production data so alternate schedules and generated artifacts reconcile without hand editing. Applies to all "data branches"; ontology/schema changes remain on `main`.
+
+#### 5.4.1 Scope of branching
+
+* **Data only.** Branches apply to **EntityVersion** (node state) and **EdgeFact** (relationship state).
+* **Schema locked to `main`.** Ontology changes (TypeDef, constraints) are proposed/approved on `main` and are not branchable. If a branch attempts schema mutation, create a **TypeDefProposal** and block the write.
+
+#### 5.4.2 Conflict units
+
+* **Node properties:** per tuple **(entity\_id, property\_key)**.
+* **Edges:** per **EdgeFact (id, edge\_type, from\_id, to\_id)**.
+  A branch "touches" a unit if it introduces a new EntityVersion changing that property, or a new/ended EdgeFact with the same `(type, from, to)`.
+
+#### 5.4.3 Conflict rulebook
+
+1. **ShootDay ↔ Scene (schedule moves).**
+   Default: **last‑writer‑wins on the merge target**. Exception: if **both** branches reassign the **same Scene** to **different ShootDays** (i.e., mutually exclusive EdgeFacts for `COVERS_SCENE`), mark **manual resolution required**.
+   *Detection*: base has `D —COVERS_SCENE→ S`. Branch A sets `D1→S`; Branch B sets `D2→S`, `D1 ≠ D2`. Conflict.
+
+2. **File → CanonicalSlot classification.**
+   If both branches classify differently:
+
+   * If one side is from **deterministic taxonomy rule**, prefer that.
+   * If both are **ML/human adjudications**, **escalate**.
+   * If neither changed vs base, keep base.
+     *Rationale*: avoid oscillation from probabilistic classifiers.
+
+3. **Numeric aggregates (e.g., PO amounts, totals).**
+   **Never auto‑merge** competing edits to **sums/totals**; require human resolution (these are business‑critical).
+
+4. **Identical edits.**
+   If both sides change a unit to the **same value**, accept once (no conflict).
+
+5. **Non‑overlapping edits.**
+   If only one side touched a unit, take it.
+
+#### 5.4.4 Merge algorithm (three‑way, base aware)
+
+* **Inputs:** `head_target` (active branch), `head_source` (to merge), **base = LCA(head\_target, head\_source)**.
+* **Compute deltas:**
+
+  * For every entity: `Δprops_target = props(head_target) – props(base)`; same for source; per property key.
+  * For edges: set‑diff **EdgeFacts** (by `(type, from, to)`) between head and base.
+* **Resolve:**
+
+  * Apply rulebook in §5.4.3 per unit.
+  * **Do not mutate past versions.** For each resolved unit, **create** a new `EntityVersion` / `EdgeFact` on the **target branch** that equals the chosen state; set `valid_to` on superseded current versions/facts.
+* **Record merge:** Create a **merge commit** on target with **two parents** (target head, source head). Attach a `MERGE_PLAN` payload (JSON) enumerating: auto‑applied units, manual conflicts, and provenance of decisions (rule vs human).
+
+**Pseudocode (spec):**
+
+```
+base = LCA(head_target, head_source)
+units = diff_units(base, head_target) ∪ diff_units(base, head_source)
+
+for unit in units:
+  t = change_on(head_target, unit)
+  s = change_on(head_source, unit)
+  if t && !s: accept t
+  elif !t && s: accept s
+  elif equal(t, s): accept t
+  else:
+    decision = apply_rulebook(unit, t, s)
+    if decision == 'manual': record_conflict(unit, t, s)
+    else: accept decision
+
+emit_merge_commit(accepted_units, conflicts)
+```
+
+#### 5.4.5 Invariants
+
+* **No parent rewrites.** Merges **only append** new versions/facts; parents remain immutable.
+* **No unsafe fast‑forwards.** If **any** unit was touched on **both** branches, you **must** produce a merge commit (no fast‑forward). Fast‑forward is allowed only when source changed units disjoint from target's changes.
+* **Data determinism.** All auto‑resolutions must be explainable (rule id, timestamp) in the merge commit.
+
+#### 5.4.6 Domain examples
+
+* **Schedule merge:** Scene 18 moved from D3→D5 on A, D3→D4 on B → manual. Scene 22 untouched on A, moved on B → accept B.
+* **Call‑sheet generations:** Two different generated PDFs on branches: keep **both** File nodes; on merge, link only the **resolved** one to `ShootDay` as `GENERATED_CALLSHEET`, archive the other (keep provenance).
+* **Budget totals:** Divergent `PO.total` edits → hard stop & review task.
+
+#### 5.4.7 API & UI (minimum)
+
+* **API:**
+
+  * `POST /branches/:target/merge/:source` → starts merge, returns plan `{auto, conflicts[]}`.
+  * `POST /merges/:id/resolve` with per‑unit decisions; emits merge commit.
+* **UI:** Merge preview with three columns: **Auto‑applied**, **Conflicts**, **Unchanged**. For conflicts, show base/left/right, and domain helper (e.g., calendar picker for ShootDay).
+* **Tasks:** On conflict, create `:Task {type: 'merge_conflict'}` linked to units; assign to role owner (e.g., AD for schedule).
+
+#### 5.4.8 Test checklist (must pass)
+
+* LCA detection correct for linear and branched histories.
+* Property conflict detection per `(entity_id, property)` including identical value short‑circuit.
+* Edge conflict detection for `COVERS_SCENE` "same Scene, different Day".
+* Deterministic rule preference for File→Slot.
+* No historical node/edge mutated during merge (only new versions/facts).
+* Fast‑forward blocked when any unit overlaps; allowed otherwise.
+* Merge commit includes `UPDATES` links to all new EntityVersions/EdgeFacts and a durable `MERGE_PLAN`.
+
+### **5.5 EdgeFact Write Helper (Temporal Relationships)**
+
+This canonical write pattern closes old EdgeFacts, opens new ones, and maintains convenience edges in a single transaction. Implement equivalent in `neo4j_client` (e.g., `upsert_edge_fact(tx, type, from_id, to_id, props, branch='main')`).
+
+```cypher
+// Params: $type, $from_id, $to_id, $props (map), $branch, $now, $ef_id (uuid)
+// Also: $from_label, $to_label for convenience rel maintenance if you want label guards.
+
+CALL apoc.util.sleep(0) YIELD value  // placeholder to emphasize single-transaction
+
+// 1) Lock both endpoints by id so concurrent writers serialize (choose your locking approach)
+MATCH (from {id: $from_id})
+MATCH (to   {id: $to_id})
+// OPTIONALLY add label predicates: from:$FromLabel, to:$ToLabel
+
+// 2) Close any open EdgeFact for this tuple
+OPTIONAL MATCH (old:EdgeFact {type:$type, from_id:$from_id, to_id:$to_id, branch:$branch})
+WHERE old.valid_to IS NULL
+SET old.valid_to = $now
+
+// 3) Create the new EdgeFact
+CREATE (ef:EdgeFact {
+  id: $ef_id,
+  type: $type,
+  from_id: $from_id,
+  to_id: $to_id,
+  props: $props,
+  branch: $branch,
+  valid_from: $now,
+  valid_to: null,
+  tx_time: $now
+})
+
+// 4) Wire anchors
+MERGE (from)-[:HAS_EDGE]->(ef)
+MERGE (to)  -[:HAS_EDGE]->(ef)
+MERGE (ef)-[:FROM]->(from)
+MERGE (ef)-[:TO]->(to)
+
+// 5) Maintain convenience edge (current snapshot)
+// Use dynamic relationship type via APOC or CASE over known types.
+CALL {
+  WITH from, to, $type AS t
+  // delete any existing convenience edge between these nodes of this type
+  CALL apoc.do.when(
+    t = 'COVERS_SCENE',
+    'MATCH (from)-[r:COVERS_SCENE]->(to) DELETE r',
+    '',
+    {from:from, to:to}
+  ) YIELD value
+  RETURN value
+}
+CALL {
+  WITH from, to, $type AS t
+  CALL apoc.do.when(
+    t = 'COVERS_SCENE',
+    'MERGE (from)-[:COVERS_SCENE]->(to)',
+    '',
+    {from:from, to:to}
+  ) YIELD value
+  RETURN value
+}
+RETURN ef;
+```
+
+> Your service layer must also **delete the convenience rel** when closing without a successor (e.g., de‑assignment). Do this by running the same block but skipping step 3 and deleting the rel after step 2 when the new state is "no edge".
+
+
+---

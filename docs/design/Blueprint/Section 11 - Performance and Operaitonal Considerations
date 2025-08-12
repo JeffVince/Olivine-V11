@@ -1,0 +1,570 @@
+# **10\. Performance & Operational Considerations**
+
+A graph of this scope and the AI agents require attention to performance and reliability: Graph Indexing: We will add indexes in Neo4j on frequently queried elements, such as :File(checksum), :File(path), :ShootDay(date), :Scene(id or name), :Commit(id), :CanonicalSlot(key), etc. These ensure that lookups and joins (which are often by these keys) are fast. For example, finding the current script file by slot key should hit an index on the CanonicalSlot or a composite index on (slot, tenant). Caching: For read-heavy operations like building a daily call sheet view in a web UI, we might not hit Neo4j every time for every piece. We can maintain a cache (e.g., in Redis) of computed “views” – say a JSON blob of everything about a particular ShootDay (scenes, cast, weather, etc.) keyed by something like tenant:project:shootday:commitHash. The commit hash part ensures that if any underlying data changes (leading to a new commit), the key changes and the cache regenerates. This gives us responsive UIs without sacrificing consistency. Bulk Operations and Batching: Some tasks, like initial ingestion of hundreds of files or generating a bunch of call sheets at once, will be optimized by batching transactions and using efficient queries. We might use Neo4j’s bulk import for the first load of a project’s script breakdown, for instance. Observability: We will instrument each agent and the overall system with metrics. This includes tracking the number of events processed, how long each action takes (e.g., time to classify a file, time to run a template generation), success/failure counts, etc. We’ll have alerts for abnormal conditions, such as: Mapping confidence issues: If suddenly many files are coming in with low confidence classification (i.e., needing human review), that could indicate the taxonomy profile is insufficient or an outage in the ML service – we’d alert to investigate. Commit rates: Unusually high commit frequency might indicate a loop or error (or just a busy period, but worth checking). Agent errors: Any exceptions or tool failures (like “weather API timed out”) will be logged and counted. Repeated failures trigger notifications. Scalability: Neo4j can handle a decent-sized graph on a single instance, but if needed, we can partition by tenant or use Neo4j Fabric for multiple graphs. However, initially this may not be needed unless we ingest extremely large files or transcripts. Backup and Disaster Recovery: Because Neo4j is the source of truth (with Supabase storing files), we’ll implement regular backups of the database and have point-in-time recovery. The bitemporal nature actually aids in recovery – since if something gets corrupted logically, we could trace it and potentially revert. But we still need physical backups for safety. Operationally, each part of the system (agents, DB, etc.) can be containerized and deployed in a cloud environment. Agents communicate via a queue or event bus (like RabbitMQ or similar), ensuring decoupling and the ability to scale agents horizontally if one type becomes a bottleneck.
+
+## **10.1 Graph Indexing & Constraints (Neo4j)**
+
+### **10.1.1 Index & Constraint Policy**
+
+**Goals**
+
+* Ensure point lookups and bounded traversals are O(logN) or better.
+
+* Protect invariants (IDs must exist and be unique).
+
+* Enable fast search on human‑entered names/paths via full‑text.
+
+**Baseline from doc:** Index frequently queried elements such as `:File(checksum)`, `:File(path)`, `:ShootDay(date)`, `:Scene(id or name)`, `:Commit(id)`, `:CanonicalSlot(key)`; fast lookup of “current script file by slot key”; consider composite index on `(slot, tenant)`. ([Google Docs](https://docs.google.com/document/d/e/2PACX-1vR_LQJv-StsiPJbVYUCFcFA3gLPyBrRjt5Q3c_nL_bQe9-klAvt5deljrx1Q6UuwcbXq1D3NPLe0yTK/pub))
+
+**Implementation (Neo4j 5+ Cypher)**  
+ Create **range** indexes and **constraints**; add **full‑text** for `name`/`path`. (Syntax per Neo4j Cypher Manual.) ([Graph Database & Analytics](https://neo4j.com/docs/cypher-manual/current/indexes/search-performance-indexes/managing-indexes/?utm_source=chatgpt.com))
+
+```
+// IDs must exist and be unique
+CREATE CONSTRAINT file_id_pk IF NOT EXISTS
+FOR (f:File) REQUIRE f.id IS UNIQUE;
+
+CREATE CONSTRAINT folder_id_pk IF NOT EXISTS
+FOR (d:Folder) REQUIRE d.id IS UNIQUE;
+
+CREATE CONSTRAINT scene_id_unique IF NOT EXISTS
+FOR (s:Scene) REQUIRE s.id IS UNIQUE;
+
+CREATE CONSTRAINT commit_id_unique IF NOT EXISTS
+FOR (c:Commit) REQUIRE c.id IS UNIQUE;
+
+CREATE CONSTRAINT canonicalslot_key_unique IF NOT EXISTS
+FOR (cs:CanonicalSlot) REQUIRE cs.key IS UNIQUE;
+
+// Frequently used lookup keys
+CREATE INDEX file_path_idx IF NOT EXISTS
+FOR (f:File) ON (f.path);
+
+CREATE INDEX file_checksum_idx IF NOT EXISTS
+FOR (f:File) ON (f.checksum);  // see GAP below
+
+CREATE INDEX shootday_date_idx IF NOT EXISTS
+FOR (sd:ShootDay) ON (sd.date);
+
+CREATE INDEX scene_number_idx IF NOT EXISTS
+FOR (s:Scene) ON (s.number);
+
+CREATE INDEX canonicalslot_key_idx IF NOT EXISTS
+FOR (cs:CanonicalSlot) ON (cs.key);
+
+// Full-text search (human-facing)
+CREATE FULLTEXT INDEX file_search_ft IF NOT EXISTS
+FOR (f:File) ON EACH [f.name, f.path];
+
+CREATE FULLTEXT INDEX scene_search_ft IF NOT EXISTS
+FOR (s:Scene) ON EACH [s.name, s.header];
+```
+
+**GAP:** Research doc stores checksums in `File.metadata` JSON, not at top level; the above `file_checksum_idx` will be a no‑op without a concrete `checksum` property. ([Google Docs](https://docs.google.com/document/d/e/2PACX-1vR_LQJv-StsiPJbVYUCFcFA3gLPyBrRjt5Q3c_nL_bQe9-klAvt5deljrx1Q6UuwcbXq1D3NPLe0yTK/pub))  
+ **FIX:** Denormalize `checksum` into `File.checksum` during sync (on new/updated files). Example (Python/driver pseudo):
+
+```py
+# GAP/FIX: add during file upsert
+props = {
+  "id": file.id,
+  "name": file.name,
+  "path": file.path,
+  "size": file.size,
+  "mime_type": file.mime_type,
+  "bucket_id": file.bucket_id,
+  "created_at": file.created_at,
+  "updated_at": file.updated_at,
+  "checksum": metadata.get("checksum")  # <= promote to top-level
+}
+```
+
+**Composite key for slot-by-tenant lookups:** The doc describes tenant scoping via a `:Tenant` node and `(:Tenant)-[:OWNS]->(:Project)` etc., not a `tenant_id` property on all nodes. Therefore, prefer **pattern‑based scoping** (MATCH from the tenant) over embedding `tenant_id` on each node to avoid duplication and drift. If benchmarks later show a hotspot, add a denormalized `tenantKey` property and composite index with a clear write‑time invariant. ([Google Docs](https://docs.google.com/document/d/e/2PACX-1vR_LQJv-StsiPJbVYUCFcFA3gLPyBrRjt5Q3c_nL_bQe9-klAvt5deljrx1Q6UuwcbXq1D3NPLe0yTK/pub))
+
+**Query examples using the indexes**
+
+*Find current script file by canonical slot (pattern‑scoped to tenant & project):*
+
+```
+MATCH (t:Tenant {id: $tenantId})-[:OWNS]->(p:Project {id: $projectId})
+MATCH (p)<-[:OF_PROJECT]-(f:File)-[:CANONICAL_SLOT]->(cs:CanonicalSlot {key: "SCRIPT_PRIMARY"})
+RETURN f LIMIT 1;
+```
+
+*Look up all scenes on a shoot day:*
+
+```
+MATCH (p:Project {id: $projectId})-[:HAS_SHOOT_DAY]->(sd:ShootDay {date: $date})
+MATCH (sd)-[:SCHEDULES]->(s:Scene)
+RETURN s ORDER BY s.number;
+```
+
+**Operational controls**
+
+* After creating indexes/constraints, run `CALL db.indexes()` and `CALL db.constraints()` and capture to ops docs.
+
+* Enable **query logs** with thresholds to detect missing index usage (“db hits” spikes). Config in `neo4j.conf`:
+
+```
+dbms.logs.query.enabled=true
+dbms.logs.query.threshold=200ms
+dbms.logs.query.parameter_logging_enabled=true
+```
+
+*   
+  (See Neo4j logging docs and KB on query.log.) ([Graph Database & Analytics](https://neo4j.com/docs/operations-manual/current/monitoring/logging/?utm_source=chatgpt.com))
+
+---
+
+## **10.2 Read‑Path Caching (Planned Redis Integration)**
+
+**Goals**
+
+* Sub‑100 ms p50 response for read‑heavy UI surfaces (e.g., call sheet / shoot‑day dashboard).
+
+* Deterministic invalidation on **graph commit** (no stale reads).
+
+**Baseline from doc:** Cache computed “views” keyed by `tenant:project:shootday:commitHash`. ([Google Docs](https://docs.google.com/document/d/e/2PACX-1vR_LQJv-StsiPJbVYUCFcFA3gLPyBrRjt5Q3c_nL_bQe9-klAvt5deljrx1Q6UuwcbXq1D3NPLe0yTK/pub))
+
+### **10.2.1 Cache Keying & TTL**
+
+* **Key schema (v1):**  
+   `olivine:v1:view:shootday:{tenantId}:{projectId}:{yyyy-mm-dd}:{commitHash}`  
+   Optional subviews: `...:cast`, `...:scenes`, `...:logistics` for partial hydration.
+
+* **Value:** JSON blob (gzip).
+
+* **TTL:** 6h “safety TTL”; correctness is enforced via commit‑hash invalidation, so TTL is just a backstop.
+
+* **Compression:** Enable Redis `client-side` gzip or store pre‑compressed to cut egress and memory.
+
+**GAP:** Redis not yet integrated.  
+ **FIX:** Introduce a thin caching module with **idempotent get‑or‑build** semantics. Example (Python/ASGI):
+
+```py
+# GAP/FIX: backend/cache/views.py
+import json, gzip, os
+import redis.asyncio as redis
+
+REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+r = redis.from_url(REDIS_URL, decode_responses=False)
+
+CACHE_TTL_SECONDS = int(os.getenv("CACHE_TTL_SECONDS", "21600")) # 6h
+
+async def get_shootday_view(tenant_id, project_id, iso_date, commit_hash, builder):
+    key = f"olivine:v1:view:shootday:{tenant_id}:{project_id}:{iso_date}:{commit_hash}"
+    data = await r.get(key)
+    if data:
+        return json.loads(gzip.decompress(data))
+    # Build on miss
+    view = await builder(tenant_id, project_id, iso_date, commit_hash)
+    payload = gzip.compress(json.dumps(view, separators=(',', ':')).encode("utf-8"))
+    # Set-if-absent to avoid thundering herd
+    await r.set(key, payload, ex=CACHE_TTL_SECONDS, nx=True)
+    return view
+```
+
+### **10.2.2 Invalidation**
+
+* **Doc intent:** “Key changes when commit changes.” We also invalidate on relevant upstream events. ([Google Docs](https://docs.google.com/document/d/e/2PACX-1vR_LQJv-StsiPJbVYUCFcFA3gLPyBrRjt5Q3c_nL_bQe9-klAvt5deljrx1Q6UuwcbXq1D3NPLe0yTK/pub))
+
+**GAP:** No canonical “commit applied” event name in doc’s Event list.  
+ **FIX:** Emit `graph.commit.applied` with `{tenantId, projectId, commitId, commitHash, affected: {shootDays:[...], scenes:[...]}}`. On consume, **delete** impacted keys (wildcard by date if needed).
+
+**GAP:** Event bus not specified as RabbitMQ vs SQS.  
+ **FIX:** Start with RabbitMQ (lowest cost/self‑managed); define exchange `olivine.events` (type=`topic`), route `graph.commit.applied`. Add a small worker:
+
+```py
+# GAP/FIX: workers/cache_invalidator.py
+import asyncio, json, aio_pika, re
+from cache.views import r  # Redis client
+
+async def handle(msg: aio_pika.IncomingMessage):
+    async with msg.process(requeue=True):
+        ev = json.loads(msg.body)
+        tenant, project = ev["tenantId"], ev["projectId"]
+        for day in ev.get("affected", {}).get("shootDays", []):
+            pattern = f"olivine:v1:view:shootday:{tenant}:{project}:{day}:*"
+            # scan & delete to avoid mass keyspace hits
+            async for key in r.scan_iter(pattern, count=200):
+                await r.delete(key)
+        # idempotent: deleting a non-existent key is fine
+
+async def main():
+    conn = await aio_pika.connect_robust(os.getenv("AMQP_URL"))
+    ch = await conn.channel()
+    q = await ch.declare_queue("", exclusive=True, durable=False)
+    await q.bind(exchange="olivine.events", routing_key="graph.commit.applied")
+    await q.consume(handle)
+    await asyncio.Future()
+```
+
+**Cache stampede control**
+
+* Use `NX` set \+ **singleflight** (one‑flight) lock key (`...:lock`) with a 10s TTL.
+
+* Builders must be **time‑boxed** (2s budget); fall back to partial cache on timeout.
+
+---
+
+## **10.3 Bulk Operations & Batching**
+
+**Baseline from doc:** Batch ingestion of hundreds of files; consider Neo4j bulk import for initial script breakdown. ([Google Docs](https://docs.google.com/document/d/e/2PACX-1vR_LQJv-StsiPJbVYUCFcFA3gLPyBrRjt5Q3c_nL_bQe9-klAvt5deljrx1Q6UuwcbXq1D3NPLe0yTK/pub))
+
+### **10.3.1 First‑Load (Empty Graph) Imports**
+
+* For first loads, use **`neo4j-admin database import`** (CSV) when no existing data—that’s 10–100× faster than transactional writes. For existing DBs, prefer batched `UNWIND` transactions. (Neo4j bulk/ops guidance.) ([Graph Database & Analytics](https://neo4j.com/docs/cypher-manual/current/indexes/search-performance-indexes/managing-indexes/?utm_source=chatgpt.com))
+
+**CSV Shapes**
+
+* `files.csv`: `:ID(File),name,path,checksum,size:long,mime_type,bucket_id,created_at,updated_at`
+
+* `folders.csv`: `:ID(Folder),name,path`
+
+* `contains.csv`: `:START_ID(Folder),:END_ID(File),:TYPE(CONTAINS)`
+
+**GAP:** No import harness present.  
+ **FIX:** Add `/ops/import/` with Make target:
+
+```shell
+# GAP/FIX: ops/import/Makefile
+import:
+	neo4j-admin database import full --overwrite-destination=true \
+	  --nodes=File=files.csv --nodes=Folder=folders.csv \
+	  --relationships=CONTAINS=contains.csv --database=neo4j
+```
+
+### **10.3.2 Transactional Batching (Day‑2+)**
+
+* Use **`UNWIND $batch AS row`** and **`apoc.merge…`** or vanilla MERGE. Keep batches at **5k–20k** rows depending on property size; wrap in `session.write_transaction` and **retry on `TransientError`**.
+
+* **One relationship type per statement** to keep planner simple.
+
+* **Profile** each statement once indexes exist; enforce “db hits \< 2M” on ingest paths via CI smoke job.
+
+---
+
+## **10.4 Observability (Metrics, Traces, Logs, Alerts)**
+
+**Baseline from doc:** Track events processed, action duration, success/failure, mapping confidence issues, commit rates, agent errors; raise alerts on anomalies. ([Google Docs](https://docs.google.com/document/d/e/2PACX-1vR_LQJv-StsiPJbVYUCFcFA3gLPyBrRjt5Q3c_nL_bQe9-klAvt5deljrx1Q6UuwcbXq1D3NPLe0yTK/pub))
+
+### **10.4.1 Stack**
+
+* **Metrics & Traces:** OpenTelemetry SDK → OTEL Collector → Prometheus (scrape) \+ Grafana (dashboards). Follow OTel metric/tracing **semantic conventions**. ([OpenTelemetry](https://opentelemetry.io/docs/specs/semconv/general/metrics/?utm_source=chatgpt.com))
+
+* **Logs:** Structured JSON to stdout; aggregate via Loki or CloudWatch; include `tenantId`, `projectId`, `commitId`, `agent`, `action`.
+
+**GAP:** No instrumentation in repo.  
+ **FIX:** Add `observability/otel.py` bootstrap and instrument: HTTP server, Neo4j driver, AMQP client, and cache layer with spans.
+
+**Metric catalogue (authoritative names)**  
+ *Counters*
+
+* `olivine_events_processed_total{agent,topic,tenantId}`
+
+* `olivine_agent_errors_total{agent,error_type}`
+
+* `olivine_commits_applied_total{tenantId,projectId}`
+
+*Histograms (ms)*
+
+* `olivine_action_duration_ms{agent,action}`
+
+* `olivine_graph_tx_duration_ms{operation}`
+
+* `olivine_cache_build_ms{view}`
+
+*Gauges*
+
+* `olivine_cache_items{view}`
+
+* `olivine_mapping_low_confidence_ratio{profile}` (derived)
+
+**Alert rules (initial)**
+
+* **Mapping Confidence Spike:** 5‑min rate of low‑confidence \> **0.25** of classifications → warn; \> **0.5** → page. (Doc calls this out explicitly.) ([Google Docs](https://docs.google.com/document/d/e/2PACX-1vR_LQJv-StsiPJbVYUCFcFA3gLPyBrRjt5Q3c_nL_bQe9-klAvt5deljrx1Q6UuwcbXq1D3NPLe0yTK/pub))
+
+* **Commit Rate Surge:** `rate(olivine_commits_applied_total[5m])` \> historical p95 × **3** for 10 min.
+
+* **Agent Error Burst:** `rate(olivine_agent_errors_total[5m])` \> **5/min** per agent for 5 min.
+
+**Neo4j Query Observability**
+
+* Enable `query.log` as in §10.1; ship to logs; run daily job “Top N by db hits / rows” to suggest new indexes. ([Graph Database & Analytics](https://neo4j.com/docs/operations-manual/current/monitoring/logging/?utm_source=chatgpt.com))
+
+---
+
+## **10.5 Reliability Controls (Timeouts, Retries, Idempotency, DLQs)**
+
+* **HTTP/External APIs:** exponential backoff **100ms → 5s**, max 5 attempts; circuit‑break after 20 failures/1m.
+
+* **Neo4j Writes:** retry on `Neo.TransientError` with jittered backoff; cap at 3\.
+
+* **Idempotency:** Use **`commitId`** as the idempotency key for write actions (same commit must be safely re‑applied).
+
+* **Queues:**
+
+  * `basic.ack` after durable side‑effects;
+
+  * Per‑message **retry headers** (attempts) and a **DLQ** `olivine.dlq` after 5 attempts;
+
+  * Dead‑letter messages carry `originalRoutingKey`, `commitId`, `payloadSha256`.
+
+**GAP:** No DLQ definitions in repo.  
+ **FIX:** Declare DLQ/exchanges in infra code (e.g., Terraform or Helm values) and add a simple DLQ browser (read‑only API, paginated).
+
+---
+
+## **10.6 Scalability Plan (Cost‑First)**
+
+**Baseline from doc:** Start single instance; consider partition by tenant or **Neo4j Fabric** if needed. ([Google Docs](https://docs.google.com/document/d/e/2PACX-1vR_LQJv-StsiPJbVYUCFcFA3gLPyBrRjt5Q3c_nL_bQe9-klAvt5deljrx1Q6UuwcbXq1D3NPLe0yTK/pub))
+
+* **Phase A (default):** **Neo4j CE 5.x** single node on 4–8 vCPU, 16–32 GB RAM.
+
+  * Heap: 6–8 GB; Page cache: 8–16 GB; leave OS cache for files.
+
+  * Vertical scale first; keep costs low.
+
+* **Phase B (data growth):** Shard by tenant at the **application level** (route to different DBs/instances) before adopting Fabric to avoid Enterprise licensing cost. (Fabric is powerful multi‑graph routing if/when we can justify Enterprise.)
+
+* **Phase C (compute burst):** Agents are **stateless**; scale horizontally on queue depth (\> 1000 ready msgs for 5 min).
+
+**GAP:** Exact heap/page cache not codified.  
+ **FIX:** Materialize in `NEO4J_server/conf/neo4j.conf`:
+
+```
+server.memory.heap.initial_size=6g
+server.memory.heap.max_size=6g
+server.memory.pagecache.size=12g
+dbms.logs.query.enabled=true
+dbms.logs.query.threshold=200ms
+```
+
+(General configuration references.) ([Graph Database & Analytics](https://neo4j.com/docs/operations-manual/current/configuration/configuration-settings/?utm_source=chatgpt.com))
+
+---
+
+## **10.7 Backup & Disaster Recovery**
+
+**Baseline from doc:** Neo4j is source of truth; implement regular backups and point‑in‑time recovery; bitemporal commit history aids logical recovery. ([Google Docs](https://docs.google.com/document/d/e/2PACX-1vR_LQJv-StsiPJbVYUCFcFA3gLPyBrRjt5Q3c_nL_bQe9-klAvt5deljrx1Q6UuwcbXq1D3NPLe0yTK/pub))
+
+**Community Edition path (cost‑sensitive):**
+
+* Use **`neo4j-admin database dump`** on a stopped database (or offline replica) to produce consistent `.dump` files; store in object storage (S3/GCS) with **14/30‑day** retention tiers. Restoration via `neo4j-admin database load`. ([Graph Database & Analytics](https://neo4j.com/docs/operations-manual/current/backup-restore/offline-backup/?utm_source=chatgpt.com))
+
+**Schedule**
+
+* **Daily full dump** at 03:00 UTC; keep 14 days.
+
+* **Hourly logical export** (optional): `CALL apoc.export.json.all` to an S3 prefix for forensic recovery (size permitting).
+
+**Runbook (abridged)**
+
+1. **Detect:** Pager triggers for DB unavailable or data loss suspected.
+
+2. **Decide RPO/RTO:** Choose last good dump time (check integrity).
+
+3. **Restore:** `neo4j-admin database load neo4j --from=/backups/neo4j-YYYYMMDD.dump --force` and restart. (Compatibility constraints: restore to same or newer minor version.) ([Graph Database & Analytics](https://neo4j.com/docs/operations-manual/current/backup-restore/restore-backup/?utm_source=chatgpt.com))
+
+4. **Rebuild caches:** Send synthetic `graph.commit.applied` for latest commit to repopulate Redis.
+
+**GAP:** No backup automation or storage bucket declared.  
+ **FIX:** Add `ops/backup/backup.sh` and a cronjob (K8s CronJob or systemd timer) writing to `s3://olivine-backups/neo4j/`. Capture IAM policy and encryption‑at‑rest.
+
+---
+
+## **10.8 Performance Budgets & SLOs (Measurable)**
+
+* **Read (cached) ShootDay view:** p50 **\< 100 ms**, p95 **\< 300 ms**, p99 **\< 600 ms** (from API edge).
+
+* **Read (miss/build):** p95 **\< 1500 ms** end‑to‑end (includes graph queries \+ render).
+
+* **Commit apply (small change ≤ 20 writes):** p95 **\< 800 ms** graph‑only; p99 **\< 2 s**.
+
+* **Agent action (classification):** p95 **\< 2 s** excluding external ML latency.
+
+**Measurement**
+
+* Export histograms (see §10.4) and **burn rate** alerts on SLOs: 2‑window, 1‑h/6‑h.
+
+**GAP:** No SLO dashboards.  
+ **FIX:** Grafana board `Olivine‑Core‑SLOs` with 4 charts \+ alert rules wired to Slack/Email.
+
+---
+
+## **10.9 Hot Paths & Query Hygiene**
+
+* **Hot path 1:** `Project -> ShootDay -> Scenes -> Cast/Locations` for day views.
+
+  * Ensure `ShootDay(date)` and `Scene(number)` indexes exist; avoid Cartesian products by anchoring on `Project{id}`.
+
+  * `PROFILE` each query once per release; store plans in `/docs/perf/`.
+
+* **Hot path 2:** `File` lookup by `CanonicalSlot`.
+
+  * Enforce `CanonicalSlot.key` uniqueness; prefer single hop from `Project` to `File` through `OF_PROJECT` then `CANONICAL_SLOT`.
+
+* **Query log triage** (daily): Top 10 slowest by avg latency & total time (aggregate from `query.log`), propose index PRs weekly. ([Graph Database & Analytics](https://neo4j.com/docs/operations-manual/current/monitoring/logging/?utm_source=chatgpt.com))
+
+---
+
+## **10.10 Cost Controls**
+
+* Prefer **CE** Neo4j until Fabric/multi‑graph is unavoidable (Enterprise).
+
+* Right‑size Redis: start with **single‑node** 1–2 GB RAM; no HA until cache hit \> 5k rps or miss penalty \> 20%.
+
+* Scale agents only on **queue depth** and **latency SLO** breaches.
+
+* Store full‑text indexes only where UI search demands (avoid excessive analyzers).
+
+---
+
+## **10.11 Operational Playbooks**
+
+### **10.11.1 Mapping Confidence Incident**
+
+1. Alert fires (`mapping_low_confidence_ratio > 0.5`).
+
+2. Check ML service health (timeouts?).
+
+3. Validate recent file naming patterns; patch or add `TaxonomyRule`s.
+
+4. Re‑run classification on affected files; monitor recovery.
+
+(Derived from doc’s explicit abnormal‑condition list.) ([Google Docs](https://docs.google.com/document/d/e/2PACX-1vR_LQJv-StsiPJbVYUCFcFA3gLPyBrRjt5Q3c_nL_bQe9-klAvt5deljrx1Q6UuwcbXq1D3NPLe0yTK/pub))
+
+### **10.11.2 Commit Storm / Loop**
+
+1. Alert on commit rate surge.
+
+2. Inspect recent commits for identical payloads (loop).
+
+3. Quarantine offending agent by pausing its queue binding; drain existing messages.
+
+4. Add idempotency guard keyed by `commitId` \+ content hash.
+
+5. Resume traffic; verify graph diffs stable.
+
+### **10.11.3 External API Degradation (e.g., Weather)**
+
+1. Rising `agent_errors_total{error_type="timeout"}` and action latency.
+
+2. Trip circuit for tool; fall back to cached data; mark outputs “stale‑source”.
+
+3. Auto‑retry after 5 min or manual clear.
+
+---
+
+## **10.12 Configuration Matrix (Authoritative knobs)**
+
+| Area | Setting | Default | Notes |
+| ----- | ----- | ----- | ----- |
+| **Neo4j** | `server.memory.heap.max_size` | `6g` | Tune with live heap metrics |
+|  | `server.memory.pagecache.size` | `12g` | Keep ≥ working set |
+|  | `dbms.logs.query.enabled` | `true` | See §10.1 |
+|  | `dbms.logs.query.threshold` | `200ms` | Slow query log |
+| **Cache** | `REDIS_URL` | `redis://localhost:6379/0` | SSL in prod |
+|  | `CACHE_TTL_SECONDS` | `21600` | 6 hours safety TTL |
+| **Queues** | `AMQP_URL` | — | RabbitMQ URI |
+|  | `AGENT_PREFETCH` | `32` | Backpressure control |
+| **OTel** | `OTEL_EXPORTER_OTLP_ENDPOINT` | — | Collector |
+|  | `OTEL_RESOURCE_ATTRIBUTES` | `service.name=olivine-core` | Tagging |
+| **Backups** | `BACKUP_BUCKET_URL` | — | S3/GCS URL |
+|  | `BACKUP_CRON` | `0 3 * * *` | Daily full dump |
+
+**GAP:** These are not present in repo env templates.  
+ **FIX:** Add `.env.example` and read points in config loader(s).
+
+---
+
+## **10.13 Data Caching Shape for ShootDay (Reference)**
+
+**Canonical JSON (compressed)**
+
+```json
+{
+  "tenantId": "t-123",
+  "projectId": "p-456",
+  "date": "2025-09-03",
+  "commitHash": "e3b0c442...",
+  "scenes": [
+    {"number": "5", "slug": "INT. HOUSE - DAY", "characters": ["Ava","Marco"], "props": ["Phone"], "pages": 1.2}
+  ],
+  "cast": [
+    {"name": "Actor X", "role": "Ava", "call": "06:30", "phone": "REDACTED"}
+  ],
+  "locations": [
+    {"name": "Silverlake House", "address": "…", "mapUrl": "…"}
+  ],
+  "weather": {"highF": 75, "lowF": 62, "conditions": "Clear"},
+  "notes": ["Stunt coordinator onsite"]
+}
+```
+
+*   
+  **Privacy:** PII trimmed based on role (viewer) before caching if cache is shared.
+
+---
+
+## **10.14 Validation & Load Testing**
+
+* **Cache efficacy test:** Warm 10 representative ShootDays; require **≥ 90%** hit rate during UI navigation tests.
+
+* **Throughput test:** Simulate 10k file ingest events; steady‑state apply ≥ **2k upserts/min** with p95 tx \< **400 ms**.
+
+* **Query plan lock‑in:** Save `PROFILE` plans for top 5 queries; fail CI if planner chooses a non‑index scan path (regex on `query.log` for `NodeByLabelScan` on hot labels).
+
+**GAP:** No load‑test harness.  
+ **FIX:** Add `tests/load/locustfile.py` (read paths) and `scripts/k6_ingest.js` (write paths); publish Grafana dashboards of runs.
+
+---
+
+## **10.15 Security & Tenancy Alignment (Performance‑Relevant)**
+
+* Always **anchor MATCH from the tenant/project** to avoid accidental cross‑tenant scans. (Reinforces doc’s tenancy model and keeps queries selective.) ([Google Docs](https://docs.google.com/document/d/e/2PACX-1vR_LQJv-StsiPJbVYUCFcFA3gLPyBrRjt5Q3c_nL_bQe9-klAvt5deljrx1Q6UuwcbXq1D3NPLe0yTK/pub))
+
+* Consider label partitioning (`:File:Tenant_123`) **only** if benchmarks show label‑scan pressure (last resort; raises schema complexity).
+
+---
+
+## **10.16 Production Readiness Checklist**
+
+* All indexes/constraints from §10.1 created in `prod` and `staging`; `CALL db.indexes()` exported.
+
+* Redis deployed; cache module wired; hit/miss metrics visible.
+
+* `query.log` enabled; slow‑query alerts active.
+
+* OTel collector running; Prometheus scraping; Grafana SLO dashboards.
+
+* Backup cron writing dumps to bucket; restore drill completed in staging.
+
+* DLQs configured; runbook linked in oncall.
+
+---
+
+## **10.17 Explicit GAPs & FIXes (cross‑cut)** 
+
+* **GAP:** `File.checksum` not stored as first‑class property.  
+   **FIX:** Promote checksum in sync worker; backfill existing nodes with a one‑off Cypher script.
+
+* **GAP:** No event `graph.commit.applied` currently enumerated in doc (events list is illustrative). ([Google Docs](https://docs.google.com/document/d/e/2PACX-1vR_LQJv-StsiPJbVYUCFcFA3gLPyBrRjt5Q3c_nL_bQe9-klAvt5deljrx1Q6UuwcbXq1D3NPLe0yTK/pub))  
+   **FIX:** Define and emit this event from the commit applier; wire cache invalidation worker to it.
+
+* **GAP:** Redis integration absent.  
+   **FIX:** Add a minimal cache module and envs; ship a Docker Compose service for local.
+
+* **GAP:** Backup automation not codified.  
+   **FIX:** Add cron/CI job and retention; document restore steps; schedule quarterly fire drills.
+
+---
+
+### **References (load‑bearing)**
+
+* Neo4j index/constraint syntax (Cypher Manual). ([Graph Database & Analytics](https://neo4j.com/docs/cypher-manual/current/indexes/search-performance-indexes/managing-indexes/?utm_source=chatgpt.com))
+
+* Neo4j full‑text index creation (Cypher Manual). ([Graph Database & Analytics](https://neo4j.com/docs/cypher-manual/current/indexes/semantic-indexes/full-text-indexes/?utm_source=chatgpt.com))
+
+* Neo4j backup/dump and restore operations. ([Graph Database & Analytics](https://neo4j.com/docs/operations-manual/current/backup-restore/offline-backup/?utm_source=chatgpt.com))
+
+* OpenTelemetry metrics/tracing conventions & Python SDK. ([OpenTelemetry](https://opentelemetry.io/docs/specs/semconv/general/metrics/?utm_source=chatgpt.com))

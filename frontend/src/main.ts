@@ -1,7 +1,7 @@
 import { createApp } from 'vue';
 import { createPinia } from 'pinia';
-import { ApolloClient, createHttpLink, InMemoryCache } from '@apollo/client/core';
 import { DefaultApolloClient } from '@vue/apollo-composable';
+import { apolloClient } from '@/graphql/client'
 import vuetify from './plugins/vuetify'
 
 import App from './App.vue';
@@ -10,15 +10,7 @@ import router from './router';
 // Create Pinia instance
 const pinia = createPinia();
 
-// Create Apollo Client
-const httpLink = createHttpLink({
-  uri: import.meta.env.VITE_GRAPHQL_URL || 'http://localhost:8080/graphql'
-});
-
-const apolloClient = new ApolloClient({
-  link: httpLink,
-  cache: new InMemoryCache()
-});
+// Apollo client configured with HTTP + WS split link
 
 // Create the Vue app
 const app = createApp(App);
