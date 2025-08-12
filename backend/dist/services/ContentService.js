@@ -41,7 +41,7 @@ class ContentService {
             now,
             metadata: JSON.stringify(input.metadata || {})
         });
-        if (result.records.length === 0) {
+        if (!result?.records?.length) {
             throw new Error('Failed to create content');
         }
         if (input.references && input.references.length > 0) {
@@ -105,7 +105,7 @@ class ContentService {
       RETURN c
     `;
         const result = await this.neo4jService.run(query, params);
-        if (result.records.length === 0) {
+        if (!result?.records?.length) {
             throw new Error('Content not found or update failed');
         }
         const commitId = await this.provenanceService.createCommit({
@@ -137,7 +137,7 @@ class ContentService {
             contentId,
             orgId
         });
-        if (result.records.length === 0) {
+        if (!result?.records?.length) {
             return null;
         }
         const content = result.records[0].get('c').properties;
@@ -160,9 +160,9 @@ class ContentService {
     `;
         const result = await this.neo4jService.run(query, params);
         return result.records.map((record) => {
-            const content = record.get('c').properties;
-            return this.mapToContent(content);
-        });
+            const content = record.get('c')?.properties;
+            return content ? this.mapToContent(content) : null;
+        }).filter((c) => c !== null);
     }
     async deleteContent(contentId, orgId, userId) {
         const now = new Date().toISOString();
@@ -211,10 +211,11 @@ class ContentService {
             orgId,
             limit
         });
-        return result.records.map((record) => ({
-            content: this.mapToContent(record.get('c').properties),
-            score: record.get('score')
-        }));
+        return result.records.map((record) => {
+            const content = record.get('c')?.properties;
+            const score = record.get('score')?.toNumber?.() || 0;
+            return content ? { content: this.mapToContent(content), score } : null;
+        }).filter((item) => item !== null);
     }
     async createContentReferences(contentId, references, orgId) {
         for (const refId of references) {

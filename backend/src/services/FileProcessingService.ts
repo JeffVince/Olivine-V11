@@ -23,8 +23,8 @@ export class FileProcessingService {
   private dropboxService: DropboxService;
   private googleDriveService: GoogleDriveService;
 
-  constructor() {
-    this.eventProcessingService = new EventProcessingService();
+  constructor(eventProcessingService: EventProcessingService) {
+    this.eventProcessingService = eventProcessingService;
     this.fileModel = new FileModel();
     this.sourceModel = new SourceModel();
     this.dropboxService = new DropboxService();

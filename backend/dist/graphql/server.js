@@ -176,7 +176,7 @@ class GraphQLServer {
             server: this.httpServer,
             path: '/graphql'
         });
-        const { useServer } = await Promise.resolve().then(() => __importStar(require('graphql-ws/dist/use/ws')));
+        const { useServer } = await Promise.resolve().then(() => __importStar(require('graphql-ws/dist/use/ws.js')));
         useServer({
             schema,
             context: async (ctx) => {

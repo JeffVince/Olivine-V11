@@ -1,14 +1,13 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.FileProcessingService = void 0;
-const EventProcessingService_1 = require("./EventProcessingService");
 const File_1 = require("../models/File");
 const Source_1 = require("../models/Source");
 const DropboxService_1 = require("./DropboxService");
 const GoogleDriveService_1 = require("./GoogleDriveService");
 class FileProcessingService {
-    constructor() {
-        this.eventProcessingService = new EventProcessingService_1.EventProcessingService();
+    constructor(eventProcessingService) {
+        this.eventProcessingService = eventProcessingService;
         this.fileModel = new File_1.FileModel();
         this.sourceModel = new Source_1.SourceModel();
         this.dropboxService = new DropboxService_1.DropboxService();

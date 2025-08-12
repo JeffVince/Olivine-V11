@@ -34,27 +34,17 @@ export class QueueService {
 
   constructor(config?: QueueServiceConfig) {
     const defaultConfig = {
-      redisHost: process.env.REDIS_HOST || 'localhost',
-      redisPort: parseInt(process.env.REDIS_PORT || '6379', 10),
-      redisPassword: process.env.REDIS_PASSWORD || '',
-      redisDb: parseInt(process.env.REDIS_DB || '0', 10),
+      redisUrl: process.env.REDIS_URL || `redis://${process.env.REDIS_HOST || 'localhost'}:${process.env.REDIS_PORT || '6379'}/${process.env.REDIS_DB || '0'}`,
       prefix: 'olivine'
     };
     const finalConfig = { ...defaultConfig, ...config };
     
-    const redisOptions: RedisOptions = {
-      host: finalConfig.redisHost,
-      port: finalConfig.redisPort,
-      db: finalConfig.redisDb,
+    console.log('Redis URL being used:', finalConfig.redisUrl);
+    
+    this.connection = new IORedis(finalConfig.redisUrl, {
       maxRetriesPerRequest: null,
       enableReadyCheck: false,
-    };
-    
-    if (finalConfig.redisPassword) {
-      redisOptions.password = finalConfig.redisPassword;
-    }
-    
-    this.connection = new IORedis(redisOptions)
+    })
     this.queues = new Map()
     this.queueEvents = new Map()
     this.prefix = finalConfig.prefix

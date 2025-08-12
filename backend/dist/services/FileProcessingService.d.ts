@@ -1,3 +1,4 @@
+import { EventProcessingService } from './EventProcessingService';
 export interface FileProcessingJobData {
     fileId: string;
     organizationId: string;
@@ -12,7 +13,7 @@ export declare class FileProcessingService {
     private sourceModel;
     private dropboxService;
     private googleDriveService;
-    constructor();
+    constructor(eventProcessingService: EventProcessingService);
     extractContent(params: {
         sourceId: string;
         path: string;

@@ -1,6 +1,17 @@
 import { Neo4jService } from './Neo4jService';
 import { ProvenanceService } from './provenance/ProvenanceService';
 import { v4 as uuidv4 } from 'uuid';
+// Type guard for Neo4j record
+interface Neo4jRecord {
+  get: (key: string) => any;
+  properties: Record<string, any>;
+}
+
+// Type guard for Neo4j result
+interface Neo4jResult {
+  records: Neo4jRecord[];
+  summary?: any;
+}
 
 export interface ContentInput {
   orgId: string;
@@ -77,7 +88,7 @@ export class ContentService {
       metadata: JSON.stringify(input.metadata || {})
     });
 
-    if (result.records.length === 0) {
+    if (!result?.records?.length) {
       throw new Error('Failed to create content');
     }
 
@@ -163,7 +174,7 @@ export class ContentService {
 
     const result = await this.neo4jService.run(query, params);
 
-    if (result.records.length === 0) {
+    if (!result?.records?.length) {
       throw new Error('Content not found or update failed');
     }
 
@@ -205,7 +216,7 @@ export class ContentService {
       orgId
     });
 
-    if (result.records.length === 0) {
+    if (!result?.records?.length) {
       return null;
     }
 
@@ -241,10 +252,10 @@ export class ContentService {
 
     const result = await this.neo4jService.run(query, params);
 
-    return result.records.map((record: any) => {
-      const content = record.get('c').properties;
-      return this.mapToContent(content);
-    });
+    return (result.records as Neo4jRecord[]).map((record: Neo4jRecord) => {
+      const content = record.get('c')?.properties;
+      return content ? this.mapToContent(content) : null;
+    }).filter((c): c is Content => c !== null);
   }
 
   /**
@@ -316,10 +327,11 @@ export class ContentService {
       limit
     });
 
-    return result.records.map((record: any) => ({
-      content: this.mapToContent(record.get('c').properties),
-      score: record.get('score')
-    }));
+    return (result.records as Neo4jRecord[]).map((record: Neo4jRecord) => {
+      const content = record.get('c')?.properties;
+      const score = record.get('score')?.toNumber?.() || 0;
+      return content ? { content: this.mapToContent(content), score } : null;
+    }).filter((item): item is { content: Content; score: number } => item !== null);
   }
 
   /**
@@ -365,7 +377,7 @@ export class ContentService {
   /**
    * Map Neo4j node properties to Content interface
    */
-  private mapToContent(props: any): Content {
+  private mapToContent(props: Record<string, any>): Content {
     return {
       id: props.id,
       orgId: props.org_id,

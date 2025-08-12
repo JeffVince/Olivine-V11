@@ -9,10 +9,11 @@ const ioredis_1 = __importDefault(require("ioredis"));
 class QueueService {
     constructor(config) {
         const defaultConfig = {
-            redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
+            redisUrl: process.env.REDIS_URL || `redis://${process.env.REDIS_HOST || 'localhost'}:${process.env.REDIS_PORT || '6379'}/${process.env.REDIS_DB || '0'}`,
             prefix: 'olivine'
         };
         const finalConfig = { ...defaultConfig, ...config };
+        console.log('Redis URL being used:', finalConfig.redisUrl);
         this.connection = new ioredis_1.default(finalConfig.redisUrl, {
             maxRetriesPerRequest: null,
             enableReadyCheck: false,

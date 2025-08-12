@@ -5,6 +5,7 @@ import { PostgresService } from '../services/PostgresService';
 import { DropboxService } from '../services/DropboxService';
 import { GoogleDriveService } from '../services/GoogleDriveService';
 import { FileProcessingService } from '../services/FileProcessingService';
+import { EventProcessingService } from '../services/EventProcessingService';
 import { ClassificationService } from '../services/classification/ClassificationService';
 import { TaxonomyService } from '../services/TaxonomyService';
 import path from 'path';
@@ -52,7 +53,11 @@ export class FileStewardAgent extends BaseAgent {
     this.postgresService = new PostgresService();
     this.dropboxService = new DropboxService();
     this.gdriveService = new GoogleDriveService();
-    this.fileProcessingService = new FileProcessingService();
+    // Create services with proper dependencies to break circular dependency
+    const eventProcessingService = new EventProcessingService(null as any);
+    this.fileProcessingService = new FileProcessingService(eventProcessingService);
+    // Set the fileProcessingService dependency in eventProcessingService
+    (eventProcessingService as any).fileProcessingService = this.fileProcessingService;
     this.classificationService = new ClassificationService(this.postgresService);
     this.taxonomyService = new TaxonomyService();
   }

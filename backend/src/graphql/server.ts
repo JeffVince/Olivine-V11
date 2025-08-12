@@ -229,7 +229,7 @@ export class GraphQLServer {
     });
 
     // Dynamically import useServer to avoid module resolution issues
-    const { useServer } = await import('graphql-ws/use/ws');
+    const { useServer } = await import('graphql-ws/dist/use/ws.js');
 
     useServer({
       schema,

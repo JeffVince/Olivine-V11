@@ -3,15 +3,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.EventProcessingService = void 0;
 const bullmq_1 = require("bullmq");
 const uuid_1 = require("uuid");
-const QueueService_1 = require("./QueueService");
+const QueueService_1 = require("./queues/QueueService");
 const Neo4jService_1 = require("./Neo4jService");
 const PostgresService_1 = require("./PostgresService");
 const File_1 = require("../models/File");
 const Source_1 = require("../models/Source");
 const TaxonomyService_1 = require("./TaxonomyService");
-const FileProcessingService_1 = require("./FileProcessingService");
 class EventProcessingService {
-    constructor() {
+    constructor(fileProcessingService) {
         this.agentStatus = new Map();
         this.retryAttempts = new Map();
         this.maxRetryAttempts = 3;
@@ -21,7 +20,7 @@ class EventProcessingService {
         this.fileModel = new File_1.FileModel();
         this.sourceModel = new Source_1.SourceModel();
         this.taxonomyService = new TaxonomyService_1.TaxonomyService();
-        this.fileProcessingService = new FileProcessingService_1.FileProcessingService();
+        this.fileProcessingService = fileProcessingService;
         this.fileSyncQueue = new bullmq_1.Queue('file-sync', {
             connection: {
                 host: process.env.REDIS_HOST || 'localhost',
@@ -617,7 +616,7 @@ class EventProcessingService {
             const [neo4jHealth, postgresHealth, redisHealth] = await Promise.all([
                 this.neo4jService.healthCheck(),
                 this.postgresService.healthCheck(),
-                this.queueService.healthCheck()
+                this.queueService.ping()
             ]);
             const healthStatus = {
                 neo4j: neo4jHealth,

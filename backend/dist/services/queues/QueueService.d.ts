@@ -1,5 +1,5 @@
 import { Queue, Worker, JobsOptions, Processor, WorkerOptions, Job, QueueEvents } from 'bullmq';
-import { Redis } from 'ioredis';
+import type { Redis } from 'ioredis';
 export type SupportedQueueName = 'file-sync' | 'file-classification' | 'content-extraction' | 'provenance' | 'agent-jobs' | 'create-commit' | 'create-action' | 'create-version' | 'webhook-events' | 'source-sync' | 'delta-sync';
 export interface QueueServiceConfig {
     redisUrl: string;

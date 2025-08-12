@@ -28,7 +28,9 @@ class FileStewardAgent extends BaseAgent_1.BaseAgent {
         this.postgresService = new PostgresService_1.PostgresService();
         this.dropboxService = new DropboxService_1.DropboxService();
         this.gdriveService = new GoogleDriveService_1.GoogleDriveService();
-        this.fileProcessingService = new FileProcessingService_1.FileProcessingService();
+        const eventProcessingService = new EventProcessingService(null);
+        this.fileProcessingService = new FileProcessingService_1.FileProcessingService(eventProcessingService);
+        eventProcessingService.fileProcessingService = this.fileProcessingService;
         this.classificationService = new ClassificationService_1.ClassificationService(this.postgresService);
         this.taxonomyService = new TaxonomyService_1.TaxonomyService();
     }

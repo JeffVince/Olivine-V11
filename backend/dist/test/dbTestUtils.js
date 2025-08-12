@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.DbTestUtils = void 0;
 const Neo4jService_1 = require("../services/Neo4jService");
 const PostgresService_1 = require("../services/PostgresService");
-const QueueService_1 = require("../services/QueueService");
+const QueueService_1 = require("../services/queues/QueueService");
 const AuthService_1 = require("../services/AuthService");
 class DbTestUtils {
     constructor() {
@@ -63,7 +63,8 @@ class DbTestUtils {
         try {
             const neo4jHealthy = await this.neo4jService.healthCheck();
             const postgresHealthy = await this.postgresService.healthCheck();
-            const redisHealthy = await this.queueService.healthCheck();
+            const redisPing = await this.queueService.ping();
+            const redisHealthy = redisPing === 'PONG';
             return neo4jHealthy && postgresHealthy && redisHealthy;
         }
         catch (error) {

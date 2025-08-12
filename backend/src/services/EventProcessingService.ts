@@ -54,14 +54,14 @@ export class EventProcessingService {
   private fileClassificationQueue: Queue<ClassificationJobData>;
   private contentExtractionQueue: Queue<ExtractionJobData>;
 
-  constructor() {
+  constructor(fileProcessingService: FileProcessingService) {
     this.queueService = new QueueService();
     this.neo4jService = new Neo4jService();
     this.postgresService = new PostgresService();
     this.fileModel = new FileModel();
     this.sourceModel = new SourceModel();
     this.taxonomyService = new TaxonomyService();
-    this.fileProcessingService = new FileProcessingService();
+    this.fileProcessingService = fileProcessingService;
     
     // Initialize BullMQ queues with prioritization as specified in the plan
     this.fileSyncQueue = new Queue('file-sync', {
