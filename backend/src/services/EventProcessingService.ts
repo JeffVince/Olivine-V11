@@ -54,8 +54,8 @@ export class EventProcessingService {
   private fileClassificationQueue: Queue<ClassificationJobData>;
   private contentExtractionQueue: Queue<ExtractionJobData>;
 
-  constructor(fileProcessingService: FileProcessingService) {
-    this.queueService = new QueueService();
+  constructor(fileProcessingService: FileProcessingService, queueService: QueueService) {
+    this.queueService = queueService;
     this.neo4jService = new Neo4jService();
     this.postgresService = new PostgresService();
     this.fileModel = new FileModel();
