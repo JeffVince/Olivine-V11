@@ -289,7 +289,7 @@ const projectStore = useProjectStore()
 const notificationStore = useNotificationStore()
 
 // State
-const projects = ref<Project[]>([])
+const projects = computed(() => projectStore.projects)
 const showCreateDialog = ref(false)
 const showDeleteDialog = ref(false)
 const formValid = ref(false)
@@ -324,7 +324,7 @@ const timezones = [
 
 // Methods
 function getStatusColor(status: string) {
-  switch (status) {
+  switch (status.toLowerCase()) {
     case 'active': return 'success'
     case 'syncing': return 'warning'
     case 'error': return 'error'
@@ -351,14 +351,24 @@ function openProject(id: string) {
   router.push({ name: 'ProjectHome', params: { id } })
 }
 
-function editProject(project: Project) {
-  // TODO: Implement edit functionality
-  notificationStore.add('info', `Edit functionality for ${project.name} coming soon`)
+async function editProject(project: Project) {
+  const newName = prompt('Enter new project name', project.name)
+  if (!newName || newName === project.name) return
+  try {
+    await projectStore.editProject(project.id, newName)
+    notificationStore.add('success', `${project.name} renamed to ${newName}`)
+  } catch {
+    notificationStore.add('error', 'Failed to update project')
+  }
 }
 
-function archiveProject(project: Project) {
-  // TODO: Implement archive functionality
-  notificationStore.add('info', `${project.name} archived successfully`)
+async function archiveProject(project: Project) {
+  try {
+    await projectStore.archiveProject(project.id)
+    notificationStore.add('success', `${project.name} archived successfully`)
+  } catch {
+    notificationStore.add('error', 'Failed to archive project')
+  }
 }
 
 function deleteProject(project: Project) {
@@ -369,16 +379,13 @@ function deleteProject(project: Project) {
 
 async function confirmDelete() {
   if (!projectToDelete.value) return
-  
+
   deleting.value = true
   try {
-    // TODO: Implement actual delete API call
-    await new Promise(resolve => setTimeout(resolve, 1000)) // Simulate API call
-    
-    projects.value = projects.value.filter(p => p.id !== projectToDelete.value!.id)
+    await projectStore.deleteProject(projectToDelete.value.id)
     notificationStore.add('success', `${projectToDelete.value.name} deleted successfully`)
     showDeleteDialog.value = false
-  } catch (error) {
+  } catch {
     notificationStore.add('error', 'Failed to delete project')
   } finally {
     deleting.value = false
@@ -388,29 +395,19 @@ async function confirmDelete() {
 async function createProject() {
   creating.value = true
   try {
-    // TODO: Implement actual create API call
-    await new Promise(resolve => setTimeout(resolve, 2000)) // Simulate API call
-    
-    const project: Project = {
-      id: Date.now().toString(),
+    const project = await projectStore.createProject({
       name: newProject.value.name,
-      company: newProject.value.company,
-      status: 'syncing',
-      lastActivity: new Date().toISOString(),
-      integrations: [{
-        type: newProject.value.storageType,
-        connected: false
-      }]
-    }
-    
-    projects.value.push(project)
+      description: newProject.value.company,
+      settings: {
+        timezone: newProject.value.timezone,
+        storageType: newProject.value.storageType,
+        referenceProjectId: newProject.value.referenceProjectId || undefined
+      }
+    })
     showCreateDialog.value = false
-    
     notificationStore.add('success', `Project ${project.name} created successfully`)
-    
-    // Navigate to new project
     openProject(project.id)
-  } catch (error) {
+  } catch {
     notificationStore.add('error', 'Failed to create project')
   } finally {
     creating.value = false
@@ -419,29 +416,7 @@ async function createProject() {
 
 // Load projects on mount
 onMounted(() => {
-  // Mock data for now
-  projects.value = [
-    {
-      id: '1',
-      name: 'Feature Film Alpha',
-      company: 'Acme Productions',
-      status: 'active',
-      lastActivity: '2024-01-15T10:30:00Z',
-      integrations: [
-        { type: 'dropbox', connected: true },
-        { type: 'googledrive', connected: false }
-      ]
-    },
-    {
-      id: '2', 
-      name: 'Commercial Beta',
-      status: 'syncing',
-      lastActivity: '2024-01-14T15:45:00Z',
-      integrations: [
-        { type: 'dropbox', connected: true }
-      ]
-    }
-  ]
+  projectStore.fetchProjects()
 })
 </script>
 
