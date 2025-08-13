@@ -9,6 +9,7 @@
 
     "dev": "nodemon --exec ts-node src/index.ts",
     "start": "node dist/index.js",
+    "pretest": "npm run type-check",
     "test": "jest",
     "test:unit": "jest --selectProjects unit",
     "test:integration": "jest --selectProjects integration",
@@ -21,7 +22,8 @@
     "lint:fix": "eslint src/**/*.ts --fix",
     "migrate": "ts-node src/scripts/migrate.ts",
     "test:setup": "ts-node src/tests/globalSetup.ts",
-    "test:teardown": "ts-node src/tests/globalTeardown.ts"
+    "test:teardown": "ts-node src/tests/globalTeardown.ts",
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "@apollo/server": "^5.0.0",
