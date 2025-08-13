@@ -120,6 +120,10 @@ export class EnhancedResolvers {
           return this.getProjects(orgId, context);
         },
 
+        projectMembers: async (_: any, { projectId, orgId }: { projectId: string; orgId: string }, context: any) => {
+          return this.getProjectMembers(projectId, orgId, context);
+        },
+
         // Source queries
         source: async (_: any, { id, orgId }: { id: string; orgId: string }, context: any) => {
           return this.getSource(id, orgId, context);
@@ -216,6 +220,30 @@ export class EnhancedResolvers {
 
         deleteProject: async (_: any, { id, orgId }: { id: string; orgId: string }, context: any) => {
           return this.deleteProject(id, orgId, context);
+        },
+
+        inviteProjectMember: async (
+          _: any,
+          { projectId, orgId, email, role }: { projectId: string; orgId: string; email: string; role: string },
+          context: any
+        ) => {
+          return this.inviteProjectMember(projectId, orgId, email, role, context);
+        },
+
+        updateProjectMemberRole: async (
+          _: any,
+          { projectId, orgId, memberId, role }: { projectId: string; orgId: string; memberId: string; role: string },
+          context: any
+        ) => {
+          return this.updateProjectMemberRole(projectId, orgId, memberId, role, context);
+        },
+
+        removeProjectMember: async (
+          _: any,
+          { projectId, orgId, memberId }: { projectId: string; orgId: string; memberId: string },
+          context: any
+        ) => {
+          return this.removeProjectMember(projectId, orgId, memberId, context);
         },
 
         // Source mutations
@@ -548,6 +576,128 @@ export class EnhancedResolvers {
       createdAt: project.created_at.toISOString(),
       updatedAt: project.updated_at.toISOString()
     });
+  }
+
+  /**
+   * Get members of a project
+   */
+  private async getProjectMembers(projectId: string, orgId: string, context: any): Promise<any[]> {
+    await this.tenantService.validateAccess(context.user, orgId);
+
+    const query = `
+      SELECT id, project_id, org_id, email, role, created_at, updated_at
+      FROM project_members
+      WHERE project_id = $1 AND org_id = $2
+      ORDER BY created_at ASC
+    `;
+
+    const result = await this.postgresService.executeQuery(query, [projectId, orgId]);
+    return result.rows;
+  }
+
+  /**
+   * Invite a member to a project
+   */
+  private async inviteProjectMember(
+    projectId: string,
+    orgId: string,
+    email: string,
+    role: string,
+    context: any
+  ): Promise<any> {
+    await this.tenantService.validateAccess(context.user, orgId);
+
+    const query = `
+      INSERT INTO project_members (id, project_id, org_id, email, role, created_at, updated_at)
+      VALUES (gen_random_uuid(), $1, $2, $3, $4, NOW(), NOW())
+      RETURNING *
+    `;
+
+    const result = await this.postgresService.executeQuery(query, [projectId, orgId, email, role]);
+    const member = result.rows[0];
+
+    await this.syncProjectMemberInGraph(member);
+    return member;
+  }
+
+  /**
+   * Update a project member's role
+   */
+  private async updateProjectMemberRole(
+    projectId: string,
+    orgId: string,
+    memberId: string,
+    role: string,
+    context: any
+  ): Promise<any> {
+    await this.tenantService.validateAccess(context.user, orgId);
+
+    const query = `
+      UPDATE project_members
+      SET role = $4, updated_at = NOW()
+      WHERE id = $3 AND project_id = $1 AND org_id = $2
+      RETURNING *
+    `;
+
+    const result = await this.postgresService.executeQuery(query, [projectId, orgId, memberId, role]);
+    const member = result.rows[0];
+
+    await this.syncProjectMemberInGraph(member);
+    return member;
+  }
+
+  /**
+   * Remove a member from a project
+   */
+  private async removeProjectMember(
+    projectId: string,
+    orgId: string,
+    memberId: string,
+    context: any
+  ): Promise<boolean> {
+    await this.tenantService.validateAccess(context.user, orgId);
+
+    const query = `
+      DELETE FROM project_members
+      WHERE id = $3 AND project_id = $1 AND org_id = $2
+    `;
+
+    const result = await this.postgresService.executeQuery(query, [projectId, orgId, memberId]);
+
+    await this.removeProjectMemberFromGraph(projectId, orgId, memberId);
+    return (result.rowCount || 0) > 0;
+  }
+
+  /**
+   * Sync project member to Neo4j graph
+   */
+  private async syncProjectMemberInGraph(member: any): Promise<void> {
+    const query = `
+      MERGE (u:User {id: $memberId})
+      ON CREATE SET u.email = $email
+      MERGE (p:Project {id: $projectId, org_id: $orgId})
+      MERGE (u)-[r:PARTICIPATES_IN]->(p)
+      SET r.role = $role, r.updated_at = datetime()
+    `;
+
+    await this.neo4jService.run(query, {
+      memberId: member.id,
+      email: member.email,
+      projectId: member.project_id,
+      orgId: member.org_id,
+      role: member.role
+    });
+  }
+
+  /**
+   * Remove project member relationship from Neo4j
+   */
+  private async removeProjectMemberFromGraph(projectId: string, orgId: string, memberId: string): Promise<void> {
+    const query = `
+      MATCH (u:User {id: $memberId})-[r:PARTICIPATES_IN]->(p:Project {id: $projectId, org_id: $orgId})
+      DELETE r
+    `;
+    await this.neo4jService.run(query, { memberId, projectId, orgId });
   }
 
   /**

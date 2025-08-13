@@ -355,6 +355,17 @@ type User {
   updatedAt: DateTime!
 }
 
+# Project member associated with a project
+type ProjectMember {
+  id: ID!
+  projectId: ID!
+  orgId: ID!
+  email: String!
+  role: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
 type File {
   id: ID!
   orgId: ID!
@@ -648,6 +659,7 @@ type Query {
   # Projects
   project(id: ID!, orgId: ID!): Project
   projects(orgId: ID!): [Project!]!
+  projectMembers(projectId: ID!, orgId: ID!): [ProjectMember!]!
   
   # Sources
   source(id: ID!, orgId: ID!): Source
@@ -702,6 +714,9 @@ type Mutation {
   createProject(input: CreateProjectInput!): Project!
   updateProject(input: UpdateProjectInput!): Project!
   deleteProject(id: ID!, orgId: ID!): Boolean!
+  inviteProjectMember(projectId: ID!, orgId: ID!, email: String!, role: String!): ProjectMember!
+  updateProjectMemberRole(projectId: ID!, orgId: ID!, memberId: ID!, role: String!): ProjectMember!
+  removeProjectMember(projectId: ID!, orgId: ID!, memberId: ID!): Boolean!
   
   # Sources
   createSource(input: CreateSourceInput!): Source!

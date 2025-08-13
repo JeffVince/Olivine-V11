@@ -1,13 +1,35 @@
-import { EventProcessingService } from '../services/EventProcessingService';
-import { FileProcessingService } from '../services/FileProcessingService';
-import { QueueService } from '../services/queues/QueueService';
+jest.mock('bullmq', () => {
+  class Queue {
+    async add() {
+      return { id: 'mock-job' }
+    }
+    async close() {}
+  }
+  return { Queue, Worker: class {}, Job: class {} }
+})
+
+jest.mock('../services/Neo4jService', () => ({ Neo4jService: class { async close() {} } }))
+jest.mock('../services/PostgresService', () => ({ PostgresService: class { async close() {} } }))
+jest.mock('../models/File', () => ({ FileModel: class {}, FileClassification: class {}, FileMetadata: class {} }))
+jest.mock('../models/Source', () => ({ SourceModel: class {} }))
+jest.mock('../services/TaxonomyService', () => ({ TaxonomyService: class {} }))
+
+import { EventProcessingService } from '../services/EventProcessingService'
+import { FileProcessingService } from '../services/FileProcessingService'
+
+class MockQueueService {
+  async addJob() {
+    return { id: 'mock-job' }
+  }
+  async close() {}
+}
 
 describe('EventProcessingService', () => {
   let eventProcessingService: EventProcessingService;
 
   beforeAll(() => {
     // Create services with proper dependencies to break circular dependency
-    const eventProcessingServiceInstance = new EventProcessingService(null as any, new QueueService());
+    const eventProcessingServiceInstance = new EventProcessingService(null as any, new MockQueueService() as any)
     const fileProcessingService = new FileProcessingService(eventProcessingServiceInstance);
     // Set the fileProcessingService dependency in eventProcessingService
     (eventProcessingServiceInstance as any).fileProcessingService = fileProcessingService;

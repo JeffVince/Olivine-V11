@@ -10,10 +10,17 @@ export interface Project {
   description?: string | null
 }
 
+export interface ProjectMember {
+  id: string
+  email: string
+  role: string
+}
+
 interface ProjectState {
   currentProjectId: string | null
   currentBranch: string
   projects: Project[]
+  members: ProjectMember[]
   error: string | null
 }
 
@@ -56,11 +63,48 @@ const DELETE_PROJECT = gql`
   }
 `
 
+const LIST_MEMBERS = gql`
+  query ProjectMembers($projectId: ID!, $orgId: ID!) {
+    projectMembers(projectId: $projectId, orgId: $orgId) {
+      id
+      email
+      role
+    }
+  }
+`
+
+const INVITE_MEMBER = gql`
+  mutation InviteProjectMember($projectId: ID!, $orgId: ID!, $email: String!, $role: String!) {
+    inviteProjectMember(projectId: $projectId, orgId: $orgId, email: $email, role: $role) {
+      id
+      email
+      role
+    }
+  }
+`
+
+const UPDATE_MEMBER_ROLE = gql`
+  mutation UpdateProjectMemberRole($projectId: ID!, $orgId: ID!, $memberId: ID!, $role: String!) {
+    updateProjectMemberRole(projectId: $projectId, orgId: $orgId, memberId: $memberId, role: $role) {
+      id
+      email
+      role
+    }
+  }
+`
+
+const REMOVE_MEMBER = gql`
+  mutation RemoveProjectMember($projectId: ID!, $orgId: ID!, $memberId: ID!) {
+    removeProjectMember(projectId: $projectId, orgId: $orgId, memberId: $memberId)
+  }
+`
+
 export const useProjectStore = defineStore('project', {
   state: (): ProjectState => ({
     currentProjectId: null,
     currentBranch: 'main',
     projects: [],
+    members: [],
     error: null,
   }),
   actions: {
@@ -151,6 +195,70 @@ export const useProjectStore = defineStore('project', {
         })
         this.projects = this.projects.filter(p => p.id !== id)
         if (this.currentProjectId === id) this.setProject(null)
+        this.error = null
+      } catch (e: any) {
+        this.error = e.message || 'Unknown error'
+        throw e
+      }
+    },
+    async fetchMembers(projectId: string) {
+      try {
+        const orgId = useOrganizationStore().currentOrg?.id
+        if (!orgId) throw new Error('Organization not selected')
+        const { data } = await apolloClient.query({
+          query: LIST_MEMBERS,
+          variables: { projectId, orgId },
+          fetchPolicy: 'no-cache',
+        })
+        this.members = data.projectMembers || []
+        this.error = null
+      } catch (e: any) {
+        this.error = e.message || 'Unknown error'
+        throw e
+      }
+    },
+    async inviteMember(projectId: string, email: string, role: string) {
+      try {
+        const orgId = useOrganizationStore().currentOrg?.id
+        if (!orgId) throw new Error('Organization not selected')
+        const { data } = await apolloClient.mutate({
+          mutation: INVITE_MEMBER,
+          variables: { projectId, orgId, email, role },
+        })
+        this.members.push(data.inviteProjectMember)
+        this.error = null
+        return data.inviteProjectMember as ProjectMember
+      } catch (e: any) {
+        this.error = e.message || 'Unknown error'
+        throw e
+      }
+    },
+    async updateMemberRole(projectId: string, memberId: string, role: string) {
+      try {
+        const orgId = useOrganizationStore().currentOrg?.id
+        if (!orgId) throw new Error('Organization not selected')
+        const { data } = await apolloClient.mutate({
+          mutation: UPDATE_MEMBER_ROLE,
+          variables: { projectId, orgId, memberId, role },
+        })
+        const idx = this.members.findIndex(m => m.id === memberId)
+        if (idx !== -1) this.members[idx] = data.updateProjectMemberRole
+        this.error = null
+        return data.updateProjectMemberRole as ProjectMember
+      } catch (e: any) {
+        this.error = e.message || 'Unknown error'
+        throw e
+      }
+    },
+    async removeMember(projectId: string, memberId: string) {
+      try {
+        const orgId = useOrganizationStore().currentOrg?.id
+        if (!orgId) throw new Error('Organization not selected')
+        await apolloClient.mutate({
+          mutation: REMOVE_MEMBER,
+          variables: { projectId, orgId, memberId },
+        })
+        this.members = this.members.filter(m => m.id !== memberId)
         this.error = null
       } catch (e: any) {
         this.error = e.message || 'Unknown error'
