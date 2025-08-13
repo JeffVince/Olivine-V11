@@ -3,11 +3,17 @@ import { useOrganizationStore } from '@/stores/organizationStore'
 import { apolloClient } from '@/graphql/client'
 import gql from 'graphql-tag'
 
+export interface ProjectSettings {
+  templates: string[]
+  autoApprove: boolean
+}
+
 export interface Project {
   id: string
   name: string
   status: string
   description?: string | null
+  settings?: ProjectSettings
 }
 
 interface ProjectState {
@@ -24,6 +30,7 @@ const LIST_PROJECTS = gql`
       name
       status
       description
+      settings
     }
   }
 `
@@ -35,6 +42,7 @@ const CREATE_PROJECT = gql`
       name
       status
       description
+      settings
     }
   }
 `
@@ -46,6 +54,7 @@ const UPDATE_PROJECT = gql`
       name
       status
       description
+      settings
     }
   }
 `
@@ -114,6 +123,30 @@ export const useProjectStore = defineStore('project', {
         const { data } = await apolloClient.mutate({
           mutation: UPDATE_PROJECT,
           variables: { input: { id, orgId, name } },
+        })
+        const idx = this.projects.findIndex(p => p.id === id)
+        if (idx !== -1) this.projects[idx] = data.updateProject
+        this.error = null
+        return data.updateProject as Project
+      } catch (e: any) {
+        this.error = e.message || 'Unknown error'
+        throw e
+      }
+    },
+    async updateProjectOptions(id: string, options: { name: string; templates: string[]; autoApprove: boolean }) {
+      try {
+        const orgId = useOrganizationStore().currentOrg?.id
+        if (!orgId) throw new Error('Organization not selected')
+        const { data } = await apolloClient.mutate({
+          mutation: UPDATE_PROJECT,
+          variables: {
+            input: {
+              id,
+              orgId,
+              name: options.name,
+              settings: { templates: options.templates, autoApprove: options.autoApprove },
+            },
+          },
         })
         const idx = this.projects.findIndex(p => p.id === id)
         if (idx !== -1) this.projects[idx] = data.updateProject

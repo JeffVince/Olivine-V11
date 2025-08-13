@@ -348,11 +348,20 @@ type User {
   orgId: ID!
   email: String!
   role: String!
+  name: String
+  avatar: String
+  notificationPrefs: NotificationPrefs
   lastLoginAt: DateTime
   organization: Organization!
   commits: [Commit!]!
   createdAt: DateTime!
   updatedAt: DateTime!
+}
+
+type NotificationPrefs {
+  email: Boolean!
+  sms: Boolean!
+  inApp: Boolean!
 }
 
 type File {
@@ -580,6 +589,17 @@ input UpdateProjectInput {
   settings: JSON
 }
 
+input UpdateProfileInput {
+  name: String!
+  avatar: String
+}
+
+input NotificationPrefsInput {
+  email: Boolean!
+  sms: Boolean!
+  inApp: Boolean!
+}
+
 input CreateSourceInput {
   orgId: ID!
   name: String!
@@ -698,6 +718,10 @@ type Query {
 # ===== MUTATIONS =====
 
 type Mutation {
+  # User
+  updateProfile(input: UpdateProfileInput!): User!
+  updateNotificationPrefs(input: NotificationPrefsInput!): NotificationPrefs!
+
   # Projects
   createProject(input: CreateProjectInput!): Project!
   updateProject(input: UpdateProjectInput!): Project!

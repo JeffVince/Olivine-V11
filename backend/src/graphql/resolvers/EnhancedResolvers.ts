@@ -6,6 +6,7 @@ import { PostgresService } from '../../services/PostgresService';
 import { QueueService } from '../../services/queues/QueueService';
 import { TenantService } from '../../services/TenantService';
 import { AuthService } from '../../services/AuthService';
+import { UserService } from '../../services/UserService';
 import winston from 'winston';
 
 export class EnhancedResolvers {
@@ -16,6 +17,7 @@ export class EnhancedResolvers {
   private queueService: QueueService;
   private tenantService: TenantService;
   private authService: AuthService;
+  private userService: UserService;
   private logger: winston.Logger;
 
   constructor() {
@@ -26,6 +28,7 @@ export class EnhancedResolvers {
     this.queueService = new QueueService();
     this.tenantService = new TenantService();
     this.authService = new AuthService();
+    this.userService = new UserService();
     
     this.logger = winston.createLogger({
       level: 'info',
@@ -205,6 +208,15 @@ export class EnhancedResolvers {
 
       // ===== MUTATIONS =====
       Mutation: {
+        // User mutations
+        updateProfile: async (_: any, { input }: { input: any }, context: any) => {
+          return this.updateProfile(input, context);
+        },
+
+        updateNotificationPrefs: async (_: any, { input }: { input: any }, context: any) => {
+          return this.updateNotificationPrefs(input, context);
+        },
+
         // Project mutations
         createProject: async (_: any, { input }: { input: any }, context: any) => {
           return this.createProject(input, context);
@@ -611,13 +623,64 @@ export class EnhancedResolvers {
   private async getEntityVersions(orgId: string, entityId: string, entityType: string, context: any): Promise<any[]> { return []; }
   private async getClassificationStats(orgId: string, context: any): Promise<any> { return { total: 0, bySlot: {}, byConfidence: {}, pending: 0, failed: 0 }; }
   private async getProvenanceStats(orgId: string, context: any): Promise<any> { return { commits: 0, actions: 0, versions: 0, branches: [] }; }
-  private async updateProject(input: any, context: any): Promise<any> { return null; }
+
+  private async updateProject(input: any, context: any): Promise<any> {
+    await this.tenantService.validateAccess(context.user, input.orgId);
+
+    const query = `
+      UPDATE projects
+      SET name = COALESCE($3, name),
+          description = COALESCE($4, description),
+          status = COALESCE($5, status),
+          settings = COALESCE($6, settings),
+          updated_at = NOW()
+      WHERE id = $1 AND org_id = $2
+      RETURNING *
+    `;
+
+    const result = await this.postgresService.executeQuery(query, [
+      input.id,
+      input.orgId,
+      input.name || null,
+      input.description || null,
+      input.status || null,
+      JSON.stringify(input.settings || null)
+    ]);
+
+    const project = result.rows[0];
+    if (project) {
+      await this.updateProjectInGraph(project);
+    }
+    return project;
+  }
+
+  private async updateProjectInGraph(project: any): Promise<void> {
+    const query = `
+      MATCH (p:Project {id: $id, org_id: $orgId})
+      SET p.name = $name,
+          p.description = $description,
+          p.status = $status,
+          p.settings = $settings,
+          p.updated_at = datetime($updatedAt)
+    `;
+    await this.neo4jService.run(query, {
+      id: project.id,
+      orgId: project.org_id,
+      name: project.name,
+      description: project.description || '',
+      status: project.status,
+      settings: JSON.stringify(project.settings || {}),
+      updatedAt: project.updated_at.toISOString()
+    });
+  }
+
   private async deleteProject(id: string, orgId: string, context: any): Promise<boolean> { return false; }
   private async createSource(input: any, context: any): Promise<any> { return null; }
   private async updateSource(input: any, context: any): Promise<any> { return null; }
   private async deleteSource(id: string, orgId: string, context: any): Promise<boolean> { return false; }
   private async triggerSourceSync(sourceId: string, orgId: string, context: any): Promise<boolean> { return false; }
-  private async createContent(input: any, context: any): Promise<any> { 
+
+  private async createContent(input: any, context: any): Promise<any> {
     const contentService = new (await import('../../services/ContentService')).ContentService();
     return contentService.createContent(input, context.user?.id || 'system');
   }
@@ -627,9 +690,21 @@ export class EnhancedResolvers {
     return contentService.updateContent(input.id, input, context.user?.id || 'system');
   }
   
-  private async deleteContent(id: string, orgId: string, context: any): Promise<boolean> { 
+  private async deleteContent(id: string, orgId: string, context: any): Promise<boolean> {
     const contentService = new (await import('../../services/ContentService')).ContentService();
     return contentService.deleteContent(id, orgId, context.user?.id || 'system');
+  }
+
+  private async updateProfile(input: any, context: any): Promise<any> {
+    if (!context.user?.id) throw new Error('Authentication required');
+    await this.tenantService.validateAccess(context.user, context.user.orgId);
+    return this.userService.updateProfile(context.user.id, input.name, input.avatar);
+  }
+
+  private async updateNotificationPrefs(input: any, context: any): Promise<any> {
+    if (!context.user?.id) throw new Error('Authentication required');
+    await this.tenantService.validateAccess(context.user, context.user.orgId);
+    return this.userService.updateNotificationPrefs(context.user.id, input);
   }
   private async createCommit(input: any, context: any): Promise<any> { return null; }
   private async rebuildIndex(orgId: string, context: any): Promise<boolean> { return false; }
