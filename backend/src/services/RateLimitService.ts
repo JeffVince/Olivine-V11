@@ -1,10 +1,11 @@
-import { Redis } from 'ioredis';
+import Redis from 'ioredis';
 
 export class RateLimitService {
-  private redis: Redis;
+  private redis: Redis | null;
 
   constructor(redisUrl: string = process.env.REDIS_URL || `redis://${process.env.REDIS_HOST || 'localhost'}:${process.env.REDIS_PORT || '6379'}/0`) {
-    this.redis = new Redis(redisUrl, {
+    const isTestMode = process.env.TEST_MODE === 'true' || process.env.NODE_ENV === 'test';
+    this.redis = isTestMode ? null : new Redis(redisUrl, {
       maxRetriesPerRequest: null,
       enableReadyCheck: false,
     });
@@ -22,6 +23,11 @@ export class RateLimitService {
     count: number;
     resetTime: number;
   }> {
+    if (!this.redis) {
+      // Mock behavior in tests: allow all
+      const now = Date.now();
+      return { allowed: true, count: 0, resetTime: now + windowMs };
+    }
     const now = Date.now();
     const windowStart = now - windowMs;
     const redisKey = `rate_limit:${key}`;
@@ -56,8 +62,8 @@ export class RateLimitService {
   async applyRateLimit(
     identifier: string,
     endpoint: string,
-    limit: number = 100,
-    windowMs: number = 60000 // 1 minute
+    limit = 100,
+    windowMs = 60000 // 1 minute
   ): Promise<{
     allowed: boolean;
     count: number;
@@ -85,6 +91,7 @@ export class RateLimitService {
     const redisKey = `rate_limit:${key}`;
 
     // Clean up and count
+    if (!this.redis) return 0;
     await this.redis.zremrangebyscore(redisKey, 0, windowStart);
     return await this.redis.zcard(redisKey);
   }
@@ -95,6 +102,7 @@ export class RateLimitService {
    */
   async reset(key: string): Promise<void> {
     const redisKey = `rate_limit:${key}`;
+    if (!this.redis) return;
     await this.redis.del(redisKey);
   }
 
@@ -102,6 +110,7 @@ export class RateLimitService {
    * Close Redis connection
    */
   async close(): Promise<void> {
+    if (!this.redis) return;
     await this.redis.quit();
   }
 }

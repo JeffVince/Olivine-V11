@@ -32,7 +32,7 @@ class TaxonomyResolvers {
                 createTaxonomyRule: async (_, { input, profileId, orgId }) => {
                     return await this.taxonomyService.createTaxonomyRule(input, profileId, orgId);
                 },
-                classifyFile: async (_, { fileId, orgId, userId }) => {
+                classifyTaxonomyFile: async (_, { fileId, orgId, userId }) => {
                     const classifications = await this.taxonomyService.classifyFile(fileId, orgId);
                     if (classifications.length > 0) {
                         const bestClassification = classifications[0];

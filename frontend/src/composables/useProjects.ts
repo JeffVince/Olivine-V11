@@ -4,6 +4,12 @@ import gql from 'graphql-tag'
 import { useOrganizationStore } from '@/stores/organizationStore'
 import { useProjectStore } from '@/stores/projectStore'
 
+interface Project {
+  id: string
+  name: string
+  status: string
+}
+
 const LIST_PROJECTS = gql`
   query Projects($orgId: ID!) {
     projects(filter: { status: "ACTIVE" }, limit: 100, offset: 0) {
@@ -19,7 +25,7 @@ export function useProjects() {
   const projectStore = useProjectStore()
   const variables = ref({ orgId: orgStore.currentOrg?.id || '' })
   const { result, loading, refetch } = useQuery(LIST_PROJECTS, variables)
-  const items = ref<any[]>([])
+  const items = ref<Project[]>([])
 
   watchEffect(() => {
     variables.value.orgId = orgStore.currentOrg?.id || ''

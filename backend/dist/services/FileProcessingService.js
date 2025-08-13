@@ -13,11 +13,13 @@ class FileProcessingService {
         this.dropboxService = new DropboxService_1.DropboxService();
         this.googleDriveService = new GoogleDriveService_1.GoogleDriveService();
     }
-    async extractContent(params, path, mimeType) {
+    async extractContent(params, path, mimeType, orgIdParam) {
+        let orgId;
         let sourceId;
         let filePath;
         let fileMimeType;
         if (typeof params === 'object') {
+            orgId = params.orgId;
             sourceId = params.sourceId;
             filePath = params.path;
             fileMimeType = params.mimeType;
@@ -26,20 +28,35 @@ class FileProcessingService {
             sourceId = params;
             filePath = path;
             fileMimeType = mimeType;
+            orgId = orgIdParam;
         }
         try {
-            if (fileMimeType.startsWith('text/')) {
+            const source = await this.sourceModel.getSource(sourceId, orgId);
+            if (source) {
+                const syntheticFile = {
+                    id: 'temp',
+                    organizationId: orgId,
+                    sourceId: sourceId,
+                    path: filePath,
+                    name: this.extractFileName(filePath),
+                    extension: this.extractFileExtension(this.extractFileName(filePath)),
+                    mimeType: fileMimeType,
+                    size: undefined,
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                    classificationStatus: 'pending'
+                };
+                const downloaded = await this.downloadFileContent(syntheticFile, source);
+                if (downloaded)
+                    return downloaded;
+            }
+            if (fileMimeType.startsWith('text/'))
                 return `Extracted content from text file: ${filePath}`;
-            }
-            else if (fileMimeType.startsWith('image/')) {
+            if (fileMimeType.startsWith('image/'))
                 return `Image content from file: ${filePath}`;
-            }
-            else if (fileMimeType.startsWith('application/')) {
+            if (fileMimeType.startsWith('application/'))
                 return `Application content from file: ${filePath}`;
-            }
-            else {
-                return `Content from file: ${filePath}`;
-            }
+            return `Content from file: ${filePath}`;
         }
         catch (error) {
             console.error(`Error extracting content from file ${filePath}:`, error);
@@ -76,6 +93,8 @@ class FileProcessingService {
         const fileName = this.extractFileName(filePath);
         const fileExtension = this.extractFileExtension(fileName);
         const mimeType = this.determineMimeType(fileExtension, metadata);
+        const modifiedRaw = metadata?.modified_at || metadata?.modified || metadata?.modifiedTime;
+        const parsedModifiedAt = modifiedRaw ? new Date(modifiedRaw) : undefined;
         const fileData = {
             id: fileId,
             organizationId,
@@ -85,7 +104,7 @@ class FileProcessingService {
             extension: fileExtension,
             mimeType,
             size: metadata?.size,
-            modifiedAt: metadata?.modified_at ? new Date(metadata.modified_at) : undefined,
+            modifiedAt: parsedModifiedAt,
             metadata: metadata,
             classificationStatus: 'pending'
         };
@@ -103,7 +122,7 @@ class FileProcessingService {
             orgId: organizationId,
             action: 'update',
             filePath,
-            metadata
+            metadata: metadata
         });
     }
     async handleFileDelete(fileId, organizationId, sourceId, filePath) {
@@ -171,8 +190,35 @@ class FileProcessingService {
     }
     async downloadFromDropbox(file, source) {
         try {
-            console.log(`Downloading from Dropbox: ${file.path}`);
-            return null;
+            const result = await this.dropboxService.downloadFile(file.organizationId, source.id, file.path);
+            let buffer = null;
+            if (result?.fileBinary) {
+                const binary = result.fileBinary;
+                if (binary instanceof ArrayBuffer) {
+                    buffer = Buffer.from(binary);
+                }
+                else if (binary instanceof Uint8Array) {
+                    buffer = Buffer.from(binary);
+                }
+                else if (typeof binary === 'string') {
+                    buffer = Buffer.from(binary, 'binary');
+                }
+            }
+            else if (result?.fileBlob && typeof result.fileBlob.arrayBuffer === 'function') {
+                const arr = await result.fileBlob.arrayBuffer();
+                buffer = Buffer.from(arr);
+            }
+            else if (result?.fileContent && (result.fileContent instanceof Uint8Array || result.fileContent instanceof ArrayBuffer)) {
+                const fc = result.fileContent;
+                buffer = Buffer.from(fc);
+            }
+            if (!buffer) {
+                console.warn(`Dropbox download returned no binary for ${file.path}`);
+                return null;
+            }
+            const mimeType = file.mimeType || 'application/octet-stream';
+            const isText = this.isTextMimeType(mimeType);
+            return isText ? buffer.toString('utf8') : buffer.toString('base64');
         }
         catch (error) {
             console.error(`Error downloading from Dropbox: ${file.path}`, error);
@@ -181,13 +227,52 @@ class FileProcessingService {
     }
     async downloadFromGoogleDrive(file, source) {
         try {
-            console.log(`Downloading from Google Drive: ${file.path}`);
-            return null;
+            const meta = (file.metadata || {});
+            const candidateId = (meta['id'] || meta['file_id']);
+            if (!candidateId) {
+                console.warn(`Missing Google Drive file ID in metadata for ${file.path}`);
+                return null;
+            }
+            const streamOrData = await this.googleDriveService.downloadFile(file.organizationId, source.id, candidateId);
+            let buffer = null;
+            if (streamOrData && typeof streamOrData.read === 'function') {
+                buffer = await this.streamToBuffer(streamOrData);
+            }
+            else if (Buffer.isBuffer(streamOrData)) {
+                buffer = streamOrData;
+            }
+            else if (streamOrData instanceof Uint8Array || streamOrData instanceof ArrayBuffer) {
+                buffer = Buffer.from(streamOrData);
+            }
+            if (!buffer) {
+                console.warn(`Google Drive download returned no binary for ${file.path}`);
+                return null;
+            }
+            const mimeType = file.mimeType || 'application/octet-stream';
+            const isText = this.isTextMimeType(mimeType);
+            return isText ? buffer.toString('utf8') : buffer.toString('base64');
         }
         catch (error) {
             console.error(`Error downloading from Google Drive: ${file.path}`, error);
             return null;
         }
+    }
+    isTextMimeType(mimeType) {
+        if (!mimeType)
+            return false;
+        return (mimeType.startsWith('text/') ||
+            mimeType === 'application/json' ||
+            mimeType === 'application/javascript' ||
+            mimeType === 'application/typescript' ||
+            mimeType === 'application/xml');
+    }
+    streamToBuffer(stream) {
+        return new Promise((resolve, reject) => {
+            const chunks = [];
+            stream.on('data', (chunk) => chunks.push(Buffer.from(chunk)));
+            stream.on('error', (err) => reject(err));
+            stream.on('end', () => resolve(Buffer.concat(chunks)));
+        });
     }
     extractFileName(filePath) {
         return filePath.split('/').pop() || filePath;
@@ -260,6 +345,43 @@ class FileProcessingService {
             'application/typescript'
         ];
         return extractableMimeTypes.includes(mimeType);
+    }
+    async getProcessingStatistics(orgId) {
+        const postgresService = this.fileModel?.postgresService || new (require('../services/PostgresService').PostgresService)();
+        const totalQuery = `
+      SELECT COUNT(*)::int AS total
+      FROM files
+      WHERE organization_id = $1 AND deleted_at IS NULL
+    `;
+        const classifiedQuery = `
+      SELECT COUNT(*)::int AS classified
+      FROM files
+      WHERE organization_id = $1 AND deleted_at IS NULL AND classification_status = 'completed'
+    `;
+        const [totalRes, classifiedRes] = await Promise.all([
+            postgresService.executeQuery(totalQuery, [orgId]),
+            postgresService.executeQuery(classifiedQuery, [orgId])
+        ]);
+        const total = totalRes.rows[0]?.total || 0;
+        const classified = classifiedRes.rows[0]?.classified || 0;
+        const rate = total > 0 ? classified / total : 0;
+        return {
+            total_files: total,
+            classified_files: classified,
+            classification_rate: rate
+        };
+    }
+    async processFileWithAI(fileRequest) {
+        return {
+            fileId: fileRequest.fileId,
+            classification: {
+                type: 'document',
+                confidence: 0.8,
+                categories: ['general'],
+                tags: ['processed']
+            },
+            extractedText: 'Extracted text from file'
+        };
     }
 }
 exports.FileProcessingService = FileProcessingService;

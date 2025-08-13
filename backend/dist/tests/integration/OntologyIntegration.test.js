@@ -5,9 +5,11 @@ const ContentOntologyService_1 = require("../../services/ContentOntologyService"
 const OperationsOntologyService_1 = require("../../services/OperationsOntologyService");
 const ProvenanceService_1 = require("../../services/provenance/ProvenanceService");
 const AgentOrchestrator_1 = require("../../services/AgentOrchestrator");
-const EnhancedFileProcessingService_1 = require("../../services/EnhancedFileProcessingService");
+const FileProcessingService_1 = require("../../services/FileProcessingService");
 const EventProcessingService_1 = require("../../services/EventProcessingService");
 const QueueService_1 = require("../../services/queues/QueueService");
+const Neo4jService_1 = require("../../services/Neo4jService");
+const PostgresService_1 = require("../../services/PostgresService");
 describe('Ontology Integration Tests', () => {
     let taxonomyService;
     let contentService;
@@ -23,9 +25,12 @@ describe('Ontology Integration Tests', () => {
         contentService = new ContentOntologyService_1.ContentOntologyService();
         operationsService = new OperationsOntologyService_1.OperationsOntologyService();
         provenanceService = new ProvenanceService_1.ProvenanceService();
-        orchestrator = new AgentOrchestrator_1.AgentOrchestrator();
+        const queueService = new QueueService_1.QueueService();
+        const neo4jService = new Neo4jService_1.Neo4jService();
+        const postgresService = new PostgresService_1.PostgresService();
+        orchestrator = new AgentOrchestrator_1.AgentOrchestrator(queueService, neo4jService, postgresService);
         const eventProcessingService = new EventProcessingService_1.EventProcessingService(null, new QueueService_1.QueueService());
-        fileProcessingService = new EnhancedFileProcessingService_1.EnhancedFileProcessingService(eventProcessingService);
+        fileProcessingService = new FileProcessingService_1.FileProcessingService(eventProcessingService);
         await orchestrator.start();
     });
     afterAll(async () => {
@@ -123,17 +128,17 @@ describe('Ontology Integration Tests', () => {
             const po = await operationsService.createPurchaseOrder({
                 org_id: testOrgId,
                 project_id: testProjectId,
-                po_number: 'PO-2024-001',
+                order_number: 'PO-2024-001',
                 vendor_id: createdVendorId,
                 description: 'Camera equipment rental',
-                amount: 2500,
+                total_amount: 2500,
                 currency: 'USD',
                 status: 'pending',
                 order_date: new Date(),
                 created_by: testUserId
             }, testUserId);
             expect(po).toBeDefined();
-            expect(po.po_number).toBe('PO-2024-001');
+            expect(po.order_number).toBe('PO-2024-001');
             expect(po.vendor_id).toBe(createdVendorId);
         });
     });
@@ -209,8 +214,14 @@ describe('Ontology Integration Tests', () => {
                 userId: testUserId,
                 extractedText: 'FADE IN: EXT. COFFEE SHOP - DAY'
             };
+            const aiRequest = {
+                fileId: mockFileRequest.fileId,
+                orgId: mockFileRequest.orgId,
+                content: mockFileRequest.extractedText,
+                mimeType: mockFileRequest.mimeType
+            };
             try {
-                const result = await fileProcessingService.processFileWithAI(mockFileRequest);
+                const result = await fileProcessingService.processFileWithAI(aiRequest);
                 expect(result).toBeDefined();
                 expect(result.fileId).toBe(mockFileRequest.fileId);
             }

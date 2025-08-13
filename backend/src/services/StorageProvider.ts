@@ -5,47 +5,47 @@ export interface StorageProvider {
    * // TODO: Implementation Plan - 02-Data-Ingestion-Implementation.md - Storage provider interface implementation
    * // TODO: Implementation Checklist - 03-Storage-Integration-Checklist.md - Storage provider client authentication
    */
-  getClient(orgId: string, sourceId: string): Promise<any | null>;
+  getClient(orgId: string, sourceId: string): Promise<unknown | null>;
 
   /**
    * List files in the storage provider
    */
-  listFiles(orgId: string, sourceId: string, options?: any): Promise<any>;
+  listFiles(orgId: string, sourceId: string, pageToken?: string): Promise<{ files: unknown[]; nextPageToken?: string } | unknown[]>;
 
   /**
    * Download file content from the storage provider
    */
-  downloadFile(orgId: string, sourceId: string, fileId: string): Promise<any>;
+  downloadFile(orgId: string, sourceId: string, fileId: string): Promise<unknown>;
 
   /**
    * Get file metadata from the storage provider
    */
-  getFileMetadata(orgId: string, sourceId: string, fileId: string): Promise<any>;
+  getFileMetadata(orgId: string, sourceId: string, fileId: string): Promise<unknown>;
 
   /**
    * Upload file to the storage provider
    */
-  uploadFile(orgId: string, sourceId: string, filePath: string, fileBuffer: Buffer, contentType: string): Promise<any>;
+  uploadFile(orgId: string, sourceId: string, filePath: string, fileBuffer: Buffer, contentType: string): Promise<unknown>;
 
   /**
    * Delete file from the storage provider
    */
-  deleteFile(orgId: string, sourceId: string, filePath: string): Promise<any>;
+  deleteFile(orgId: string, sourceId: string, filePath: string): Promise<unknown>;
 
   /**
    * Subscribe to real-time changes (if supported)
    */
-  subscribeToChanges?(orgId: string, sourceId: string, callback: (payload: any) => void): Promise<any>;
+  subscribeToChanges?(orgId: string, sourceId: string, callback: (payload: unknown) => void): Promise<unknown>;
 
   /**
    * Get stored tokens for authentication
    */
-  getStoredTokens(orgId: string, sourceId: string): Promise<any | null>;
+  getStoredTokens(orgId: string, sourceId: string): Promise<Record<string, unknown> | null>;
 
   /**
    * Store tokens for authentication
    */
-  storeTokens(orgId: string, sourceId: string, tokenData: any): Promise<void>;
+  storeTokens(orgId: string, sourceId: string, tokenData: Record<string, unknown>): Promise<void>;
 }
 
 export type StorageProviderType = 'dropbox' | 'gdrive' | 'supabase';
@@ -54,17 +54,20 @@ export class StorageProviderFactory {
   // TODO: Implementation Plan - 02-Data-Ingestion-Implementation.md - Storage provider factory implementation
   // TODO: Implementation Checklist - 03-Storage-Integration-Checklist.md - Storage provider factory pattern
   // TODO: Implementation Checklist - 07-Testing-QA-Checklist.md - Backend storage provider factory tests
-  static createProvider(type: StorageProviderType): StorageProvider {
+  static async createProvider(type: StorageProviderType): Promise<StorageProvider> {
     switch (type) {
-      case 'dropbox':
-        const { DropboxService } = require('./DropboxService');
+      case 'dropbox': {
+        const { DropboxService } = await import('./DropboxService');
         return new DropboxService();
-      case 'gdrive':
-        const { GoogleDriveService } = require('./GoogleDriveService');
+      }
+      case 'gdrive': {
+        const { GoogleDriveService } = await import('./GoogleDriveService');
         return new GoogleDriveService();
-      case 'supabase':
-        const { SupabaseService } = require('./SupabaseService');
+      }
+      case 'supabase': {
+        const { SupabaseService } = await import('./SupabaseService');
         return new SupabaseService();
+      }
       default:
         throw new Error(`Unsupported storage provider type: ${type}`);
     }
@@ -80,12 +83,12 @@ export interface SyncOrchestrator {
   /**
    * Handle conflicts between providers
    */
-  resolveConflicts(orgId: string, conflicts: any[]): Promise<void>;
+  resolveConflicts(orgId: string, conflicts: unknown[]): Promise<void>;
 
   /**
    * Optimize multi-provider operations
    */
-  optimizeOperations(orgId: string, operations: any[]): Promise<void>;
+  optimizeOperations(orgId: string, operations: unknown[]): Promise<void>;
 }
 
 export class MultiProviderSyncOrchestrator implements SyncOrchestrator {
@@ -95,13 +98,13 @@ export class MultiProviderSyncOrchestrator implements SyncOrchestrator {
     // TODO: Implement actual sync coordination logic
   }
 
-  async resolveConflicts(orgId: string, conflicts: any[]): Promise<void> {
+  async resolveConflicts(orgId: string, conflicts: unknown[]): Promise<void> {
     // Implementation for resolving conflicts between providers
     console.log(`Resolving ${conflicts.length} conflicts for org ${orgId}`);
     // TODO: Implement actual conflict resolution logic
   }
 
-  async optimizeOperations(orgId: string, operations: any[]): Promise<void> {
+  async optimizeOperations(orgId: string, operations: unknown[]): Promise<void> {
     // Implementation for optimizing multi-provider operations
     console.log(`Optimizing ${operations.length} operations for org ${orgId}`);
     // TODO: Implement actual optimization logic

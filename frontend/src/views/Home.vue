@@ -1,7 +1,9 @@
 <template>
   <div class="home">
-    <h1>Welcome to Olivine</h1>
-    <p>A unified, versioned knowledge layer for creative production.</p>
+    <v-card class="glass-card pa-6 text-center">
+      <h1>Welcome to Olivine</h1>
+      <p>A unified, versioned knowledge layer for creative production.</p>
+    </v-card>
   </div>
 </template>
 
@@ -10,8 +12,5 @@
 </script>
 
 <style scoped>
-.home {
-  padding: 20px;
-  text-align: center;
-}
+.home { padding: 20px; }
 </style>

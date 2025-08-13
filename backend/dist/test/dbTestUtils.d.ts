@@ -6,8 +6,8 @@ export declare class DbTestUtils {
     constructor();
     clearNeo4jData(): Promise<void>;
     clearPostgresData(): Promise<void>;
-    createTestOrganization(name?: string, slug?: string): Promise<any>;
-    createTestUser(email: string, password: string, orgId: string, role?: string): Promise<any>;
+    createTestOrganization(name?: string, slug?: string): Promise<unknown>;
+    createTestUser(email: string, password: string, orgId: string, role?: string): Promise<unknown>;
     healthCheckAll(): Promise<boolean>;
     closeAll(): Promise<void>;
 }

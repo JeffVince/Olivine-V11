@@ -2,17 +2,22 @@
   <div>
     <v-row>
       <v-col cols="12">
-        <v-card>
+        <v-card class="glass-card">
           <v-card-title>
-            <v-icon left>mdi-view-dashboard</v-icon>
+            <v-icon left>
+              mdi-view-dashboard
+            </v-icon>
             Dashboard
           </v-card-title>
           <v-card-text>
             <p>Welcome to Olivine! Your creative production knowledge layer is ready.</p>
             
             <v-row class="mt-4">
-              <v-col cols="12" md="6">
-                <v-card variant="outlined">
+              <v-col
+                cols="12"
+                md="6"
+              >
+                <v-card variant="outlined" class="glass-card">
                   <v-card-title>Quick Actions</v-card-title>
                   <v-card-text>
                     <v-btn 
@@ -20,7 +25,9 @@
                       class="mr-2 mb-2"
                       @click="navigateToFileExplorer"
                     >
-                      <v-icon left>mdi-folder</v-icon>
+                      <v-icon left>
+                        mdi-folder
+                      </v-icon>
                       File Explorer
                     </v-btn>
                     <v-btn 
@@ -28,23 +35,35 @@
                       class="mr-2 mb-2"
                       @click="navigateToIntegrations"
                     >
-                      <v-icon left>mdi-puzzle</v-icon>
+                      <v-icon left>
+                        mdi-puzzle
+                      </v-icon>
                       Integrations
                     </v-btn>
                   </v-card-text>
                 </v-card>
               </v-col>
               
-              <v-col cols="12" md="6">
-                <v-card variant="outlined">
+              <v-col
+                cols="12"
+                md="6"
+              >
+                <v-card variant="outlined" class="glass-card">
                   <v-card-title>System Status</v-card-title>
                   <v-card-text>
-                    <v-chip color="success" class="mr-2">
-                      <v-icon left>mdi-check</v-icon>
+                    <v-chip
+                      color="success"
+                      class="mr-2"
+                    >
+                      <v-icon left>
+                        mdi-check
+                      </v-icon>
                       Frontend Connected
                     </v-chip>
                     <v-chip color="success">
-                      <v-icon left>mdi-check</v-icon>
+                      <v-icon left>
+                        mdi-check
+                      </v-icon>
                       Backend Online
                     </v-chip>
                   </v-card-text>

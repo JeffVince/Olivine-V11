@@ -1,9 +1,25 @@
-import { google } from 'googleapis';
-import { JWT } from 'google-auth-library';
+import { google, Auth } from 'googleapis';
+import { JWT, OAuth2Client } from 'google-auth-library';
 import { PostgresService } from './PostgresService';
 import { ConfigService } from './ConfigService';
 
-export interface GoogleDriveTokenData {
+export interface GoogleDriveFile {
+  id?: string;
+  name?: string;
+  mimeType?: string;
+  size?: string;
+  createdTime?: string;
+  modifiedTime?: string;
+  webViewLink?: string;
+  parents?: string[];
+}
+
+export interface GoogleDriveListResponse {
+  files: GoogleDriveFile[];
+  nextPageToken?: string;
+}
+
+export interface GoogleDriveTokenData extends Record<string, unknown> {
   access_token: string;
   refresh_token: string;
   expires_at: number;
@@ -166,7 +182,7 @@ export class GoogleDriveService {
   /**
    * Get authenticated Google Drive client
    */
-  async getClient(orgId: string, sourceId: string): Promise<any | null> {
+  async getClient(orgId: string, sourceId: string): Promise<OAuth2Client | null> {
     try {
       const tokenData = await this.getStoredTokens(orgId, sourceId);
       
@@ -203,7 +219,7 @@ export class GoogleDriveService {
   /**
    * List files in Google Drive
    */
-  async listFiles(orgId: string, sourceId: string, pageToken?: string): Promise<any> {
+  async listFiles(orgId: string, sourceId: string, pageToken?: string): Promise<GoogleDriveListResponse> {
     try {
       const auth = await this.getClient(orgId, sourceId);
       
@@ -214,12 +230,25 @@ export class GoogleDriveService {
       const drive = google.drive({ version: 'v3', auth });
       
       const response = await drive.files.list({
-        pageSize: 100,
-        fields: 'nextPageToken, files(id, name, mimeType, modifiedTime, size, parents)',
-        pageToken: pageToken
+        q: "'root' in parents",
+        fields: 'nextPageToken, files(id, name, mimeType, size, createdTime, modifiedTime, webViewLink, parents)',
+        pageToken: pageToken,
+        pageSize: 100
       });
       
-      return response.data;
+      return {
+        files: (response.data.files || []).map(file => ({
+          id: file.id || undefined,
+          name: file.name || undefined,
+          mimeType: file.mimeType || undefined,
+          size: file.size || undefined,
+          createdTime: file.createdTime || undefined,
+          modifiedTime: file.modifiedTime || undefined,
+          webViewLink: file.webViewLink || undefined,
+          parents: file.parents || undefined
+        })),
+        nextPageToken: response.data.nextPageToken || undefined
+      };
     } catch (error) {
       console.error('Error listing Google Drive files:', error);
       throw error;
@@ -229,7 +258,7 @@ export class GoogleDriveService {
   /**
    * Download file content from Google Drive
    */
-  async downloadFile(orgId: string, sourceId: string, fileId: string): Promise<any> {
+  async downloadFile(orgId: string, sourceId: string, fileId: string): Promise<unknown> {
     try {
       const auth = await this.getClient(orgId, sourceId);
       
@@ -254,7 +283,7 @@ export class GoogleDriveService {
   /**
    * Get file metadata from Google Drive
    */
-  async getFileMetadata(orgId: string, sourceId: string, fileId: string): Promise<any> {
+  async getFileMetadata(orgId: string, sourceId: string, fileId: string): Promise<unknown> {
     try {
       const auth = await this.getClient(orgId, sourceId);
       
@@ -272,6 +301,76 @@ export class GoogleDriveService {
       return response.data;
     } catch (error) {
       console.error('Error getting Google Drive file metadata:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Upload file to Google Drive
+   */
+  async uploadFile(orgId: string, sourceId: string, filePath: string, fileBuffer: Buffer, contentType: string): Promise<unknown> {
+    try {
+      const auth = await this.getClient(orgId, sourceId);
+      
+      if (!auth) {
+        throw new Error('Could not initialize Google Drive client');
+      }
+      
+      const drive = google.drive({ version: 'v3', auth });
+      
+      const response = await drive.files.create({
+        requestBody: {
+          name: filePath.split('/').pop(),
+          parents: [filePath.substring(0, filePath.lastIndexOf('/')) || 'root']
+        },
+        media: {
+          mimeType: contentType,
+          body: fileBuffer
+        }
+      });
+      
+      return response.data;
+    } catch (error) {
+      console.error('Error uploading file to Google Drive:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Delete file from Google Drive
+   */
+  async deleteFile(orgId: string, sourceId: string, filePath: string): Promise<unknown> {
+    try {
+      const auth = await this.getClient(orgId, sourceId);
+      
+      if (!auth) {
+        throw new Error('Could not initialize Google Drive client');
+      }
+      
+      const drive = google.drive({ version: 'v3', auth });
+      
+      // First, we need to find the file ID by its path
+      // This is a simplified implementation - in a real scenario, you'd want to maintain a mapping
+      // between file paths and file IDs
+      const fileName = filePath.split('/').pop();
+      const response = await drive.files.list({
+        q: `name = '${fileName}'`,
+        fields: 'files(id)'
+      });
+      
+      if (response.data.files && response.data.files.length > 0) {
+        const fileId = response.data.files[0].id;
+        if (fileId) {
+          await drive.files.delete({ fileId });
+          return { success: true };
+        } else {
+          throw new Error('File ID is null');
+        }
+      } else {
+        throw new Error('File not found');
+      }
+    } catch (error) {
+      console.error('Error deleting file from Google Drive:', error);
       throw error;
     }
   }

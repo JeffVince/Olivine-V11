@@ -2,16 +2,26 @@
   <div>
     <!-- Header -->
     <v-row class="mb-4">
-      <v-col cols="12" md="8">
-        <h1 class="text-h4 font-weight-bold">Mapping Studio</h1>
+      <v-col
+        cols="12"
+        md="8"
+      >
+        <h1 class="text-h4 font-weight-bold">
+          Mapping Studio
+        </h1>
         <p class="text-subtitle-1 text-medium-emphasis">
           Configure data transformations and field mappings
         </p>
       </v-col>
-      <v-col cols="12" md="4" class="text-right">
+      <v-col
+        cols="12"
+        md="4"
+        class="text-right"
+      >
         <v-btn 
           color="primary"
           prepend-icon="mdi-plus"
+          class="liquid-button"
           @click="showCreateDialog = true"
         >
           Create Mapping
@@ -22,9 +32,11 @@
     <!-- Mapping Templates -->
     <v-row class="mb-6">
       <v-col cols="12">
-        <v-card>
+        <v-card class="glass-card">
           <v-card-title>
-            <v-icon class="mr-2">mdi-file-document-multiple</v-icon>
+            <v-icon class="mr-2">
+              mdi-file-document-multiple
+            </v-icon>
             Mapping Templates
           </v-card-title>
           <v-card-text>
@@ -36,9 +48,9 @@
                 sm="6"
                 md="4"
               >
-                <v-card 
+                 <v-card 
                   variant="outlined"
-                  class="template-card"
+                  class="template-card glass-card"
                   @click="createFromTemplate(template)"
                 >
                   <v-card-text class="text-center pa-4">
@@ -47,10 +59,17 @@
                       size="48"
                       class="mb-3"
                     >
-                      <v-icon :icon="template.icon" size="24" />
+                      <v-icon
+                        :icon="template.icon"
+                        size="24"
+                      />
                     </v-avatar>
-                    <h4 class="text-subtitle-1 mb-2">{{ template.name }}</h4>
-                    <p class="text-body-2 text-medium-emphasis">{{ template.description }}</p>
+                    <h4 class="text-subtitle-1 mb-2">
+                      {{ template.name }}
+                    </h4>
+                    <p class="text-body-2 text-medium-emphasis">
+                      {{ template.description }}
+                    </p>
                     <v-chip 
                       :color="template.color"
                       size="small"
@@ -71,17 +90,28 @@
     <!-- Active Mappings -->
     <v-row>
       <v-col cols="12">
-        <v-card>
+        <v-card class="glass-card">
           <v-card-title class="d-flex align-center justify-space-between">
             <div>
-              <v-icon class="mr-2">mdi-map</v-icon>
+              <v-icon class="mr-2">
+                mdi-map
+              </v-icon>
               Active Mappings
             </div>
-            <v-btn-toggle v-model="viewMode" mandatory>
-              <v-btn value="grid" size="small">
+            <v-btn-toggle
+              v-model="viewMode"
+              mandatory
+            >
+              <v-btn
+                value="grid"
+                size="small"
+              >
                 <v-icon>mdi-view-grid</v-icon>
               </v-btn>
-              <v-btn value="list" size="small">
+              <v-btn
+                value="list"
+                size="small"
+              >
                 <v-icon>mdi-view-list</v-icon>
               </v-btn>
             </v-btn-toggle>
@@ -97,8 +127,8 @@
                 md="6"
                 lg="4"
               >
-                <v-card 
-                  class="mapping-card"
+                 <v-card 
+                  class="mapping-card glass-card"
                   :class="{ 'active': mapping.status === 'active' }"
                 >
                   <v-card-title class="d-flex align-center">
@@ -107,10 +137,15 @@
                       class="mr-3"
                       size="32"
                     >
-                      <v-icon :icon="getMappingIcon(mapping.type)" size="16" />
+                      <v-icon
+                        :icon="getMappingIcon(mapping.type)"
+                        size="16"
+                      />
                     </v-avatar>
                     <div class="flex-grow-1">
-                      <div class="text-subtitle-1">{{ mapping.name }}</div>
+                      <div class="text-subtitle-1">
+                        {{ mapping.name }}
+                      </div>
                       <v-chip 
                         :color="mapping.status === 'active' ? 'success' : 'warning'"
                         size="x-small"
@@ -120,7 +155,7 @@
                       </v-chip>
                     </div>
                     <v-menu>
-                      <template v-slot:activator="{ props }">
+                      <template #activator="{ props }">
                         <v-btn 
                           v-bind="props"
                           icon="mdi-dots-vertical"
@@ -131,26 +166,37 @@
                       <v-list>
                         <v-list-item @click="editMapping(mapping)">
                           <v-list-item-title>
-                            <v-icon start>mdi-pencil</v-icon>
+                            <v-icon start>
+                              mdi-pencil
+                            </v-icon>
                             Edit
                           </v-list-item-title>
                         </v-list-item>
                         <v-list-item @click="duplicateMapping(mapping)">
                           <v-list-item-title>
-                            <v-icon start>mdi-content-copy</v-icon>
+                            <v-icon start>
+                              mdi-content-copy
+                            </v-icon>
                             Duplicate
                           </v-list-item-title>
                         </v-list-item>
                         <v-list-item @click="testMapping(mapping)">
                           <v-list-item-title>
-                            <v-icon start>mdi-play</v-icon>
+                            <v-icon start>
+                              mdi-play
+                            </v-icon>
                             Test
                           </v-list-item-title>
                         </v-list-item>
                         <v-divider />
-                        <v-list-item @click="deleteMapping(mapping)" class="text-error">
+                        <v-list-item
+                          class="text-error"
+                          @click="deleteMapping(mapping)"
+                        >
                           <v-list-item-title>
-                            <v-icon start>mdi-delete</v-icon>
+                            <v-icon start>
+                              mdi-delete
+                            </v-icon>
                             Delete
                           </v-list-item-title>
                         </v-list-item>
@@ -159,20 +205,34 @@
                   </v-card-title>
 
                   <v-card-text>
-                    <p class="text-body-2 mb-3">{{ mapping.description }}</p>
+                    <p class="text-body-2 mb-3">
+                      {{ mapping.description }}
+                    </p>
                     
                     <v-row class="text-center">
                       <v-col cols="4">
-                        <div class="text-h6">{{ mapping.fieldCount }}</div>
-                        <div class="text-caption text-medium-emphasis">Fields</div>
+                        <div class="text-h6">
+                          {{ mapping.fieldCount }}
+                        </div>
+                        <div class="text-caption text-medium-emphasis">
+                          Fields
+                        </div>
                       </v-col>
                       <v-col cols="4">
-                        <div class="text-h6">{{ mapping.transformCount }}</div>
-                        <div class="text-caption text-medium-emphasis">Transforms</div>
+                        <div class="text-h6">
+                          {{ mapping.transformCount }}
+                        </div>
+                        <div class="text-caption text-medium-emphasis">
+                          Transforms
+                        </div>
                       </v-col>
                       <v-col cols="4">
-                        <div class="text-h6">{{ mapping.lastRun ? formatDate(mapping.lastRun) : 'Never' }}</div>
-                        <div class="text-caption text-medium-emphasis">Last Run</div>
+                        <div class="text-h6">
+                          {{ mapping.lastRun ? formatDate(mapping.lastRun) : 'Never' }}
+                        </div>
+                        <div class="text-caption text-medium-emphasis">
+                          Last Run
+                        </div>
                       </v-col>
                     </v-row>
                   </v-card-text>
@@ -209,20 +269,23 @@
               item-key="id"
               density="compact"
             >
-              <template v-slot:item.name="{ item }">
+              <template #item.name="{ item }">
                 <div class="d-flex align-center">
                   <v-avatar 
                     :color="getMappingColor(item.type)"
                     class="mr-3"
                     size="24"
                   >
-                    <v-icon :icon="getMappingIcon(item.type)" size="12" />
+                    <v-icon
+                      :icon="getMappingIcon(item.type)"
+                      size="12"
+                    />
                   </v-avatar>
                   {{ item.name }}
                 </div>
               </template>
 
-              <template v-slot:item.status="{ item }">
+              <template #item.status="{ item }">
                 <v-chip 
                   :color="item.status === 'active' ? 'success' : 'warning'"
                   size="small"
@@ -232,11 +295,11 @@
                 </v-chip>
               </template>
 
-              <template v-slot:item.lastRun="{ item }">
+              <template #item.lastRun="{ item }">
                 {{ item.lastRun ? formatDate(item.lastRun) : 'Never' }}
               </template>
 
-              <template v-slot:item.actions="{ item }">
+              <template #item.actions="{ item }">
                 <v-btn 
                   icon="mdi-pencil"
                   variant="text"
@@ -264,11 +327,17 @@
     </v-row>
 
     <!-- Create Mapping Dialog -->
-    <v-dialog v-model="showCreateDialog" max-width="600">
+    <v-dialog
+      v-model="showCreateDialog"
+      max-width="600"
+    >
       <v-card>
         <v-card-title>Create New Mapping</v-card-title>
         <v-card-text>
-          <v-form ref="createForm" v-model="createValid">
+          <v-form
+            ref="createForm"
+            v-model="createValid"
+          >
             <v-text-field
               v-model="newMapping.name"
               label="Mapping Name"
@@ -305,7 +374,12 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer />
-          <v-btn variant="text" @click="showCreateDialog = false">Cancel</v-btn>
+          <v-btn
+            variant="text"
+            @click="showCreateDialog = false"
+          >
+            Cancel
+          </v-btn>
           <v-btn 
             color="primary" 
             :disabled="!createValid"

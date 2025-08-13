@@ -31,6 +31,9 @@ export class SourceResolvers {
    * Get all sources for an organization
    */
   async getSources(organizationId: string): Promise<SourceMetadata[]> {
+    if (!organizationId || organizationId.trim() === '') {
+      throw new Error('Organization ID is required');
+    }
     return await this.sourceModel.getSourcesByOrganization(organizationId);
   }
 
@@ -38,6 +41,12 @@ export class SourceResolvers {
    * Get a specific source by ID
    */
   async getSource(sourceId: string, organizationId: string): Promise<SourceMetadata | null> {
+    if (!sourceId || sourceId.trim() === '') {
+      throw new Error('Source ID is required');
+    }
+    if (!organizationId || organizationId.trim() === '') {
+      throw new Error('Organization ID is required');
+    }
     return await this.sourceModel.getSource(sourceId, organizationId);
   }
 
@@ -50,6 +59,9 @@ export class SourceResolvers {
     type: 'dropbox' | 'google_drive' | 'onedrive' | 'local',
     config: SourceConfig
   ): Promise<SourceMetadata> {
+    if (!organizationId || organizationId.trim() === '') {
+      throw new Error('Organization ID is required');
+    }
     const source = await this.sourceModel.createSource({
       organizationId,
       name,
@@ -72,6 +84,9 @@ export class SourceResolvers {
     organizationId: string,
     config: SourceConfig
   ): Promise<boolean> {
+    if (!organizationId || organizationId.trim() === '') {
+      throw new Error('Organization ID is required');
+    }
     const success = await this.sourceModel.updateSourceConfig(sourceId, organizationId, config);
     
     if (success) {
@@ -93,6 +108,9 @@ export class SourceResolvers {
     organizationId: string,
     active: boolean
   ): Promise<boolean> {
+    if (!organizationId || organizationId.trim() === '') {
+      throw new Error('Organization ID is required');
+    }
     const success = await this.sourceModel.updateSourceStatus(sourceId, organizationId, active);
     
     if (success) {
@@ -110,6 +128,9 @@ export class SourceResolvers {
    * Delete a source and all its files
    */
   async deleteSource(sourceId: string, organizationId: string): Promise<boolean> {
+    if (!organizationId || organizationId.trim() === '') {
+      throw new Error('Organization ID is required');
+    }
     try {
       // First, get all files from this source and mark them as deleted
       const files = await this.fileModel.getFilesBySource(sourceId, organizationId, 10000);
@@ -141,6 +162,9 @@ export class SourceResolvers {
     lastSync: Date | null;
     classificationStats: { [status: string]: number };
   }> {
+    if (!organizationId || organizationId.trim() === '') {
+      throw new Error('Organization ID is required');
+    }
     const files = await this.fileModel.getFilesBySource(sourceId, organizationId, 10000);
     
     const stats = {
@@ -165,6 +189,9 @@ export class SourceResolvers {
    * Trigger full resync for a source
    */
   async triggerSourceResync(sourceId: string, organizationId: string): Promise<boolean> {
+    if (!organizationId || organizationId.trim() === '') {
+      throw new Error('Organization ID is required');
+    }
     try {
       const source = await this.sourceModel.getSource(sourceId, organizationId);
       if (!source) {
@@ -207,7 +234,7 @@ export class SourceResolvers {
         let pageToken: string | undefined = undefined;
         do {
           const data = await this.googleDriveService.listFiles(organizationId, sourceId, pageToken);
-          const files = data.files || [];
+          const files = Array.isArray(data) ? data : (data.files || []);
           for (const f of files) {
             if (f.mimeType === 'application/vnd.google-apps.folder') continue;
             await this.fileModel.upsertFile({

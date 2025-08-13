@@ -10,7 +10,12 @@ export interface Organization {
   status: 'active' | 'suspended' | 'archived';
   created_at: Date;
   updated_at: Date;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
+}
+
+export interface User {
+  orgId: string;
+  [key: string]: unknown;
 }
 
 export interface UserPermission {
@@ -65,7 +70,7 @@ export class TenantService {
    * @param orgId Organization ID
    * @returns Query parameters with org_id included
    */
-  addOrgIdToParams(params: Record<string, any>, orgId: string): Record<string, any> {
+  addOrgIdToParams(params: Record<string, unknown>, orgId: string): Record<string, unknown> {
     if (!this.validateOrgId(orgId)) {
       throw new Error('Invalid organization ID');
     }
@@ -102,7 +107,7 @@ export class TenantService {
    * @param orgId Organization ID for multi-tenant filtering
    * @returns Query result
    */
-  async executeTenantQuery(query: string, params: Record<string, any> = {}, orgId: string): Promise<any> {
+  async executeTenantQuery(query: string, params: Record<string, unknown> = {}, orgId: string): Promise<unknown> {
     if (!this.validateOrgId(orgId)) {
       throw new Error('Invalid organization ID');
     }
@@ -120,7 +125,7 @@ export class TenantService {
    * @param orgId Organization ID to validate access for
    * @returns Boolean indicating if access is valid
    */
-  async validateAccess(user: any, orgId: string): Promise<void> {
+  async validateAccess(user: User, orgId: string): Promise<void> {
     if (!user || !user.orgId) {
       throw new Error('User organization information is required');
     }
@@ -135,7 +140,7 @@ export class TenantService {
    * @param orgId Organization ID
    * @returns Organization object
    */
-  async getOrganization(orgId: string): Promise<any> {
+  async getOrganization(orgId: string): Promise<Organization> {
     if (!this.validateOrgId(orgId)) {
       throw new Error('Invalid organization ID');
     }
@@ -151,7 +156,16 @@ export class TenantService {
       throw new Error('Organization not found');
     }
     
-    return result.records[0].get('org').properties;
+    const orgData = result.records[0].get('org').properties;
+    return {
+      id: orgData.id,
+      name: orgData.name,
+      description: orgData.description,
+      status: orgData.status,
+      created_at: new Date(orgData.created_at),
+      updated_at: new Date(orgData.updated_at),
+      metadata: orgData.metadata
+    };
   }
 
   /**
@@ -295,7 +309,7 @@ export class TenantService {
     }
 
     const setClause = [];
-    const params: Record<string, any> = { orgId };
+    const params: Record<string, unknown> = { orgId };
 
     if (updateData.name) {
       setClause.push('org.name = $name');
@@ -355,7 +369,7 @@ export class TenantService {
 
     const result = await this.neo4jService.executeQuery(query, { userId });
     
-    return result.records.map((record: any) => {
+    return result.records.map((record) => {
       const orgProperties = record.get('org').properties;
       return {
         id: orgProperties.id,
@@ -375,7 +389,7 @@ export class TenantService {
    * @param orgId Organization ID
    * @param role User role in the organization
    */
-  async addUserToOrganization(userId: string, orgId: string, role: string = 'member'): Promise<void> {
+  async addUserToOrganization(userId: string, orgId: string, role = 'member'): Promise<void> {
     if (!this.validateOrgId(orgId)) {
       throw new Error('Invalid organization ID');
     }
@@ -734,7 +748,7 @@ export class TenantService {
 
     const result = await this.neo4jService.executeQuery(query, { orgId });
     
-    return result.records.map((record: any) => ({
+    return result.records.map((record) => ({
       version: record.get('version'),
       description: record.get('description'),
       applied_at: new Date(record.get('applied_at')),

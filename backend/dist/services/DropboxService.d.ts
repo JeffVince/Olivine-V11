@@ -27,7 +27,7 @@ export interface DropboxLogEntry {
     duration?: number;
     error?: any;
 }
-export interface DropboxTokenData {
+export interface DropboxTokenData extends Record<string, unknown> {
     access_token: string;
     refresh_token: string;
     expires_at: number;
@@ -98,7 +98,7 @@ export declare class DropboxService extends EventEmitter implements StorageProvi
     private sleep;
     private sanitizeError;
     private enhanceError;
-    generateAuthUrl(): Promise<string>;
+    generateAuthUrl(state?: string): Promise<string>;
     exchangeCodeForTokens(code: string): Promise<DropboxTokenData>;
     refreshAccessToken(refreshToken: string): Promise<DropboxTokenData>;
     getStoredTokens(orgId: string, sourceId: string): Promise<DropboxTokenData | null>;
@@ -111,7 +111,7 @@ export declare class DropboxService extends EventEmitter implements StorageProvi
     uploadFile(orgId: string, sourceId: string, filePath: string, fileBuffer: Buffer, contentType: string): Promise<any>;
     private uploadLargeFile;
     deleteFile(orgId: string, sourceId: string, filePath: string): Promise<any>;
-    listFiles(orgId: string, sourceId: string, options?: any): Promise<any>;
+    listFiles(orgId: string, sourceId: string, pageToken?: string): Promise<any>;
     moveFile(orgId: string, sourceId: string, fromPath: string, toPath: string): Promise<any>;
     copyFile(orgId: string, sourceId: string, fromPath: string, toPath: string): Promise<any>;
     createFolder(orgId: string, sourceId: string, path: string): Promise<any>;

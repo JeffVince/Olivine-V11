@@ -3,7 +3,10 @@ import { FileStewardAgent } from '../agents/FileStewardAgent'
 import { TaxonomyClassificationAgent } from '../agents/TaxonomyClassificationAgent'
 import { ProvenanceTrackingAgent } from '../agents/ProvenanceTrackingAgent'
 import { SyncAgent } from '../agents/SyncAgent'
+import { CrossLayerEnforcementService } from './CrossLayerEnforcementService'
 import { QueueService } from './queues/QueueService'
+import { Neo4jService } from './Neo4jService'
+import { PostgresService } from './PostgresService'
 import { Logger } from 'winston'
 import * as winston from 'winston'
 
@@ -12,10 +15,14 @@ export class AgentRegistry {
   // TODO: Implementation Checklist - 07-Testing-QA-Checklist.md - Backend agent registry tests
   private static instance: AgentRegistry
   private agents: Map<string, BaseAgent> = new Map()
+  private crossLayerService: CrossLayerEnforcementService | null = null
   private logger: Logger
   private queueService: QueueService
+  private neo4jService: Neo4jService | null = null
+  private postgresService: PostgresService | null = null
+  private clusterMode = false
 
-  private constructor() {
+  constructor(queueService?: QueueService, crossLayerService?: CrossLayerEnforcementService) {
     this.logger = winston.createLogger({
       level: 'info',
       format: winston.format.combine(
@@ -28,9 +35,10 @@ export class AgentRegistry {
         new winston.transports.Console()
       ]
     })
-    // Note: QueueService should be injected, not accessed via getInstance
-    // For now, using a placeholder
-    this.queueService = {} as QueueService
+    
+    // Use injected services or create placeholders
+    this.queueService = queueService || {} as QueueService
+    this.crossLayerService = crossLayerService || null
   }
 
   public static getInstance(): AgentRegistry {
@@ -41,14 +49,39 @@ export class AgentRegistry {
   }
 
   /**
+   * Set services required for cluster-centric mode
+   */
+  public setServices(neo4jService: Neo4jService, postgresService: PostgresService, queueService: QueueService): void {
+    this.neo4jService = neo4jService
+    this.postgresService = postgresService
+    this.queueService = queueService
+  }
+
+
+
+  /**
    * Initialize and register all available agents
    */
   public async initializeAgents(): Promise<void> {
     this.logger.info('Initializing agent registry...')
 
     try {
-      // Initialize File Steward Agent
+      // Initialize File Steward Agent (supports both legacy and cluster modes)
       const fileStewardAgent = new FileStewardAgent(this.queueService)
+      
+      if (this.clusterMode && this.neo4jService && this.postgresService) {
+        // Enable cluster mode on the existing agent
+        fileStewardAgent.enableClusterMode()
+        
+        // Initialize Cross-Layer Enforcement Service
+        this.crossLayerService = new CrossLayerEnforcementService(
+          this.neo4jService,
+          this.postgresService
+        )
+        
+        this.logger.info('Initialized cluster-centric services')
+      }
+      
       this.registerAgent('file-steward-agent', fileStewardAgent)
 
       // Initialize taxonomy classification agent
@@ -63,7 +96,7 @@ export class AgentRegistry {
       const syncAgent = new SyncAgent(this.queueService)
       this.registerAgent('sync-agent', syncAgent)
 
-      this.logger.info(`Registered ${this.agents.size} agents`)
+      this.logger.info(`Initialized ${this.agents.size} agents`)
     } catch (error) {
       this.logger.error('Failed to initialize agents:', error)
       throw error
@@ -75,7 +108,7 @@ export class AgentRegistry {
    */
   public registerAgent(name: string, agent: BaseAgent): void {
     if (this.agents.has(name)) {
-      this.logger.warn(`Agent ${name} is already registered, replacing...`)
+      throw new Error(`Agent with name '${name}' is already registered`)
     }
     
     this.agents.set(name, agent)
@@ -90,8 +123,10 @@ export class AgentRegistry {
     
     const startPromises = Array.from(this.agents.entries()).map(async ([name, agent]) => {
       try {
-        await agent.start()
-        this.logger.info(`Started agent: ${name}`)
+        if (typeof agent.start === 'function') {
+          await agent.start()
+          this.logger.info(`Started agent: ${name}`)
+        }
       } catch (error) {
         this.logger.error(`Failed to start agent ${name}:`, error)
         throw error
@@ -110,8 +145,10 @@ export class AgentRegistry {
     
     const stopPromises = Array.from(this.agents.entries()).map(async ([name, agent]) => {
       try {
-        await agent.stop()
-        this.logger.info(`Stopped agent: ${name}`)
+        if (typeof agent.stop === 'function') {
+          await agent.stop()
+          this.logger.info(`Stopped agent: ${name}`)
+        }
       } catch (error) {
         this.logger.error(`Failed to stop agent ${name}:`, error)
       }
@@ -127,11 +164,13 @@ export class AgentRegistry {
   public async startAgent(name: string): Promise<void> {
     const agent = this.agents.get(name)
     if (!agent) {
-      throw new Error(`Agent ${name} not found`)
+      throw new Error(`Agent '${name}' not found`)
     }
-
-    await agent.start()
-    this.logger.info(`Started agent: ${name}`)
+    
+    if (typeof agent.start === 'function') {
+      await agent.start()
+      this.logger.info(`Started agent: ${name}`)
+    }
   }
 
   /**
@@ -140,11 +179,13 @@ export class AgentRegistry {
   public async stopAgent(name: string): Promise<void> {
     const agent = this.agents.get(name)
     if (!agent) {
-      throw new Error(`Agent ${name} not found`)
+      throw new Error(`Agent '${name}' not found`)
     }
-
-    await agent.stop()
-    this.logger.info(`Stopped agent: ${name}`)
+    
+    if (typeof agent.stop === 'function') {
+      await agent.stop()
+      this.logger.info(`Stopped agent: ${name}`)
+    }
   }
 
   /**
@@ -153,11 +194,13 @@ export class AgentRegistry {
   public async pauseAgent(name: string): Promise<void> {
     const agent = this.agents.get(name)
     if (!agent) {
-      throw new Error(`Agent ${name} not found`)
+      throw new Error(`Agent '${name}' not found`)
     }
-
-    await agent.pause()
-    this.logger.info(`Paused agent: ${name}`)
+    
+    if (typeof agent.pause === 'function') {
+      await agent.pause()
+      this.logger.info(`Paused agent: ${name}`)
+    }
   }
 
   /**
@@ -166,11 +209,13 @@ export class AgentRegistry {
   public async resumeAgent(name: string): Promise<void> {
     const agent = this.agents.get(name)
     if (!agent) {
-      throw new Error(`Agent ${name} not found`)
+      throw new Error(`Agent '${name}' not found`)
     }
-
-    await agent.resume()
-    this.logger.info(`Resumed agent: ${name}`)
+    
+    if (typeof agent.resume === 'function') {
+      await agent.resume()
+      this.logger.info(`Resumed agent: ${name}`)
+    }
   }
 
   /**
@@ -184,27 +229,71 @@ export class AgentRegistry {
    * Get all active (running) agents
    */
   public getActiveAgents(): BaseAgent[] {
-    return Array.from(this.agents.values()).filter(agent => agent.isRunning())
+    return Array.from(this.agents.values()).filter(agent => 
+      agent.isRunning()
+    )
   }
 
   /**
-   * Get a specific agent by name
+   * Get agent by name
    */
   public getAgent(name: string): BaseAgent | undefined {
     return this.agents.get(name)
   }
 
   /**
-   * Get agent status summary
+   * Get all registered agent names
    */
-  public getAgentStatus(): { [key: string]: boolean } {
-    const status: { [key: string]: boolean } = {}
-    
-    for (const [name, agent] of this.agents.entries()) {
-      status[name] = agent.isRunning()
+  public getRegisteredAgents(): string[] {
+    return Array.from(this.agents.keys())
+  }
+
+  /**
+   * Get agent registry health status
+   */
+  public getHealthStatus(): { healthy: boolean; agents: Record<string, boolean> } {
+    const agentStatus: Record<string, boolean> = {}
+    let allHealthy = true
+
+    for (const [name, agent] of this.agents) {
+      const isHealthy = agent.isRunning()
+      agentStatus[name] = isHealthy
+      if (!isHealthy) {
+        allHealthy = false
+      }
     }
-    
-    return status
+
+    return {
+      healthy: allHealthy,
+      agents: agentStatus
+    }
+  }
+
+  /**
+   * Validate cross-layer links using the enforcement service
+   */
+  public async validateCrossLayerLinks(orgId: string): Promise<void> {
+    if (!this.crossLayerService) {
+      throw new Error('Cross-layer enforcement service not initialized. Enable cluster mode first.')
+    }
+
+    try {
+      this.logger.info('Starting cross-layer link validation...', { orgId })
+      const results = await this.crossLayerService.validateAllLinks(orgId)
+      
+      const totalViolations = results.reduce((sum, r) => sum + r.violationsFound, 0)
+      const totalRepaired = results.reduce((sum, r) => sum + r.violationsRepaired, 0)
+      
+      this.logger.info('Cross-layer link validation completed successfully', {
+        orgId,
+        rulesValidated: results.length,
+        violationsFound: totalViolations,
+        violationsRepaired: totalRepaired
+      })
+    } catch (error) {
+      this.logger.error('Cross-layer link validation failed:', error)
+      throw error
+    }
   }
 
   /**
@@ -212,25 +301,26 @@ export class AgentRegistry {
    */
   public async performHealthCheck(): Promise<{
     healthy: boolean
-    agents: { [key: string]: { running: boolean; error?: string } }
+    agents: Record<string, { healthy: boolean; error?: string }>
   }> {
     const result = {
       healthy: true,
-      agents: {} as { [key: string]: { running: boolean; error?: string } }
+      agents: {} as Record<string, { healthy: boolean; error?: string }>
     }
 
-    for (const [name, agent] of this.agents.entries()) {
+    for (const [name, agent] of this.agents) {
       try {
-        const running = agent.isRunning()
-        result.agents[name] = { running }
+        const healthCheck = await agent.getHealthCheck()
+        result.agents[name] = { healthy: healthCheck.healthy }
         
-        if (!running) {
+        if (!healthCheck.healthy) {
           result.healthy = false
         }
       } catch (error) {
+        this.logger.error(`Health check failed for agent ${name}:`, error)
         result.agents[name] = { 
-          running: false, 
-          error: error instanceof Error ? error.message : 'Unknown error' 
+          healthy: false, 
+          error: error instanceof Error ? error.message : 'Unknown error'
         }
         result.healthy = false
       }
@@ -240,18 +330,46 @@ export class AgentRegistry {
   }
 
   /**
-   * Graceful shutdown of all agents
+   * Graceful shutdown of all agents and services
    */
   public async shutdown(): Promise<void> {
-    this.logger.info('Shutting down agent registry...')
+    this.logger.info('Initiating graceful shutdown...')
     
     try {
+      // Stop all agents first
       await this.stopAllAgents()
-      this.agents.clear()
-      this.logger.info('Agent registry shutdown complete')
+      
+      // Stop cross-layer service if running
+      if (this.crossLayerService) {
+        this.logger.info('Stopping cross-layer enforcement service...')
+        // Note: CrossLayerEnforcementService may not have a stop method
+        // This is a placeholder for future implementation
+      }
+      
+      this.logger.info('Graceful shutdown completed')
     } catch (error) {
-      this.logger.error('Error during agent registry shutdown:', error)
+      this.logger.error('Error during shutdown:', error)
       throw error
     }
   }
+
+
+
+  /**
+   * Disable cluster-centric processing mode for all agents
+   */
+  public disableClusterMode(): void {
+    this.logger.info('Disabling cluster mode for all agents...')
+    this.clusterMode = false
+    
+    // Disable cluster mode for all registered agents
+    this.agents.forEach((agent, agentId) => {
+      if (typeof (agent as any).disableClusterMode === 'function') {
+        (agent as any).disableClusterMode()
+        this.logger.info(`Cluster mode disabled for agent: ${agentId}`)
+      }
+    })
+  }
+
+
 }

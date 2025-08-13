@@ -7,7 +7,7 @@ import { Request, Response, NextFunction } from 'express';
 export const tenantMiddleware = (req: Request, res: Response, next: NextFunction) => {
   try {
     // Extract org_id from headers (for testing purposes)
-    let orgId = req.headers['x-org-id'] as string;
+    const orgId = req.headers['x-org-id'] as string;
     
     // If not in headers, extract from JWT token (when auth is implemented)
     if (!orgId && req.headers.authorization) {

@@ -25,6 +25,10 @@ export class FileResolvers {
    * Get files for an organization
    */
   async getFiles(organizationId: string, sourceId?: string, limit: number = 100): Promise<FileMetadata[]> {
+    if (!organizationId || organizationId.trim() === '') {
+      throw new Error('Organization ID is required');
+    }
+    
     if (sourceId) {
       return await this.fileModel.getFilesBySource(sourceId, organizationId, limit);
     }
@@ -48,6 +52,12 @@ export class FileResolvers {
    * Get a specific file by ID
    */
   async getFile(fileId: string, organizationId: string): Promise<FileMetadata | null> {
+    if (!fileId || fileId.trim() === '') {
+      throw new Error('File ID is required');
+    }
+    if (!organizationId || organizationId.trim() === '') {
+      throw new Error('Organization ID is required');
+    }
     return await this.fileModel.getFile(fileId, organizationId);
   }
 
@@ -55,34 +65,29 @@ export class FileResolvers {
    * Trigger file reprocessing (classification and extraction)
    */
   async reprocessFile(fileId: string, organizationId: string): Promise<boolean> {
+    if (!fileId || fileId.trim() === '') {
+      throw new Error('File ID is required');
+    }
+    if (!organizationId || organizationId.trim() === '') {
+      throw new Error('Organization ID is required');
+    }
+    
     try {
       const file = await this.fileModel.getFile(fileId, organizationId);
       if (!file) {
-        throw new Error(`File not found: ${fileId}`);
+        throw new Error('File not found');
       }
 
-      const source = await this.sourceModel.getSource(file.sourceId, organizationId);
-      if (!source) {
-        throw new Error(`Source not found: ${file.sourceId}`);
-      }
-
-      // Reset classification status to pending
-      await this.fileModel.updateClassification(
-        fileId,
-        organizationId,
-        { type: 'unknown', confidence: 0, categories: [], tags: [] },
-        'pending'
-      );
-
-      // Queue for reprocessing
+      // Trigger file reprocessing through the file processing service
       await this.fileProcessingService.processFileChange({
-        fileId,
-        organizationId,
+        fileId: file.id,
+        organizationId: file.organizationId,
         sourceId: file.sourceId,
         filePath: file.path,
         action: 'update',
         metadata: file.metadata
       });
+      
 
       return true;
     } catch (error) {

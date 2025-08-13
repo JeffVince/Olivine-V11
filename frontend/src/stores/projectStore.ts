@@ -11,9 +11,14 @@ export interface ProjectSettings {
 export interface Project {
   id: string
   name: string
-  status: string
+  status: 'active' | 'syncing' | 'error' | 'archived'
   description?: string | null
   settings?: ProjectSettings
+  lastActivity?: string
+  integrations?: Array<{
+    type: 'dropbox' | 'googledrive' | 'frameio'
+    connected: boolean
+  }>
 }
 
 interface ProjectState {
@@ -95,12 +100,12 @@ export const useProjectStore = defineStore('project', {
         })
         this.projects = data.projects || []
         this.error = null
-      } catch (e: any) {
-        this.error = e.message || 'Unknown error'
+      } catch (e: unknown) {
+        this.error = (e as Error).message || 'Unknown error'
         throw e
       }
     },
-    async createProject(input: { name: string; description?: string; settings?: any }) {
+    async createProject(input: { name: string; description?: string; settings?: Record<string, unknown> }) {
       try {
         const orgId = useOrganizationStore().currentOrg?.id
         if (!orgId) throw new Error('Organization not selected')
@@ -111,8 +116,8 @@ export const useProjectStore = defineStore('project', {
         this.projects.push(data.createProject)
         this.error = null
         return data.createProject as Project
-      } catch (e: any) {
-        this.error = e.message || 'Unknown error'
+      } catch (e: unknown) {
+        this.error = (e as Error).message || 'Unknown error'
         throw e
       }
     },
@@ -128,8 +133,8 @@ export const useProjectStore = defineStore('project', {
         if (idx !== -1) this.projects[idx] = data.updateProject
         this.error = null
         return data.updateProject as Project
-      } catch (e: any) {
-        this.error = e.message || 'Unknown error'
+      } catch (e: unknown) {
+        this.error = (e as Error).message || 'Unknown error'
         throw e
       }
     },
@@ -152,8 +157,8 @@ export const useProjectStore = defineStore('project', {
         if (idx !== -1) this.projects[idx] = data.updateProject
         this.error = null
         return data.updateProject as Project
-      } catch (e: any) {
-        this.error = e.message || 'Unknown error'
+      } catch (e: unknown) {
+        this.error = (e as Error).message || 'Unknown error'
         throw e
       }
     },
@@ -169,8 +174,8 @@ export const useProjectStore = defineStore('project', {
         if (idx !== -1) this.projects[idx] = data.updateProject
         this.error = null
         return data.updateProject as Project
-      } catch (e: any) {
-        this.error = e.message || 'Unknown error'
+      } catch (e: unknown) {
+        this.error = (e as Error).message || 'Unknown error'
         throw e
       }
     },
@@ -185,8 +190,8 @@ export const useProjectStore = defineStore('project', {
         this.projects = this.projects.filter(p => p.id !== id)
         if (this.currentProjectId === id) this.setProject(null)
         this.error = null
-      } catch (e: any) {
-        this.error = e.message || 'Unknown error'
+      } catch (e: unknown) {
+        this.error = (e as Error).message || 'Unknown error'
         throw e
       }
     },

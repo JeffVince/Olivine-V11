@@ -41,12 +41,17 @@ const dropboxService = new DropboxService_1.DropboxService();
 const gdriveService = new GoogleDriveService_1.GoogleDriveService();
 router.get('/dropbox', async (req, res) => {
     try {
-        const { organizationId, sourceId } = req.query;
-        const authUrl = await dropboxService.generateAuthUrl();
-        const redirect = new URL(authUrl);
-        if (organizationId)
-            redirect.searchParams.set('state', JSON.stringify({ organizationId, sourceId }));
-        return res.redirect(redirect.toString());
+        const { organizationId, sourceId, state: stateParam } = req.query;
+        let state = stateParam || '';
+        if (!state && organizationId) {
+            state = JSON.stringify({
+                organizationId,
+                sourceId,
+                projectId: req.query.projectId || ''
+            });
+        }
+        const authUrl = await dropboxService.generateAuthUrl(state);
+        return res.redirect(authUrl);
     }
     catch (error) {
         console.error('Error generating Dropbox auth URL:', error);
@@ -55,42 +60,55 @@ router.get('/dropbox', async (req, res) => {
 });
 router.get('/dropbox/callback', async (req, res) => {
     try {
-        const { code, state } = req.query;
+        const { code, state: stateParam } = req.query;
         if (!code) {
             return res.status(400).json({ error: 'Authorization code is required' });
         }
         const tokenData = await dropboxService.exchangeCodeForTokens(code);
         let redirectTo = '/';
         try {
-            if (state) {
-                const parsed = JSON.parse(state);
-                const organizationId = parsed.organizationId;
-                const sourceId = parsed.sourceId;
-                if (organizationId && sourceId) {
-                    await dropboxService.storeTokens(organizationId, sourceId, {
-                        access_token: tokenData.access_token,
-                        refresh_token: tokenData.refresh_token,
-                        expires_at: tokenData.expires_at,
-                        account_id: tokenData.account_id,
-                        team_member_id: tokenData.team_member_id,
-                        is_team_account: tokenData.is_team_account,
-                        home_namespace_id: tokenData.home_namespace_id,
-                        root_namespace_id: tokenData.root_namespace_id,
-                    });
+            if (stateParam) {
+                let state;
+                try {
+                    const decodedState = decodeURIComponent(stateParam);
+                    state = JSON.parse(decodedState);
                 }
-                if (parsed.projectId) {
-                    redirectTo = `/#/projects/${parsed.projectId}/integrations?connected=dropbox`;
+                catch (e) {
+                    console.warn('Failed to parse state parameter, using as-is');
+                    state = stateParam;
+                }
+                if (typeof state === 'object' && state !== null) {
+                    const { organizationId, sourceId, projectId } = state;
+                    if (organizationId && sourceId) {
+                        await dropboxService.storeTokens(organizationId, sourceId, {
+                            access_token: tokenData.access_token,
+                            refresh_token: tokenData.refresh_token,
+                            expires_at: tokenData.expires_at,
+                            account_id: tokenData.account_id,
+                            team_member_id: tokenData.team_member_id,
+                            is_team_account: tokenData.is_team_account,
+                            home_namespace_id: tokenData.home_namespace_id,
+                            root_namespace_id: tokenData.root_namespace_id,
+                        });
+                        if (projectId) {
+                            redirectTo = `/#/projects/${projectId}/integrations?connected=dropbox`;
+                        }
+                        else {
+                            redirectTo = `/#/integrations?connected=dropbox`;
+                        }
+                    }
                 }
             }
         }
-        catch (persistErr) {
-            console.error('Error persisting Dropbox tokens:', persistErr);
+        catch (error) {
+            console.error('Error in OAuth callback processing:', error);
+            redirectTo = '/#/integrations?error=oauth_error';
         }
         return res.redirect(redirectTo);
     }
     catch (error) {
         console.error('Error handling Dropbox OAuth callback:', error);
-        return res.status(500).json({ error: 'Failed to handle Dropbox OAuth callback' });
+        return res.redirect('/#/integrations?error=oauth_failed');
     }
 });
 router.get('/gdrive', (req, res) => {

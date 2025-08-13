@@ -19,6 +19,14 @@ export interface SyncJobData {
   eventData: any;
 }
 
+export interface ClusterProcessingResult {
+  fileId: string;
+  clusterId: string;
+  slots: string[];
+  extractionTriggered: boolean;
+  crossLayerLinksCreated: number;
+}
+
 export interface FileMetadata {
   name: string;
   size: number;
@@ -38,6 +46,8 @@ export class FileStewardAgent extends BaseAgent {
   private fileProcessingService: FileProcessingService;
   private classificationService: ClassificationService;
   private taxonomyService: TaxonomyService;
+  private clusterMode = false;
+  private eventBus: any; // EventEmitter for cluster events
 
   constructor(queueService: QueueService, config?: Partial<AgentConfig>) {
     super('file-steward-agent', queueService, {
@@ -60,6 +70,10 @@ export class FileStewardAgent extends BaseAgent {
     (eventProcessingService as any).fileProcessingService = this.fileProcessingService;
     this.classificationService = new ClassificationService(this.postgresService);
     this.taxonomyService = new TaxonomyService();
+    this.eventBus = new (require('events').EventEmitter)();
+    
+    // Enable cluster mode if environment variable is set
+    this.clusterMode = process.env.CLUSTER_MODE === 'true';
   }
 
   /**
@@ -192,28 +206,47 @@ export class FileStewardAgent extends BaseAgent {
     // Create parent folder hierarchy
     await this.ensureFolderHierarchy(orgId, sourceId, resourcePath, commitId);
 
-    // Queue for classification if file type supports it
-    if (this.shouldClassifyFile(fileMetadata.mimeType)) {
-      await this.queueService.addJob('file-classification', 'classify-file', {
+    // If cluster mode is enabled, process with cluster-centric approach
+    if (this.clusterMode) {
+      const clusterResult = await this.processFileWithCluster(orgId, sourceId, fileId, resourcePath, fileMetadata, commitId);
+      
+      // Emit cluster processing event for orchestration
+      this.eventBus.emit('file.processed', {
+        type: 'file.processed',
         orgId,
         fileId,
-        filePath: resourcePath,
-        sourceId,
-        commitId,
-        metadata: fileMetadata
+        clusterId: clusterResult.clusterId,
+        slots: clusterResult.slots,
+        extractionTriggered: clusterResult.extractionTriggered,
+        eventType: 'created',
+        timestamp: new Date().toISOString(),
+        agent: 'file-steward-agent'
       });
-    }
+    } else {
+      // Legacy processing approach
+      // Queue for classification if file type supports it
+      if (this.shouldClassifyFile(fileMetadata.mimeType)) {
+        await this.queueService.addJob('file-classification', 'classify-file', {
+          orgId,
+          fileId,
+          filePath: resourcePath,
+          sourceId,
+          commitId,
+          metadata: fileMetadata
+        });
+      }
 
-    // Queue for content extraction if applicable
-    if (this.shouldExtractContent(fileMetadata.mimeType)) {
-      await this.queueService.addJob('content-extraction', 'extract-content', {
-        orgId,
-        fileId,
-        filePath: resourcePath,
-        sourceId,
-        commitId,
-        metadata: fileMetadata
-      });
+      // Queue for content extraction if applicable
+      if (this.shouldExtractContent(fileMetadata.mimeType)) {
+        await this.queueService.addJob('content-extraction', 'extract-content', {
+          orgId,
+          fileId,
+          filePath: resourcePath,
+          sourceId,
+          commitId,
+          metadata: fileMetadata
+        });
+      }
     }
   }
 
@@ -744,13 +777,19 @@ export class FileStewardAgent extends BaseAgent {
     try {
       // Use file processing service to extract content
       const extractedContent = await this.fileProcessingService.extractContent({
+        orgId,
         sourceId: metadata.sourceId,
         path: filePath,
         mimeType: metadata.mimeType
       });
 
+      // Normalize extracted content to expected shape
+      const normalizedExtracted = typeof extractedContent === 'string'
+        ? { text: extractedContent, metadata: {} }
+        : extractedContent;
+
       // Update file node with extracted content
-      await this.updateFileContent(fileId, extractedContent);
+      await this.updateFileContent(fileId, normalizedExtracted);
       
       this.logger.info(`Content extracted successfully: ${filePath}`);
     } catch (error) {
@@ -777,5 +816,444 @@ export class FileStewardAgent extends BaseAgent {
       text: extractedContent.text || '',
       metadata: JSON.stringify(extractedContent.metadata || {})
     });
+  }
+
+  // ========================================
+  // CLUSTER-CENTRIC PROCESSING METHODS
+  // ========================================
+
+  /**
+   * Process file with cluster-centric approach
+   */
+  private async processFileWithCluster(
+    orgId: string,
+    sourceId: string,
+    fileId: string,
+    resourcePath: string,
+    fileMetadata: FileMetadata,
+    commitId: string
+  ): Promise<ClusterProcessingResult> {
+    this.logger.info(`Processing file with cluster-centric approach: ${resourcePath}`, { orgId, fileId });
+
+    // Step 1: Create content cluster for this file
+    const clusterId = await this.createContentCluster(orgId, fileId, commitId);
+
+    // Step 2: Perform multi-slot classification
+    const slots = await this.performMultiSlotClassification(orgId, fileId, resourcePath, fileMetadata);
+
+    // Step 3: Queue extraction jobs based on classification
+    const extractionTriggered = await this.queueExtractionJobs(orgId, fileId, slots, fileMetadata);
+
+    // Step 4: Create initial cross-layer links if applicable
+    const crossLayerLinksCreated = await this.createInitialCrossLayerLinks(orgId, fileId, slots);
+
+    return {
+      fileId,
+      clusterId,
+      slots,
+      extractionTriggered,
+      crossLayerLinksCreated
+    };
+  }
+
+  /**
+   * Create content cluster for file
+   */
+  private async createContentCluster(orgId: string, fileId: string, commitId: string): Promise<string> {
+    const clusterId = uuidv4();
+    
+    const query = `
+      MATCH (f:File {id: $fileId})
+      CREATE (cc:ContentCluster {
+        id: $clusterId,
+        orgId: $orgId,
+        fileId: $fileId,
+        projectId: f.project_id,
+        status: 'empty',
+        entitiesCount: 0,
+        linksCount: 0,
+        createdAt: datetime(),
+        updatedAt: datetime()
+      })
+      CREATE (f)-[:HAS_CLUSTER]->(cc)
+      RETURN cc.id as clusterId
+    `;
+
+    await this.neo4jService.run(query, { clusterId, orgId, fileId });
+    
+    // Also create staging record in PostgreSQL
+    await this.postgresService.query(`
+      INSERT INTO content_cluster (id, org_id, file_id, status, entities_count, links_count, created_at, updated_at)
+      VALUES ($1, $2, $3, 'empty', 0, 0, NOW(), NOW())
+    `, [clusterId, orgId, fileId]);
+
+    this.logger.debug(`Created content cluster: ${clusterId}`, { fileId, orgId });
+    return clusterId;
+  }
+
+  /**
+   * Perform multi-slot classification using taxonomy rules
+   */
+  private async performMultiSlotClassification(
+    orgId: string,
+    fileId: string,
+    resourcePath: string,
+    fileMetadata: FileMetadata
+  ): Promise<string[]> {
+    const slots: string[] = [];
+
+    try {
+      // Get applicable taxonomy rules for this file
+      const rules = await this.getApplicableTaxonomyRules(orgId, fileMetadata);
+
+      for (const rule of rules) {
+        const confidence = this.calculateRuleConfidence(rule, fileMetadata, resourcePath);
+        
+        if (confidence >= rule.minConfidence) {
+          slots.push(rule.slot);
+          
+          // Create EdgeFact for this classification
+          await this.createSlotEdgeFact(fileId, rule.slot, confidence, rule.id, orgId);
+        }
+      }
+
+      // Fallback classification if no rules matched
+      if (slots.length === 0) {
+        const fallbackSlot = this.getFallbackSlot(fileMetadata.mimeType);
+        if (fallbackSlot) {
+          slots.push(fallbackSlot);
+          await this.createSlotEdgeFact(fileId, fallbackSlot, 0.5, 'fallback', orgId);
+        }
+      }
+
+      this.logger.debug(`Multi-slot classification completed`, { fileId, slots });
+      return slots;
+    } catch (error) {
+      this.logger.error(`Multi-slot classification failed`, { fileId, error });
+      return [];
+    }
+  }
+
+  /**
+   * Get applicable taxonomy rules for file
+   */
+  private async getApplicableTaxonomyRules(orgId: string, fileMetadata: FileMetadata): Promise<any[]> {
+    const result = await this.postgresService.query(`
+      SELECT * FROM parser_registry 
+      WHERE org_id = $1 
+      AND (mime_type = $2 OR mime_type = '*/*')
+      AND enabled = true
+      ORDER BY min_confidence DESC
+    `, [orgId, fileMetadata.mimeType]);
+
+    return result.rows;
+  }
+
+  /**
+   * Calculate confidence score for taxonomy rule
+   */
+  private calculateRuleConfidence(rule: any, fileMetadata: FileMetadata, resourcePath: string): number {
+    let confidence = 0.7; // Base confidence
+
+    // Boost confidence for exact MIME type match
+    if (rule.mime_type === fileMetadata.mimeType) {
+      confidence += 0.2;
+    }
+
+    // Boost confidence for file name patterns
+    const fileName = path.basename(resourcePath).toLowerCase();
+    if (rule.slot === 'SCRIPT_PRIMARY' && (fileName.includes('script') || fileName.endsWith('.fdx'))) {
+      confidence += 0.1;
+    }
+
+    // Boost confidence for file size patterns
+    if (rule.slot === 'BUDGET_MASTER' && fileMetadata.size > 100000) {
+      confidence += 0.05;
+    }
+
+    return Math.min(confidence, 1.0);
+  }
+
+  /**
+   * Create EdgeFact for slot classification
+   */
+  private async createSlotEdgeFact(
+    fileId: string,
+    slot: string,
+    confidence: number,
+    ruleId: string,
+    orgId: string
+  ): Promise<void> {
+    const edgeFactId = uuidv4();
+    
+    const query = `
+      MATCH (f:File {id: $fileId})
+      CREATE (ef:EdgeFact {
+        id: $edgeFactId,
+        type: 'FILLS_SLOT',
+        props: {
+          slot: $slot,
+          confidence: $confidence,
+          ruleId: $ruleId,
+          method: 'taxonomy_rule'
+        },
+        orgId: $orgId,
+        createdAt: datetime(),
+        validFrom: datetime(),
+        validTo: null
+      })
+      CREATE (f)<-[:FILLS_SLOT]-(ef)
+      RETURN ef.id as edgeFactId
+    `;
+
+    await this.neo4jService.run(query, {
+      fileId,
+      edgeFactId,
+      slot,
+      confidence,
+      ruleId,
+      orgId
+    });
+  }
+
+  /**
+   * Get fallback slot for unclassified files
+   */
+  private getFallbackSlot(mimeType: string): string | null {
+    const fallbackMap: Record<string, string> = {
+      'application/pdf': 'DOCUMENT_GENERAL',
+      'image/jpeg': 'MEDIA_IMAGE',
+      'image/png': 'MEDIA_IMAGE',
+      'video/mp4': 'MEDIA_VIDEO',
+      'audio/mpeg': 'MEDIA_AUDIO',
+      'text/plain': 'DOCUMENT_TEXT'
+    };
+
+    return fallbackMap[mimeType] || 'FILE_UNCLASSIFIED';
+  }
+
+  /**
+   * Queue extraction jobs based on classification slots
+   */
+  private async queueExtractionJobs(
+    orgId: string,
+    fileId: string,
+    slots: string[],
+    fileMetadata: FileMetadata
+  ): Promise<boolean> {
+    let jobsQueued = false;
+
+    for (const slot of slots) {
+      const parsers = await this.getApplicableParsers(orgId, slot, fileMetadata.mimeType);
+      
+      for (const parser of parsers) {
+        const jobId = uuidv4();
+        
+        // Create extraction job record
+        await this.postgresService.query(`
+          INSERT INTO extraction_job (id, org_id, file_id, slot, parser_name, parser_version, status, created_at)
+          VALUES ($1, $2, $3, $4, $5, $6, 'queued', NOW())
+        `, [jobId, orgId, fileId, slot, parser.parser_name, parser.parser_version]);
+
+        // Queue the actual extraction job
+        await this.queueService.addJob('content-extraction', 'extract-content', {
+          jobId,
+          orgId,
+          fileId,
+          slot,
+          parser: parser.parser_name,
+          parserVersion: parser.parser_version,
+          metadata: fileMetadata
+        });
+
+        jobsQueued = true;
+      }
+    }
+
+    return jobsQueued;
+  }
+
+  /**
+   * Get applicable parsers for slot and MIME type
+   */
+  private async getApplicableParsers(orgId: string, slot: string, mimeType: string): Promise<any[]> {
+    const result = await this.postgresService.query(`
+      SELECT * FROM parser_registry 
+      WHERE org_id = $1 
+      AND slot = $2 
+      AND (mime_type = $3 OR mime_type = '*/*')
+      AND enabled = true
+      ORDER BY parser_version DESC
+    `, [orgId, slot, mimeType]);
+
+    return result.rows;
+  }
+
+  /**
+   * Create initial cross-layer links based on classification
+   */
+  private async createInitialCrossLayerLinks(
+    orgId: string,
+    fileId: string,
+    slots: string[]
+  ): Promise<number> {
+    let linksCreated = 0;
+
+    // Example: Link script files to project scenes
+    if (slots.includes('SCRIPT_PRIMARY')) {
+      const projectScenes = await this.getProjectScenes(orgId, fileId);
+      
+      for (const scene of projectScenes) {
+        await this.createCrossLayerLink(fileId, scene.id, 'SCRIPT_FOR', orgId);
+        linksCreated++;
+      }
+    }
+
+    // Example: Link budget files to purchase orders
+    if (slots.includes('BUDGET_MASTER')) {
+      const projectPOs = await this.getProjectPurchaseOrders(orgId, fileId);
+      
+      for (const po of projectPOs) {
+        await this.createCrossLayerLink(fileId, po.id, 'BUDGET_FOR', orgId);
+        linksCreated++;
+      }
+    }
+
+    return linksCreated;
+  }
+
+  /**
+   * Get project scenes for cross-layer linking
+   */
+  private async getProjectScenes(orgId: string, fileId: string): Promise<any[]> {
+    const query = `
+      MATCH (f:File {id: $fileId})-[:BELONGS_TO]->(p:Project)
+      MATCH (p)<-[:BELONGS_TO]-(s:Scene)
+      WHERE s.org_id = $orgId
+      RETURN s.id as id, s.number as number, s.title as title
+      LIMIT 10
+    `;
+
+    const result = await this.neo4jService.run(query, { fileId, orgId });
+    return result.records.map(record => ({
+      id: record.get('id'),
+      number: record.get('number'),
+      title: record.get('title')
+    }));
+  }
+
+  /**
+   * Get project purchase orders for cross-layer linking
+   */
+  private async getProjectPurchaseOrders(orgId: string, fileId: string): Promise<any[]> {
+    const query = `
+      MATCH (f:File {id: $fileId})-[:BELONGS_TO]->(p:Project)
+      MATCH (p)<-[:BELONGS_TO]-(po:PurchaseOrder)
+      WHERE po.org_id = $orgId
+      RETURN po.id as id, po.number as number, po.vendor as vendor
+      LIMIT 5
+    `;
+
+    const result = await this.neo4jService.run(query, { fileId, orgId });
+    return result.records.map(record => ({
+      id: record.get('id'),
+      number: record.get('number'),
+      vendor: record.get('vendor')
+    }));
+  }
+
+  /**
+   * Create cross-layer relationship link
+   */
+  private async createCrossLayerLink(
+    fromEntityId: string,
+    toEntityId: string,
+    relationshipType: string,
+    orgId: string
+  ): Promise<void> {
+    const query = `
+      MATCH (from {id: $fromEntityId}), (to {id: $toEntityId})
+      CREATE (from)-[r:${relationshipType} {
+        orgId: $orgId,
+        createdAt: datetime(),
+        method: 'automatic',
+        createdBy: 'file-steward-agent'
+      }]->(to)
+      RETURN r
+    `;
+
+    await this.neo4jService.run(query, { fromEntityId, toEntityId, orgId });
+  }
+
+  /**
+   * Enable cluster mode for this agent
+   */
+  public enableClusterMode(): void {
+    this.clusterMode = true;
+    this.logger.info('Cluster mode enabled for FileStewardAgent');
+  }
+
+  /**
+   * Disable cluster mode for this agent
+   */
+  public disableClusterMode(): void {
+    this.clusterMode = false;
+    this.logger.info('Cluster mode disabled for FileStewardAgent');
+  }
+
+  /**
+   * Get cluster processing event bus for external orchestration
+   */
+  /**
+   * Process sync event with cluster-centric approach
+   */
+  public async processSyncEventWithCluster(eventData: any): Promise<ClusterProcessingResult> {
+    const { orgId, sourceId, resourcePath, eventData: fileEventData } = eventData;
+    
+    // Generate commit ID for provenance
+    const commitId = uuidv4();
+    
+    // Create file metadata from event data
+    const fileMetadata: FileMetadata = {
+      name: fileEventData.name,
+      size: fileEventData.size,
+      mimeType: fileEventData.mimeType || this.inferMimeType(fileEventData.name),
+      checksum: fileEventData.checksum,
+      modified: fileEventData.modified,
+      dbId: fileEventData.id,
+      provider: fileEventData.provider,
+      extra: fileEventData.extra || {}
+    };
+    
+    // Process file with cluster approach
+    const result = await this.processFileWithCluster(
+      orgId,
+      sourceId,
+      fileEventData.id, // fileId
+      resourcePath,
+      fileMetadata,
+      commitId
+    );
+    
+    // Emit cluster processing event if in cluster mode
+    if (this.clusterMode) {
+      this.eventBus.emit('file.cluster.processed', {
+        orgId,
+        sourceId,
+        fileId: fileEventData.id,
+        resourcePath,
+        clusterId: result.clusterId,
+        slots: result.slots,
+        extractionTriggered: result.extractionTriggered,
+        crossLayerLinksCreated: result.crossLayerLinksCreated,
+        timestamp: new Date().toISOString()
+      });
+    }
+    
+    return result;
+  }
+  
+  public getEventBus(): any {
+    return this.eventBus;
   }
 }

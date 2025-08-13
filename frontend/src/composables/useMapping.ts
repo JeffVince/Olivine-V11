@@ -3,6 +3,21 @@ import { useQuery, useMutation } from '@vue/apollo-composable'
 import gql from 'graphql-tag'
 import { useOrganizationStore } from '@/stores/organizationStore'
 
+interface TaxonomyRule {
+  id: string
+  slotKey: string
+  matchPattern: string
+  priority: number
+  enabled: boolean
+}
+
+interface TaxonomySuggestion {
+  id: string
+  slotKey: string
+  proposedPattern: string
+  confidence: number
+}
+
 // Based on Implementation Plan, wire to taxonomy profiles/rules endpoints when available
 const LIST_RULES = gql`
   query ListRules($orgId: ID!, $limit: Int, $offset: Int) {
@@ -39,9 +54,9 @@ export function useMapping() {
   const org = useOrganizationStore()
   const variables = ref({ orgId: org.currentOrg?.id || '', limit: 100, offset: 0 })
   const { result, loading, refetch } = useQuery(LIST_RULES, variables)
-  const rules = ref<any[]>([])
+  const rules = ref<TaxonomyRule[]>([])
   const { result: sugResult, refetch: refetchSug } = useQuery(LIST_SUGGESTIONS, () => ({ orgId: org.currentOrg?.id || '' }))
-  const suggestions = ref<any[]>([])
+  const suggestions = ref<TaxonomySuggestion[]>([])
 
   watchEffect(() => {
     variables.value.orgId = org.currentOrg?.id || ''

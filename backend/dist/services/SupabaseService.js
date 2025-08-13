@@ -120,7 +120,7 @@ class SupabaseService {
             throw error;
         }
     }
-    async listFiles(orgId, sourceId, path) {
+    async listFiles(orgId, sourceId, pageToken) {
         try {
             const client = await this.getClient(orgId, sourceId);
             if (!client) {
@@ -128,14 +128,14 @@ class SupabaseService {
             }
             const { data, error } = await client.storage
                 .from('files')
-                .list(path);
+                .list('');
             if (error) {
-                throw new Error(`Error listing files in Supabase: ${error.message}`);
+                throw error;
             }
-            return data;
+            return data || [];
         }
         catch (error) {
-            console.error('Error listing files in Supabase:', error);
+            console.error('Error listing Supabase files:', error);
             throw error;
         }
     }
@@ -158,12 +158,13 @@ class SupabaseService {
             throw error;
         }
     }
-    async subscribeToChanges(orgId, sourceId, tableName, callback) {
+    async subscribeToChanges(orgId, sourceId, callback) {
         try {
             const client = await this.getClient(orgId, sourceId);
             if (!client) {
                 throw new Error('Could not initialize Supabase client');
             }
+            const tableName = 'files';
             const subscription = client
                 .channel(`storage-changes-${orgId}-${sourceId}`)
                 .on('postgres_changes', {
@@ -178,6 +179,34 @@ class SupabaseService {
         }
         catch (error) {
             console.error('Error subscribing to Supabase changes:', error);
+            throw error;
+        }
+    }
+    async getFileMetadata(orgId, sourceId, fileId) {
+        try {
+            const client = await this.getClient(orgId, sourceId);
+            if (!client) {
+                throw new Error('Could not initialize Supabase client');
+            }
+            const { data, error } = await client.storage
+                .from('files')
+                .list(undefined, {
+                limit: 1,
+                offset: 0,
+                search: fileId
+            });
+            if (error) {
+                throw new Error(`Error getting file metadata from Supabase: ${error.message}`);
+            }
+            if (data && data.length > 0) {
+                return data[0];
+            }
+            else {
+                throw new Error('File not found');
+            }
+        }
+        catch (error) {
+            console.error('Error getting file metadata from Supabase:', error);
             throw error;
         }
     }

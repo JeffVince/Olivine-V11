@@ -1,4 +1,4 @@
-import neo4j, { Driver, Session, Transaction } from 'neo4j-driver';
+import neo4j, { Driver, Session, Transaction, Result } from 'neo4j-driver';
 import { getNeo4jConfig, Neo4jConfig } from '../config/neo4j';
 
 export class Neo4jService {
@@ -38,7 +38,7 @@ export class Neo4jService {
    * @param params - Query parameters
    * @returns Query result
    */
-  async run(query: string, params: Record<string, any> = {}): Promise<any> {
+  async run(query: string, params: Record<string, unknown> = {}): Promise<Result> {
     return this.executeQuery(query, params);
   }
 
@@ -52,7 +52,7 @@ export class Neo4jService {
    * // TODO: Implementation Plan - 03-Knowledge-Graph-Implementation.md - Neo4j query execution with multi-tenant filtering
    * // TODO: Implementation Checklist - 07-Testing-QA-Checklist.md - Backend database query tests
    */
-  async executeQuery(query: string, params: Record<string, any> = {}, orgId?: string): Promise<any> {
+  async executeQuery(query: string, params: Record<string, unknown> = {}, orgId?: string): Promise<Result> {
     // Determine if this is a write operation. Be robust to newlines and comments.
     const q = query.replace(/\/\*[\s\S]*?\*\//g, '').replace(/--.*$/gm, '').trim();
     const isWriteQuery = /(CREATE|MERGE|SET\s+|DELETE|REMOVE|DROP|CALL\s+db\.|CREATE\s+CONSTRAINT|CREATE\s+INDEX)/i.test(q);
@@ -63,12 +63,33 @@ export class Neo4jService {
       defaultAccessMode: accessMode
     });
     try {
-      // Add org_id to params if provided for multi-tenant filtering
+      // Add org_id/orgId param compatibility if provided for multi-tenant filtering
       if (orgId) {
-        params.orgId = orgId;
+        if (!('org_id' in params) && !('orgId' in params)) {
+          params.org_id = orgId;
+        }
+      }
+      // Ensure no plain object parameters for node/relationship properties
+      // Convert known complex objects to JSON strings where they are likely used as properties
+      const sanitizedParams: Record<string, unknown> = {}
+      for (const [k, v] of Object.entries(params)) {
+        if (v === undefined) {
+          sanitizedParams[k] = null
+          continue
+        }
+        if (v && typeof v === 'object' && !(v instanceof Date) && !Array.isArray(v)) {
+          // Keep for parameters that are intended as maps in MATCH conditions; heuristic: keys ending with _json or metadata/inputs/outputs/properties/props
+          if (/(_json|metadata|inputs|outputs|properties|props)$/i.test(k)) {
+            sanitizedParams[k] = JSON.stringify(v)
+          } else {
+            sanitizedParams[k] = v
+          }
+        } else {
+          sanitizedParams[k] = v
+        }
       }
       
-      const result = await session.run(query, params);
+      const result = await session.run(query, sanitizedParams);
       return result;
     } catch (error) {
       console.error('Error executing Neo4j query:', error);
@@ -85,7 +106,7 @@ export class Neo4jService {
    * @param orgId Organization ID for multi-tenant filtering
    * @returns Query result
    */
-  async executeQueryInTransaction(query: string, params: Record<string, any> = {}, orgId?: string): Promise<any> {
+  async executeQueryInTransaction(query: string, params: Record<string, unknown> = {}, orgId?: string): Promise<unknown> {
     // TODO: Implementation Checklist - 07-Testing-QA-Checklist.md - Backend Neo4j service tests
     const session = this.getSession(orgId, 'WRITE');
     try {
@@ -103,7 +124,7 @@ export class Neo4jService {
    * @param orgId Organization ID for multi-tenancy
    * @returns Query result
    */
-  async executeWriteQuery(query: string, params: Record<string, any> = {}, orgId?: string): Promise<any> {
+  async executeWriteQuery(query: string, params: Record<string, unknown> = {}, orgId?: string): Promise<unknown> {
     // TODO: Implementation Checklist - 07-Testing-QA-Checklist.md - Backend Neo4j service tests
     const session = this.getSession(orgId, 'WRITE');
     try {
@@ -128,10 +149,10 @@ export class Neo4jService {
    * @param orgId Organization ID for multi-tenancy
    * @returns Array of query results
    */
-  async executeTransaction(queries: Array<{query: string, params?: Record<string, any>}>, orgId?: string): Promise<any[]> {
+  async executeTransaction(queries: Array<{query: string, params?: Record<string, unknown>}>, orgId?: string): Promise<unknown[]> {
     // TODO: Implementation Checklist - 07-Testing-QA-Checklist.md - Backend Neo4j service tests
     const session = this.getSession(orgId, 'WRITE');
-    const results: any[] = [];
+    const results: unknown[] = [];
     let tx: Transaction | null = null;
     
     try {
@@ -162,12 +183,12 @@ export class Neo4jService {
    * @param orgId Organization ID for multi-tenant filtering
    * @returns Array of results
    */
-  async executeBatch(queries: string[], paramsArray: Record<string, any>[] = [], orgId?: string): Promise<any[]> {
+  async executeBatch(queries: string[], paramsArray: Record<string, unknown>[] = [], orgId?: string): Promise<unknown[]> {
     const session = this.driver.session({
       database: 'neo4j',
       defaultAccessMode: 'WRITE'
     });
-    const results: any[] = [];
+    const results: unknown[] = [];
     let tx: Transaction | null = null;
     
     try {

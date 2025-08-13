@@ -57,7 +57,7 @@ export interface Classification {
   confidence: number;
   method: 'rule_based' | 'ml_based' | 'manual';
   rule_id?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface FileNode {
@@ -67,7 +67,7 @@ export interface FileNode {
   path: string;
   size: number;
   mime_type: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export class TaxonomyService {
@@ -237,7 +237,7 @@ export class TaxonomyService {
 
     const result = await this.neo4j.executeQuery(query, { file_id: fileId, org_id: orgId }, orgId);
 
-    return result.records.map((record: any) => ({
+    return result.records.map((record) => ({
       slot: record.get('slot'),
       confidence: record.get('confidence'),
       method: 'rule_based' as const,
@@ -345,7 +345,7 @@ export class TaxonomyService {
     `;
 
     const result = await this.neo4j.executeQuery(query, { org_id: orgId }, orgId);
-    return result.records.map((record: any) => record.get('cs').properties);
+    return result.records.map((record) => record.get('cs').properties);
   }
 
   /**
@@ -359,7 +359,7 @@ export class TaxonomyService {
     `;
 
     const result = await this.neo4j.executeQuery(query, { org_id: orgId }, orgId);
-    return result.records.map((record: any) => record.get('tp').properties);
+    return result.records.map((record) => record.get('tp').properties);
   }
 
   /**
@@ -374,7 +374,7 @@ export class TaxonomyService {
     `;
 
     const result = await this.neo4j.executeQuery(query, { profile_id: profileId, org_id: orgId }, orgId);
-    return result.records.map((record: any) => record.get('tr').properties);
+    return result.records.map((record) => record.get('tr').properties);
   }
 
   /**

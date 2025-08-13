@@ -1,26 +1,29 @@
 export interface StorageProvider {
-    getClient(orgId: string, sourceId: string): Promise<any | null>;
-    listFiles(orgId: string, sourceId: string, options?: any): Promise<any>;
-    downloadFile(orgId: string, sourceId: string, fileId: string): Promise<any>;
-    getFileMetadata(orgId: string, sourceId: string, fileId: string): Promise<any>;
-    uploadFile(orgId: string, sourceId: string, filePath: string, fileBuffer: Buffer, contentType: string): Promise<any>;
-    deleteFile(orgId: string, sourceId: string, filePath: string): Promise<any>;
-    subscribeToChanges?(orgId: string, sourceId: string, callback: (payload: any) => void): Promise<any>;
-    getStoredTokens(orgId: string, sourceId: string): Promise<any | null>;
-    storeTokens(orgId: string, sourceId: string, tokenData: any): Promise<void>;
+    getClient(orgId: string, sourceId: string): Promise<unknown | null>;
+    listFiles(orgId: string, sourceId: string, pageToken?: string): Promise<{
+        files: unknown[];
+        nextPageToken?: string;
+    } | unknown[]>;
+    downloadFile(orgId: string, sourceId: string, fileId: string): Promise<unknown>;
+    getFileMetadata(orgId: string, sourceId: string, fileId: string): Promise<unknown>;
+    uploadFile(orgId: string, sourceId: string, filePath: string, fileBuffer: Buffer, contentType: string): Promise<unknown>;
+    deleteFile(orgId: string, sourceId: string, filePath: string): Promise<unknown>;
+    subscribeToChanges?(orgId: string, sourceId: string, callback: (payload: unknown) => void): Promise<unknown>;
+    getStoredTokens(orgId: string, sourceId: string): Promise<Record<string, unknown> | null>;
+    storeTokens(orgId: string, sourceId: string, tokenData: Record<string, unknown>): Promise<void>;
 }
 export type StorageProviderType = 'dropbox' | 'gdrive' | 'supabase';
 export declare class StorageProviderFactory {
-    static createProvider(type: StorageProviderType): StorageProvider;
+    static createProvider(type: StorageProviderType): Promise<StorageProvider>;
 }
 export interface SyncOrchestrator {
     syncProviders(orgId: string, sourceIds: string[]): Promise<void>;
-    resolveConflicts(orgId: string, conflicts: any[]): Promise<void>;
-    optimizeOperations(orgId: string, operations: any[]): Promise<void>;
+    resolveConflicts(orgId: string, conflicts: unknown[]): Promise<void>;
+    optimizeOperations(orgId: string, operations: unknown[]): Promise<void>;
 }
 export declare class MultiProviderSyncOrchestrator implements SyncOrchestrator {
     syncProviders(orgId: string, sourceIds: string[]): Promise<void>;
-    resolveConflicts(orgId: string, conflicts: any[]): Promise<void>;
-    optimizeOperations(orgId: string, operations: any[]): Promise<void>;
+    resolveConflicts(orgId: string, conflicts: unknown[]): Promise<void>;
+    optimizeOperations(orgId: string, operations: unknown[]): Promise<void>;
 }
 //# sourceMappingURL=StorageProvider.d.ts.map

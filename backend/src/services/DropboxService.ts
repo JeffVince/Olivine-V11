@@ -28,7 +28,7 @@ export interface DropboxLogEntry {
   error?: any;
 }
 
-export interface DropboxTokenData {
+export interface DropboxTokenData extends Record<string, unknown> {
   access_token: string;
   refresh_token: string;
   expires_at: number;
@@ -183,7 +183,7 @@ export class DropboxService extends EventEmitter implements StorageProvider {
     operation: string,
     success: boolean,
     duration: number,
-    bytesTransferred: number = 0,
+    bytesTransferred = 0,
     error?: any
   ): void {
     this.metrics.totalRequests++;
@@ -576,30 +576,31 @@ export class DropboxService extends EventEmitter implements StorageProvider {
 
   /**
    * Generate Dropbox authorization URL with required scopes
+   * @param state Optional OAuth state parameter for CSRF protection and state passing
    */
-  async generateAuthUrl(): Promise<string> {
+  async generateAuthUrl(state: string = ''): Promise<string> {
     return this.executeWithRetry(async () => {
-    const scopes = [
-      'files.metadata.read',
-      'files.content.read',
+      const scopes = [
+        'files.metadata.read',
+        'files.content.read',
         'files.content.write',
         'files.metadata.write',
-      'team_data.member',
-      'team_info.read',
+        'team_data.member',
+        'team_info.read',
         'files.team_metadata.read',
         'sharing.read',
         'sharing.write'
-    ];
+      ];
 
-    const authUrl = await this.dropboxAuth.getAuthenticationUrl(
-      this.redirectUri,
-      undefined,
-      'code',
-      'offline',
-      scopes
-    );
-    
-    return authUrl.toString();
+      const authUrl = await this.dropboxAuth.getAuthenticationUrl(
+        this.redirectUri,
+        state || undefined, // Pass the state parameter if provided
+        'code',
+        'offline',
+        scopes
+      );
+      
+      return authUrl.toString();
     }, 'generateAuthUrl');
   }
 
@@ -803,7 +804,7 @@ export class DropboxService extends EventEmitter implements StorageProvider {
   /**
    * List folder contents with proper namespace handling
    */
-  async listFolder(orgId: string, sourceId: string, path: string = '', namespace: string = 'home'): Promise<any> {
+  async listFolder(orgId: string, sourceId: string, path = '', namespace = 'home'): Promise<any> {
     try {
       const tokenData = await this.getStoredTokens(orgId, sourceId);
       
@@ -916,7 +917,7 @@ export class DropboxService extends EventEmitter implements StorageProvider {
     const CHUNK_SIZE = 8 * 1024 * 1024; // 8MB chunks
     
     // Start upload session
-    let sessionResponse = await client.filesUploadSessionStart({
+    const sessionResponse = await client.filesUploadSessionStart({
       close: false,
       contents: fileBuffer.slice(0, CHUNK_SIZE)
     });
@@ -978,21 +979,17 @@ export class DropboxService extends EventEmitter implements StorageProvider {
   /**
    * List files in Dropbox (implementing StorageProvider interface)
    */
-  async listFiles(orgId: string, sourceId: string, options: any = {}): Promise<any> {
+  async listFiles(orgId: string, sourceId: string, pageToken?: string): Promise<any> {
     return this.executeWithRetry(async () => {
-      const path = options.path || '';
-      const recursive = options.recursive || false;
-      const limit = options.limit || 100;
-      
       const client = await this.getClient(orgId, sourceId);
       if (!client) {
         throw new Error('Could not initialize Dropbox client');
       }
 
       const response = await client.filesListFolder({
-        path: path,
-        recursive: recursive,
-        limit: limit,
+        path: '',
+        recursive: false,
+        limit: 100,
         include_media_info: true,
         include_deleted: false,
         include_has_explicit_shared_members: true
@@ -1483,7 +1480,7 @@ export class DropboxService extends EventEmitter implements StorageProvider {
   async listFolderWithPagination(
     orgId: string, 
     sourceId: string, 
-    path: string = '', 
+    path = '', 
     options: {
       recursive?: boolean;
       limit?: number;
@@ -1531,7 +1528,7 @@ export class DropboxService extends EventEmitter implements StorageProvider {
   async getAllFilesInFolder(
     orgId: string, 
     sourceId: string, 
-    path: string = '', 
+    path = '', 
     options: {
       recursive?: boolean;
       maxFiles?: number;

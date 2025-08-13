@@ -35,7 +35,7 @@ export declare class TaxonomyResolvers {
                 profileId: string;
                 orgId: string;
             }) => Promise<TaxonomyRule>;
-            classifyFile: (_: any, { fileId, orgId, userId }: {
+            classifyTaxonomyFile: (_: any, { fileId, orgId, userId }: {
                 fileId: string;
                 orgId: string;
                 userId: string;
@@ -83,7 +83,7 @@ export declare const taxonomyResolvers: {
             profileId: string;
             orgId: string;
         }) => Promise<TaxonomyRule>;
-        classifyFile: (_: any, { fileId, orgId, userId }: {
+        classifyTaxonomyFile: (_: any, { fileId, orgId, userId }: {
             fileId: string;
             orgId: string;
             userId: string;

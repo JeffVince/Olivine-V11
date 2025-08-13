@@ -88,7 +88,16 @@ class TenantService {
         if (result.records.length === 0) {
             throw new Error('Organization not found');
         }
-        return result.records[0].get('org').properties;
+        const orgData = result.records[0].get('org').properties;
+        return {
+            id: orgData.id,
+            name: orgData.name,
+            description: orgData.description,
+            status: orgData.status,
+            created_at: new Date(orgData.created_at),
+            updated_at: new Date(orgData.updated_at),
+            metadata: orgData.metadata
+        };
     }
     async getUserPermissions(userId, orgId) {
         const query = `

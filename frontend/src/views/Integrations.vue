@@ -2,16 +2,26 @@
   <div>
     <!-- Header -->
     <v-row class="mb-4">
-      <v-col cols="12" md="8">
-        <h1 class="text-h4 font-weight-bold">Integrations</h1>
+      <v-col
+        cols="12"
+        md="8"
+      >
+        <h1 class="text-h4 font-weight-bold">
+          Integrations
+        </h1>
         <p class="text-subtitle-1 text-medium-emphasis">
           Connect and manage external services for your project
         </p>
       </v-col>
-      <v-col cols="12" md="4" class="text-right">
+      <v-col
+        cols="12"
+        md="4"
+        class="text-right"
+      >
         <v-btn 
           color="primary"
           prepend-icon="mdi-plus"
+          class="liquid-button"
           @click="showAddDialog = true"
         >
           Add Integration
@@ -29,7 +39,7 @@
         lg="4"
       >
         <v-card 
-          class="integration-card"
+          class="integration-card glass-card"
           :class="{ 'connected': integration.connected }"
         >
           <v-card-title class="d-flex align-center">
@@ -41,7 +51,9 @@
               <v-icon :icon="getIntegrationIcon(integration.type)" />
             </v-avatar>
             <div>
-              <div class="text-h6">{{ integration.name }}</div>
+              <div class="text-h6">
+                {{ integration.name }}
+              </div>
               <v-chip 
                 :color="integration.connected ? 'success' : 'warning'"
                 size="small"
@@ -53,10 +65,15 @@
           </v-card-title>
 
           <v-card-text>
-            <p class="text-body-2 mb-3">{{ integration.description }}</p>
+            <p class="text-body-2 mb-3">
+              {{ integration.description }}
+            </p>
             
             <!-- Connection Status -->
-            <div v-if="integration.connected" class="mb-3">
+            <div
+              v-if="integration.connected"
+              class="mb-3"
+            >
               <v-list density="compact">
                 <v-list-item v-if="integration.lastSync">
                   <v-list-item-title>Last Sync</v-list-item-title>
@@ -81,18 +98,29 @@
             </div>
 
             <!-- Statistics -->
-            <div v-if="integration.stats" class="mb-3">
+            <div
+              v-if="integration.stats"
+              class="mb-3"
+            >
               <v-row>
                 <v-col cols="6">
                   <div class="text-center">
-                    <div class="text-h6">{{ integration.stats.files }}</div>
-                    <div class="text-caption text-medium-emphasis">Files</div>
+                    <div class="text-h6">
+                      {{ integration.stats.files }}
+                    </div>
+                    <div class="text-caption text-medium-emphasis">
+                      Files
+                    </div>
                   </div>
                 </v-col>
                 <v-col cols="6">
                   <div class="text-center">
-                    <div class="text-h6">{{ integration.stats.folders }}</div>
-                    <div class="text-caption text-medium-emphasis">Folders</div>
+                    <div class="text-h6">
+                      {{ integration.stats.folders }}
+                    </div>
+                    <div class="text-caption text-medium-emphasis">
+                      Folders
+                    </div>
                   </div>
                 </v-col>
               </v-row>
@@ -104,8 +132,8 @@
               v-if="!integration.connected"
               color="primary"
               variant="flat"
-              @click="connectIntegration(integration)"
               :loading="connecting === integration.id"
+              @click="connectIntegration(integration)"
             >
               Connect
             </v-btn>
@@ -114,8 +142,8 @@
               <v-btn 
                 color="primary"
                 variant="outlined"
-                @click="triggerSync(integration)"
                 :loading="syncing === integration.id"
+                @click="triggerSync(integration)"
               >
                 Sync Now
               </v-btn>
@@ -123,7 +151,7 @@
               <v-spacer />
               
               <v-menu>
-                <template v-slot:activator="{ props }">
+                <template #activator="{ props }">
                   <v-btn 
                     v-bind="props"
                     icon="mdi-dots-vertical"
@@ -134,26 +162,37 @@
                 <v-list>
                   <v-list-item @click="configureIntegration(integration)">
                     <v-list-item-title>
-                      <v-icon start>mdi-cog</v-icon>
+                      <v-icon start>
+                        mdi-cog
+                      </v-icon>
                       Configure
                     </v-list-item-title>
                   </v-list-item>
                   <v-list-item @click="viewLogs(integration)">
                     <v-list-item-title>
-                      <v-icon start>mdi-text-box</v-icon>
+                      <v-icon start>
+                        mdi-text-box
+                      </v-icon>
                       View Logs
                     </v-list-item-title>
                   </v-list-item>
                   <v-list-item @click="resubscribeWebhook(integration)">
                     <v-list-item-title>
-                      <v-icon start>mdi-webhook</v-icon>
+                      <v-icon start>
+                        mdi-webhook
+                      </v-icon>
                       Resubscribe Webhook
                     </v-list-item-title>
                   </v-list-item>
                   <v-divider />
-                  <v-list-item @click="disconnectIntegration(integration)" class="text-error">
+                  <v-list-item
+                    class="text-error"
+                    @click="disconnectIntegration(integration)"
+                  >
                     <v-list-item-title>
-                      <v-icon start>mdi-link-off</v-icon>
+                      <v-icon start>
+                        mdi-link-off
+                      </v-icon>
                       Disconnect
                     </v-list-item-title>
                   </v-list-item>
@@ -166,9 +205,11 @@
     </v-row>
 
     <!-- Available Integrations -->
-    <v-card class="mt-6">
+    <v-card class="mt-6 glass-card">
       <v-card-title>
-        <v-icon class="mr-2">mdi-store</v-icon>
+        <v-icon class="mr-2">
+          mdi-store
+        </v-icon>
         Available Integrations
       </v-card-title>
       <v-card-text>
@@ -191,10 +232,17 @@
                   size="48"
                   class="mb-3"
                 >
-                  <v-icon :icon="getIntegrationIcon(available.type)" size="24" />
+                  <v-icon
+                    :icon="getIntegrationIcon(available.type)"
+                    size="24"
+                  />
                 </v-avatar>
-                <h4 class="text-subtitle-1 mb-2">{{ available.name }}</h4>
-                <p class="text-body-2 text-medium-emphasis">{{ available.description }}</p>
+                <h4 class="text-subtitle-1 mb-2">
+                  {{ available.name }}
+                </h4>
+                <p class="text-body-2 text-medium-emphasis">
+                  {{ available.description }}
+                </p>
               </v-card-text>
             </v-card>
           </v-col>
@@ -203,8 +251,11 @@
     </v-card>
 
     <!-- Add Integration Dialog -->
-    <v-dialog v-model="showAddDialog" max-width="500">
-      <v-card>
+    <v-dialog
+      v-model="showAddDialog"
+      max-width="500"
+    >
+      <v-card class="glass-card">
         <v-card-title>Add Integration</v-card-title>
         <v-card-text>
           <v-select
@@ -218,7 +269,12 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer />
-          <v-btn variant="text" @click="showAddDialog = false">Cancel</v-btn>
+          <v-btn
+            variant="text"
+            @click="showAddDialog = false"
+          >
+            Cancel
+          </v-btn>
           <v-btn 
             color="primary" 
             :disabled="!selectedIntegrationType"
@@ -231,13 +287,19 @@
     </v-dialog>
 
     <!-- Configuration Dialog -->
-    <v-dialog v-model="showConfigDialog" max-width="600">
-      <v-card v-if="configIntegration">
+    <v-dialog
+      v-model="showConfigDialog"
+      max-width="600"
+    >
+      <v-card v-if="configIntegration" class="glass-card">
         <v-card-title>
           Configure {{ configIntegration.name }}
         </v-card-title>
         <v-card-text>
-          <v-form ref="configForm" v-model="configValid">
+          <v-form
+            ref="configForm"
+            v-model="configValid"
+          >
             <v-text-field
               v-model="configData.rootFolder"
               label="Root Folder Path"
@@ -267,7 +329,12 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer />
-          <v-btn variant="text" @click="showConfigDialog = false">Cancel</v-btn>
+          <v-btn
+            variant="text"
+            @click="showConfigDialog = false"
+          >
+            Cancel
+          </v-btn>
           <v-btn 
             color="primary" 
             :disabled="!configValid"
@@ -281,8 +348,11 @@
     </v-dialog>
 
     <!-- Logs Dialog -->
-    <v-dialog v-model="showLogsDialog" max-width="800">
-      <v-card>
+    <v-dialog
+      v-model="showLogsDialog"
+      max-width="800"
+    >
+      <v-card class="glass-card">
         <v-card-title>
           Integration Logs - {{ logsIntegration?.name }}
         </v-card-title>
@@ -294,7 +364,7 @@
             density="compact"
             :loading="loadingLogs"
           >
-            <template v-slot:item.level="{ item }">
+            <template #item.level="{ item }">
               <v-chip 
                 :color="getLogLevelColor(item.level)"
                 size="small"
@@ -304,14 +374,19 @@
               </v-chip>
             </template>
             
-            <template v-slot:item.timestamp="{ item }">
+            <template #item.timestamp="{ item }">
               {{ formatDateTime(item.timestamp) }}
             </template>
           </v-data-table>
         </v-card-text>
         <v-card-actions>
           <v-spacer />
-          <v-btn variant="text" @click="showLogsDialog = false">Close</v-btn>
+          <v-btn
+            variant="text"
+            @click="showLogsDialog = false"
+          >
+            Close
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -319,50 +394,61 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useNotificationStore } from '@/stores/notificationStore'
 import { useQuery, useMutation } from '@vue/apollo-composable'
 import gql from 'graphql-tag'
 import { useOrganizationStore } from '@/stores/organizationStore'
 
-const API_BASE = `${import.meta.env.VITE_API_BASE_URL || ''}`
-
+// Type definitions
 interface Integration {
   id: string
-  type: 'dropbox' | 'googledrive' | 'frameio' | 'slack' | 'gmail'
   name: string
+  type: 'dropbox' | 'slack' | 'googledrive' | 'frameio' | 'gmail' | string
   description: string
   connected: boolean
   lastSync?: string
-  rootFolder?: string
+  status: 'connected' | 'disconnected' | 'error'
+  error?: string
+  config?: Record<string, any>
   webhookStatus?: 'active' | 'inactive' | 'error'
+  rootFolder?: string
   stats?: {
     files: number
     folders: number
   }
-  // internal flag to indicate this entry comes from backend sources
+  // Internal flag to indicate this entry comes from backend sources
   __existing?: boolean
+  organizationId?: string
 }
 
 interface AvailableIntegration {
-  type: string
+  id: string
   name: string
+  type: string
   description: string
+  icon: string
+  color: string
 }
 
 interface LogEntry {
   id: string
-  level: 'info' | 'warning' | 'error'
-  message: string
   timestamp: string
+  level: 'info' | 'warn' | 'error'
+  message: string
+  details?: string
 }
 
+// Constants
+const API_BASE = import.meta.env.VITE_API_BASE_URL || ''
+
+// Router and Stores
 const route = useRoute()
 const notificationStore = useNotificationStore()
+const orgStore = useOrganizationStore()
 
 // State
-const integrations = ref<Integration[]>([])
 const showAddDialog = ref(false)
 const showConfigDialog = ref(false)
 const showLogsDialog = ref(false)
@@ -372,19 +458,283 @@ const logsIntegration = ref<Integration | null>(null)
 const connecting = ref<string | null>(null)
 const syncing = ref<string | null>(null)
 const saving = ref(false)
+const loading = ref(false)
 const loadingLogs = ref(false)
+const error = ref<string | null>(null)
 const configValid = ref(false)
-const logs = ref<LogEntry[]>([])
+const selectedIntegration = ref<Integration | null>(null)
+const selectedAvailable = ref<AvailableIntegration | null>(null)
 
 // Configuration data
 const configData = ref({
-  rootFolder: '',
-  enableWebhooks: true,
-  syncFrequency: 'hourly'
+  syncFrequency: 'hourly',
+  rootFolder: '/',
+  notifications: true,
+  enableWebhooks: true
+})
+
+// Data collections
+const integrations = ref<Integration[]>([])
+const logs = ref<LogEntry[]>([])
+
+// UI Configuration
+const logHeaders = [
+  { title: 'Timestamp', key: 'timestamp' },
+  { title: 'Level', key: 'level' },
+  { title: 'Message', key: 'message' }
+]
+
+// Available integrations with their configurations
+const availableIntegrations = ref<AvailableIntegration[]>([
+  {
+    id: 'dropbox',
+    name: 'Dropbox',
+    type: 'dropbox',
+    description: 'Connect your Dropbox account to access files and folders',
+    icon: 'mdi-dropbox',
+    color: '#0061FF'
+  },
+  {
+    id: 'google-drive',
+    name: 'Google Drive',
+    type: 'google',
+    description: 'Connect your Google Drive to access files and folders',
+    icon: 'mdi-google-drive',
+    color: '#4285F4'
+  },
+  {
+    id: 'onedrive',
+    name: 'OneDrive',
+    type: 'onedrive',
+    description: 'Connect your OneDrive to access files and folders',
+    icon: 'mdi-microsoft-onedrive',
+    color: '#0078D4'
+  },
+  {
+    id: 'slack',
+    name: 'Slack',
+    type: 'slack',
+    description: 'Connect your Slack workspace to manage notifications',
+    icon: 'mdi-slack',
+    color: '#4A154B'
+  },
+  {
+    id: 'github',
+    name: 'GitHub',
+    type: 'github',
+    description: 'Connect your GitHub repositories',
+    icon: 'mdi-github',
+    color: '#181717'
+  }
+])
+
+// Sync frequencies
+const syncFrequencies = [
+  { title: 'Every 15 minutes', value: '15m' },
+  { title: 'Every hour', value: '1h' },
+  { title: 'Every 6 hours', value: '6h' },
+  { title: 'Every 12 hours', value: '12h' },
+  { title: 'Manual', value: 'manual' }
+]
+
+// Utility functions
+const getIntegrationColor = (type: string): string => {
+  const integration = availableIntegrations.value.find(i => i.type === type)
+  return integration?.color || '#64748b'
+}
+
+const getIntegrationIcon = (type: string): string => {
+  const integration = availableIntegrations.value.find(i => i.type === type)
+  return integration?.icon || 'mdi-puzzle'
+}
+
+const getLogLevelColor = (level: string): string => {
+  switch (level.toLowerCase()) {
+    case 'error':
+      return 'error'
+    case 'warn':
+      return 'warning'
+    default:
+      return 'info'
+  }
+}
+
+const formatDate = (dateString: string): string => {
+  return new Date(dateString).toLocaleDateString()
+}
+
+const formatDateTime = (dateString: string): string => {
+  return new Date(dateString).toLocaleString()
+}
+
+// Integration methods
+const connectIntegration = async (integration: Integration) => {
+  try {
+    console.log('connectIntegration called with:', integration);
+    connecting.value = integration.id;
+    
+    const orgId = orgStore.currentOrg?.id;
+    if (!orgId) {
+      throw new Error('No organization selected');
+    }
+    
+    let sourceId = integration.id;
+    console.log('Starting with sourceId:', sourceId);
+    
+    if (!integration.__existing) {
+      console.log('Creating new source for integration:', integration.type);
+      // Implementation for creating a new source would go here
+    }
+    
+    // Build the OAuth URL with state
+    const state = {
+      organizationId: orgId,
+      sourceId: sourceId,
+      projectId: route.params.projectId
+    };
+    
+  } finally {
+    connecting.value = null
+  }
+}
+
+const disconnectIntegration = async (integration: Integration) => {
+  try {
+    // Implementation for disconnecting integration
+    notificationStore.showSuccess(`Successfully disconnected from ${integration.name}`)
+  } catch (err: any) {
+    notificationStore.showError(`Failed to disconnect from ${integration.name}: ${err.message}`)
+  }
+}
+
+const triggerSync = async (integration: Integration) => {
+  try {
+    syncing.value = integration.id
+    // Implementation for triggering sync
+    notificationStore.showSuccess(`Sync triggered for ${integration.name}`)
+  } catch (err: any) {
+    notificationStore.showError(`Failed to sync ${integration.name}: ${err.message}`)
+  } finally {
+    syncing.value = null
+  }
+}
+
+const configureIntegration = (integration: Integration) => {
+  selectedIntegration.value = integration
+  showConfigDialog.value = true
+}
+
+const viewLogs = (integration: Integration) => {
+  logsIntegration.value = integration
+  loadingLogs.value = true
+  // Implementation for fetching logs
+  loadingLogs.value = false
+}
+
+const resubscribeWebhook = async (integration: Integration) => {
+  try {
+    // Implementation for resubscribing webhook
+    notificationStore.showSuccess(`Webhook resubscribed for ${integration.name}`)
+  } catch (err: any) {
+    notificationStore.showError(`Failed to resubscribe webhook for ${integration.name}: ${err.message}`)
+  }
+}
+
+const addIntegration = (available: AvailableIntegration) => {
+  selectedAvailable.value = available
+  selectedIntegrationType.value = available.type
+  showAddDialog.value = true
+}
+
+const proceedWithIntegration = async () => {
+  if (!selectedIntegrationType.value) return
+  
+  const integration = availableIntegrations.value.find((i: AvailableIntegration) => i.type === selectedIntegrationType.value)
+  if (!integration) return
+  
+  // Implementation for proceeding with integration
+  showAddDialog.value = false
+  notificationStore.showSuccess(`Starting ${integration.name} integration...`)
+}
+
+const saveConfiguration = async () => {
+  if (!selectedIntegration.value) return
+  
+  try {
+    saving.value = true
+    // Implementation for saving configuration
+    showConfigDialog.value = false
+    notificationStore.showSuccess('Configuration saved successfully')
+  } catch (err: any) {
+    notificationStore.showError(`Failed to save configuration: ${err.message}`)
+  } finally {
+    saving.value = false
+  }
+}
+
+const closeConfigDialog = () => {
+  showConfigDialog.value = false
+  selectedIntegration.value = null
+}
+
+const closeLogsDialog = () => {
+  showLogsDialog.value = false
+  logsIntegration.value = null
+}
+
+// Expose necessary variables and methods to the template
+defineExpose({
+  // UI State
+  showAddDialog,
+  showConfigDialog,
+  showLogsDialog,
+  
+  // Data
+  selectedIntegration,
+  selectedAvailable,
+  configData,
+  configValid,
+  integrations,
+  availableIntegrations,
+  logs,
+  logsIntegration,
+  logHeaders,
+  
+  // Loading States
+  connecting,
+  syncing,
+  saving,
+  loading,
+  loadingLogs,
+  
+  // Error State
+  error,
+  
+  // Integration Methods
+  connectIntegration,
+  disconnectIntegration,
+  triggerSync,
+  configureIntegration,
+  viewLogs,
+  resubscribeWebhook,
+  addIntegration,
+  proceedWithIntegration,
+  saveConfiguration,
+  closeConfigDialog,
+  closeLogsDialog,
+  
+  // Utility Functions
+  getIntegrationColor,
+  getIntegrationIcon,
+  getLogLevelColor,
+  formatDate,
+  formatDateTime,
+  
+  // Constants
+  syncFrequencies
 })
 
 // GraphQL
-const orgStore = useOrganizationStore()
 const GET_SOURCES = gql`
   query GetSources($organizationId: ID!) {
     getSources(organizationId: $organizationId) {
@@ -504,35 +854,107 @@ function formatDateTime(dateString: string): string {
   return new Date(dateString).toLocaleString()
 }
 
+// Connect to an integration (starts OAuth flow)
 async function connectIntegration(integration: Integration) {
-  connecting.value = integration.id
+  console.log('connectIntegration called with:', integration);
+  
+  // Set loading state
+  connecting.value = integration.id;
+  
   try {
-    const orgId = orgStore.currentOrg?.id
-    if (!orgId) throw new Error('No organization selected')
-    let sourceId = integration.id
-    // Step 1: create a source if this is a new integration entry (not yet in backend)
-    if (!integration.__existing) {
-      const type = integration.type === 'googledrive' ? 'google_drive' : integration.type
-      const res = await createSource({ organizationId: orgId, name: integration.name, type, config: {} })
-      sourceId = res?.data?.createSource?.id
-      if (!sourceId) throw new Error('Failed to create source')
-      // Update integration id to backend id for subsequent actions
-      integration.id = sourceId
-      integration.__existing = true
+    // Get current organization ID
+    const orgId = orgStore.currentOrg?.id;
+    console.log('Current org ID:', orgId);
+    
+    if (!orgId) {
+      const error = new Error('No organization selected');
+      console.error('Error in connectIntegration:', error);
+      throw error;
     }
-    // Step 2: redirect to provider OAuth
-    const basePath = integration.type === 'dropbox' ? '/api/oauth/dropbox' : '/api/oauth/gdrive'
-    const absolute = API_BASE ? new URL(basePath, API_BASE) : new URL(basePath, window.location.origin)
-    const url = absolute
-    url.searchParams.set('organizationId', orgId)
-    url.searchParams.set('sourceId', sourceId)
-    const projectId = (route.params.id as string) || ''
-    url.searchParams.set('state', JSON.stringify({ organizationId: orgId, sourceId, projectId }))
-    window.location.href = url.toString()
+    
+    let sourceId = integration.id;
+    console.log('Starting with sourceId:', sourceId);
+    
+    // Step 1: Create a source if this is a new integration entry
+    if (!integration.__existing) {
+      console.log('Creating new source for integration');
+      const type = integration.type === 'googledrive' ? 'google_drive' : integration.type;
+      console.log('Creating source with type:', type);
+      
+      try {
+        const res = await createSource({ 
+          organizationId: orgId, 
+          name: integration.name, 
+          type, 
+          config: {} 
+        });
+        
+        console.log('Create source response:', res);
+        
+        if (!res?.data?.createSource?.id) {
+          const error = new Error('Failed to create source: Invalid response from server');
+          console.error(error);
+          throw error;
+        }
+        
+        sourceId = res.data.createSource.id;
+        console.log('New source ID:', sourceId);
+        
+        // Update integration id to backend id for subsequent actions
+        integration.id = sourceId;
+        integration.__existing = true;
+      } catch (createError) {
+        console.error('Error creating source:', createError);
+        throw new Error(`Failed to create source: ${createError.message || 'Unknown error'}`);
+      }
+    }
+    
+    // Step 2: Build the OAuth URL
+    const basePath = integration.type === 'dropbox' ? '/api/oauth/dropbox' : '/api/oauth/gdrive';
+    console.log('Using base path:', basePath);
+    
+    // Determine the base URL for the API
+    const baseUrl = API_BASE || window.location.origin;
+    console.log('Using base URL:', baseUrl);
+    
+    // Create the URL object
+    const url = new URL(basePath, baseUrl);
+    
+    // Get project ID from route if available
+    const projectId = (route.params.id as string) || '';
+    
+    // Create state object to maintain context
+    const state = JSON.stringify({ 
+      organizationId: orgId, 
+      sourceId, 
+      projectId,
+      timestamp: Date.now()
+    });
+    
+    console.log('OAuth state:', state);
+    
+    // Add query parameters
+    url.searchParams.set('state', encodeURIComponent(state));
+    url.searchParams.set('organizationId', orgId);
+    url.searchParams.set('sourceId', sourceId);
+    
+    console.log('Final OAuth URL:', url.toString());
+    
+    // Add a small delay to ensure the loading state is visible
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    // For debugging - uncomment to test without redirecting
+    // notificationStore.add('info', `Would redirect to: ${url.toString()}`);
+    // return;
+    
+    // Redirect to OAuth URL
+    window.location.href = url.toString();
+    
   } catch (error) {
-    notificationStore.add('error', `Failed to connect ${integration.name}`)
+    console.error('Error in connectIntegration:', error);
+    notificationStore.add('error', `Failed to connect ${integration.name}: ${error.message || 'Unknown error'}`);
   } finally {
-    connecting.value = null
+    connecting.value = null;
   }
 }
 

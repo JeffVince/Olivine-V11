@@ -1,4 +1,37 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = globalSetup;
 const Neo4jService_1 = require("../services/Neo4jService");
@@ -7,6 +40,7 @@ const QueueService_1 = require("../services/queues/QueueService");
 async function globalSetup() {
     console.log('🧪 Setting up global test environment...');
     process.env.NODE_ENV = 'test';
+    process.env.TEST_MODE = 'true';
     process.env.NEO4J_URI = process.env.NEO4J_TEST_URI || 'bolt://localhost:7687';
     process.env.NEO4J_DATABASE = 'test';
     process.env.POSTGRES_DATABASE = process.env.POSTGRES_TEST_DATABASE || 'olivine_test';
@@ -81,6 +115,84 @@ async function globalSetup() {
         metadata JSONB DEFAULT '{}',
         created_at TIMESTAMP DEFAULT NOW(),
         updated_at TIMESTAMP DEFAULT NOW()
+      )`,
+            `CREATE TABLE IF NOT EXISTS parser_registry (
+        id VARCHAR(255) PRIMARY KEY,
+        org_id VARCHAR(255) NOT NULL,
+        slot VARCHAR(255),
+        mime_type VARCHAR(255),
+        extension VARCHAR(50),
+        parser_name VARCHAR(255),
+        parser_version VARCHAR(50),
+        min_confidence NUMERIC DEFAULT 0,
+        feature_flag BOOLEAN DEFAULT false,
+        enabled BOOLEAN DEFAULT true,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      )`,
+            `INSERT INTO parser_registry (id, org_id, slot, mime_type, extension, parser_name, parser_version, min_confidence, feature_flag, enabled)
+       VALUES ('test-parser-1', 'test-org-123', 'SCRIPT_PRIMARY', '*/*', 'txt', 'script-parser-v1', '1.0.0', 0.5, true, true)
+       ON CONFLICT (id) DO NOTHING`,
+            `CREATE TABLE IF NOT EXISTS promotion_audit (
+        id VARCHAR(255) PRIMARY KEY,
+        job_id VARCHAR(255) NOT NULL,
+        actor VARCHAR(255),
+        action VARCHAR(50),
+        before_json JSONB,
+        after_json JSONB,
+        timestamp TIMESTAMP DEFAULT NOW()
+      )`,
+            `CREATE TABLE IF NOT EXISTS extraction_job (
+        id VARCHAR(255) PRIMARY KEY,
+        org_id VARCHAR(255) NOT NULL,
+        file_id VARCHAR(255) NOT NULL,
+        project_id VARCHAR(255),
+        parser_name VARCHAR(255),
+        parser_version VARCHAR(50),
+        method VARCHAR(50),
+        dedupe_key VARCHAR(255) UNIQUE,
+        status VARCHAR(50),
+        confidence NUMERIC,
+        promoted_at TIMESTAMP,
+        created_at TIMESTAMP DEFAULT NOW(),
+        completed_at TIMESTAMP,
+        metadata JSONB DEFAULT '{}'::jsonb
+      )`,
+            `CREATE TABLE IF NOT EXISTS extracted_entity_temp (
+        id SERIAL PRIMARY KEY,
+        job_id VARCHAR(255) NOT NULL,
+        kind VARCHAR(100) NOT NULL,
+        raw_json JSONB NOT NULL,
+        hash VARCHAR(255) NOT NULL,
+        confidence NUMERIC,
+        source_offset VARCHAR(255),
+        created_at TIMESTAMP DEFAULT NOW()
+      )`,
+            `CREATE TABLE IF NOT EXISTS extracted_link_temp (
+        id SERIAL PRIMARY KEY,
+        job_id VARCHAR(255) NOT NULL,
+        from_hash VARCHAR(255) NOT NULL,
+        to_hash VARCHAR(255) NOT NULL,
+        rel_type VARCHAR(100) NOT NULL,
+        raw_json JSONB,
+        confidence NUMERIC,
+        created_at TIMESTAMP DEFAULT NOW()
+      )`,
+            `CREATE TABLE IF NOT EXISTS content_cluster (
+        id VARCHAR(255) PRIMARY KEY,
+        file_id VARCHAR(255),
+        entities_count INTEGER DEFAULT 0,
+        links_count INTEGER DEFAULT 0,
+        updated_at TIMESTAMP DEFAULT NOW(),
+        status VARCHAR(50)
+      )`,
+            `CREATE TABLE IF NOT EXISTS files (
+        id VARCHAR(255) PRIMARY KEY,
+        org_id VARCHAR(255) NOT NULL,
+        name VARCHAR(255),
+        mime_type VARCHAR(100),
+        size INTEGER,
+        checksum VARCHAR(255)
       )`
         ];
         for (const query of createTablesQueries) {
@@ -90,6 +202,23 @@ async function globalSetup() {
             catch (error) {
                 console.warn('Error creating test table:', error.message);
             }
+        }
+        try {
+            const fs = await Promise.resolve().then(() => __importStar(require('fs')));
+            const path = await Promise.resolve().then(() => __importStar(require('path')));
+            const srcSchemaDir = path.join(process.cwd(), 'dist', 'graphql', 'schema');
+            const dstSchemaDir = path.join(process.cwd(), 'src', 'dist', 'graphql', 'schema');
+            fs.mkdirSync(dstSchemaDir, { recursive: true });
+            for (const file of ['enhanced.graphql', 'core.graphql']) {
+                const src = path.join(srcSchemaDir, file);
+                const dst = path.join(dstSchemaDir, file);
+                if (fs.existsSync(src)) {
+                    fs.copyFileSync(src, dst);
+                }
+            }
+        }
+        catch (e) {
+            console.warn('Schema copy skipped:', e.message);
         }
         await neo4jService.close();
         await postgresService.close();

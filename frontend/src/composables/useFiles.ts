@@ -2,7 +2,26 @@ import { ref, watchEffect } from 'vue'
 import { useQuery, useSubscription, useMutation } from '@vue/apollo-composable'
 import gql from 'graphql-tag'
 import { useOrganizationStore } from '@/stores/organizationStore'
-import { useProjectStore } from '@/stores/projectStore'
+
+interface File {
+  id: string
+  orgId: string
+  sourceId: string
+  projectId: string
+  path: string
+  name: string
+  size: number
+  mimeType: string
+  updatedAt: string
+  metadata: Record<string, unknown>
+  classificationStatus: string
+  classificationConfidence: number
+  canonicalSlot: string
+  current: boolean
+  deleted: boolean
+  project: { id: string; name: string }
+  source: { id: string; name: string; provider: string }
+}
 
 const FILES_QUERY = gql`
   query Files($filter: FileFilter, $limit: Int, $offset: Int) {
@@ -74,7 +93,6 @@ const MOVE_FILE = gql`
 
 export function useFiles() {
   const orgStore = useOrganizationStore()
-  const projectStore = useProjectStore()
 
   const variables = ref({
     filter: {
@@ -90,7 +108,7 @@ export function useFiles() {
   })
 
   const { result, loading, refetch, onError } = useQuery(FILES_QUERY, variables)
-  const items = ref<any[]>([])
+  const items = ref<File[]>([])
 
   const { mutate: renameFileMutate } = useMutation(RENAME_FILE)
   const { mutate: moveFileMutate } = useMutation(MOVE_FILE)
@@ -104,17 +122,16 @@ export function useFiles() {
   })
 
   // Live updates for file changes
-  useSubscription(FILE_UPDATED_SUB, () => ({ orgId: orgStore.currentOrg?.id || '' }), {
-    onResult: (res) => {
-      const updated = res.data?.fileUpdated
-      if (!updated) return
-      const idx = items.value.findIndex((f) => f.id === updated.id)
-      if (idx >= 0) {
-        items.value[idx] = { ...items.value[idx], ...updated }
-      } else {
-        items.value.unshift(updated)
-      }
-    },
+  const { onResult } = useSubscription(FILE_UPDATED_SUB, () => ({ orgId: orgStore.currentOrg?.id || '' }))
+  onResult((res: { data?: { fileUpdated: File } }) => {
+    const updated = res.data?.fileUpdated
+    if (!updated) return
+    const idx = items.value.findIndex((f) => f.id === updated.id)
+    if (idx >= 0) {
+      items.value[idx] = { ...items.value[idx], ...updated }
+    } else {
+      items.value.unshift(updated)
+    }
   })
 
   async function renameFile(id: string, name: string) {
@@ -127,12 +144,12 @@ export function useFiles() {
     await refetch()
   }
 
-  function downloadFile(file: any) {
+  function downloadFile(file: File) {
     const url = file?.metadata?.downloadUrl
     if (url) window.open(url, '_blank')
   }
 
-  function openInProvider(file: any) {
+  function openInProvider(file: File) {
     const url = file?.metadata?.providerUrl || file?.metadata?.previewUrl
     if (url) window.open(url, '_blank')
   }

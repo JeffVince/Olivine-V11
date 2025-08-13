@@ -3,6 +3,14 @@ import { useQuery, useMutation } from '@vue/apollo-composable'
 import gql from 'graphql-tag'
 import { useOrganizationStore } from '@/stores/organizationStore'
 
+interface Branch {
+  id: string
+  name: string
+  description: string
+  active: boolean
+  baseCommitId: string
+}
+
 const LIST_BRANCHES = gql`
   query Branches($orgId: ID!) { branches(orgId: $orgId) { id name description active baseCommitId } }
 `
@@ -21,7 +29,7 @@ export function useBranches() {
   const org = useOrganizationStore()
   const variables = ref({ orgId: org.currentOrg?.id || '' })
   const { result, loading, refetch } = useQuery(LIST_BRANCHES, variables)
-  const branches = ref<any[]>([])
+  const branches = ref<Branch[]>([])
 
   watchEffect(() => { variables.value.orgId = org.currentOrg?.id || '' })
   watchEffect(() => { if (result.value?.branches) branches.value = result.value.branches })

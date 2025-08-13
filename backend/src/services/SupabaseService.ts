@@ -2,7 +2,7 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { PostgresService } from './PostgresService';
 import { ConfigService } from './ConfigService';
 
-export interface SupabaseTokenData {
+export interface SupabaseTokenData extends Record<string, unknown> {
   access_token: string;
   refresh_token: string;
   expires_at: number;
@@ -115,7 +115,7 @@ export class SupabaseService {
   /**
    * Upload file to Supabase storage
    */
-  async uploadFile(orgId: string, sourceId: string, filePath: string, fileBuffer: Buffer, contentType: string): Promise<any> {
+  async uploadFile(orgId: string, sourceId: string, filePath: string, fileBuffer: Buffer, contentType: string): Promise<unknown> {
     try {
       const client = await this.getClient(orgId, sourceId);
       
@@ -144,7 +144,7 @@ export class SupabaseService {
   /**
    * Download file from Supabase storage
    */
-  async downloadFile(orgId: string, sourceId: string, filePath: string): Promise<any> {
+  async downloadFile(orgId: string, sourceId: string, filePath: string): Promise<unknown> {
     try {
       const client = await this.getClient(orgId, sourceId);
       
@@ -170,7 +170,7 @@ export class SupabaseService {
   /**
    * List files in Supabase storage
    */
-  async listFiles(orgId: string, sourceId: string, path?: string): Promise<any> {
+  async listFiles(orgId: string, sourceId: string, pageToken?: string): Promise<unknown[]> {
     try {
       const client = await this.getClient(orgId, sourceId);
       
@@ -178,17 +178,18 @@ export class SupabaseService {
         throw new Error('Could not initialize Supabase client');
       }
       
+      // Supabase doesn't use pageToken, so we ignore it
       const { data, error } = await client.storage
         .from('files')
-        .list(path);
+        .list('');
       
       if (error) {
-        throw new Error(`Error listing files in Supabase: ${error.message}`);
+        throw error;
       }
       
-      return data;
+      return data || [];
     } catch (error) {
-      console.error('Error listing files in Supabase:', error);
+      console.error('Error listing Supabase files:', error);
       throw error;
     }
   }
@@ -196,7 +197,7 @@ export class SupabaseService {
   /**
    * Delete file from Supabase storage
    */
-  async deleteFile(orgId: string, sourceId: string, filePath: string): Promise<any> {
+  async deleteFile(orgId: string, sourceId: string, filePath: string): Promise<unknown> {
     try {
       const client = await this.getClient(orgId, sourceId);
       
@@ -222,13 +223,17 @@ export class SupabaseService {
   /**
    * Subscribe to real-time changes
    */
-  async subscribeToChanges(orgId: string, sourceId: string, tableName: string, callback: (payload: any) => void): Promise<any> {
+  async subscribeToChanges(orgId: string, sourceId: string, callback: (payload: unknown) => void): Promise<unknown> {
     try {
       const client = await this.getClient(orgId, sourceId);
       
       if (!client) {
         throw new Error('Could not initialize Supabase client');
       }
+      
+      // For Supabase, we'll use a default table name for file changes
+      // In a real implementation, this might need to be configurable
+      const tableName = 'files';
       
       const subscription = client
         .channel(`storage-changes-${orgId}-${sourceId}`)
@@ -239,7 +244,7 @@ export class SupabaseService {
             schema: 'public',
             table: tableName
           },
-          (payload: any) => {
+          (payload: unknown) => {
             callback(payload);
           }
         )
@@ -248,6 +253,43 @@ export class SupabaseService {
       return subscription;
     } catch (error) {
       console.error('Error subscribing to Supabase changes:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get file metadata from Supabase
+   */
+  async getFileMetadata(orgId: string, sourceId: string, fileId: string): Promise<unknown> {
+    try {
+      const client = await this.getClient(orgId, sourceId);
+      
+      if (!client) {
+        throw new Error('Could not initialize Supabase client');
+      }
+      
+      // In Supabase, we can get file metadata by listing files with a specific path
+      // This assumes fileId is actually the file path in Supabase storage
+      const { data, error } = await client.storage
+        .from('files')
+        .list(undefined, {
+          limit: 1,
+          offset: 0,
+          search: fileId
+        });
+      
+      if (error) {
+        throw new Error(`Error getting file metadata from Supabase: ${error.message}`);
+      }
+      
+      if (data && data.length > 0) {
+        // Return the first matching file's metadata
+        return data[0];
+      } else {
+        throw new Error('File not found');
+      }
+    } catch (error) {
+      console.error('Error getting file metadata from Supabase:', error);
       throw error;
     }
   }

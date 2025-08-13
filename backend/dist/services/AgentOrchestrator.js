@@ -2,29 +2,28 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AgentOrchestrator = void 0;
 const ScriptBreakdownAgent_1 = require("../agents/ScriptBreakdownAgent");
-const EnhancedClassificationAgent_1 = require("../agents/EnhancedClassificationAgent");
+const TaxonomyClassificationAgent_1 = require("../agents/TaxonomyClassificationAgent");
 const NoveltyDetectionAgent_1 = require("../agents/NoveltyDetectionAgent");
-const QueueService_1 = require("./queues/QueueService");
 const ProvenanceService_1 = require("./provenance/ProvenanceService");
-const Neo4jService_1 = require("./Neo4jService");
 class AgentOrchestrator {
-    constructor() {
+    constructor(queueService, neo4jService, postgresService) {
         this.agents = new Map();
         this.workflows = new Map();
         this.tasks = new Map();
         this.isRunning = false;
-        this.queueService = new QueueService_1.QueueService();
+        this.queueService = queueService;
+        this.neo4j = neo4jService;
+        this.postgres = postgresService;
         this.provenance = new ProvenanceService_1.ProvenanceService();
-        this.neo4j = new Neo4jService_1.Neo4jService();
         this.initializeAgents();
         this.initializeWorkflows();
     }
     initializeAgents() {
         const scriptBreakdownAgent = new ScriptBreakdownAgent_1.ScriptBreakdownAgent(this.queueService);
-        const classificationAgent = new EnhancedClassificationAgent_1.EnhancedClassificationAgent(this.queueService);
+        const taxonomyClassificationAgent = new TaxonomyClassificationAgent_1.TaxonomyClassificationAgent(this.queueService);
         const noveltyAgent = new NoveltyDetectionAgent_1.NoveltyDetectionAgent(this.queueService);
         this.agents.set('script_breakdown_agent', scriptBreakdownAgent);
-        this.agents.set('enhanced_classification_agent', classificationAgent);
+        this.agents.set('taxonomy_classification_agent', taxonomyClassificationAgent);
         this.agents.set('novelty_detection_agent', noveltyAgent);
     }
     initializeWorkflows() {
@@ -42,7 +41,10 @@ class AgentOrchestrator {
                 {
                     agent: 'novelty_detection_agent',
                     type: 'detect_novelty',
-                    condition: (context) => context.classification_confidence < 0.8,
+                    condition: (context) => {
+                        const value = context.classification_confidence;
+                        return typeof value === 'number' && value < 0.8;
+                    },
                     timeout: 15000,
                     retries: 1
                 }
@@ -69,7 +71,10 @@ class AgentOrchestrator {
                 {
                     agent: 'script_breakdown_agent',
                     type: 'process_script',
-                    condition: (context) => context.classification?.slot === 'SCRIPT_PRIMARY',
+                    condition: (context) => {
+                        const cls = context.classification;
+                        return !!cls && cls.slot === 'SCRIPT_PRIMARY';
+                    },
                     timeout: 120000,
                     retries: 1
                 },
@@ -175,12 +180,14 @@ class AgentOrchestrator {
         return taskId;
     }
     async processQueue() {
-        this.queueService.registerWorker('agent-jobs', async (job) => {
-            await this.executeTask(job.data.taskId);
-        }, {
-            concurrency: 5,
-            connection: this.queueService.connection
-        });
+        {
+            const opts = { concurrency: 5 };
+            if (this.queueService.connection)
+                opts.connection = this.queueService.connection;
+            this.queueService.registerWorker('agent-jobs', async (job) => {
+                await this.executeTask(job.data.taskId);
+            }, opts);
+        }
     }
     async executeTask(taskId) {
         const task = this.tasks.get(taskId);
@@ -211,7 +218,7 @@ class AgentOrchestrator {
             let result;
             switch (task.type) {
                 case 'classify_file':
-                    if (task.agent === 'enhanced_classification_agent') {
+                    if (task.agent === 'taxonomy_classification_agent') {
                         result = await agent.classifyFile(task.payload);
                     }
                     break;
@@ -316,8 +323,11 @@ class AgentOrchestrator {
     getTaskStatus(taskId) {
         return this.tasks.get(taskId);
     }
-    getWorkflowStatus(workflowId) {
-        return this.workflows.get(workflowId);
+    getWorkflowStatus(workflowExecutionId) {
+        return {
+            results: new Map(),
+            errors: new Map()
+        };
     }
     getStatistics() {
         const tasksByStatus = new Map();
@@ -327,9 +337,10 @@ class AgentOrchestrator {
             tasksByAgent.set(task.agent, (tasksByAgent.get(task.agent) || 0) + 1);
         }
         return {
-            total_tasks: this.tasks.size,
-            tasks_by_status: Object.fromEntries(tasksByStatus),
-            tasks_by_agent: Object.fromEntries(tasksByAgent),
+            tasksByStatus: Object.fromEntries(tasksByStatus),
+            tasksByAgent: Object.fromEntries(tasksByAgent),
+            totalTasks: this.tasks.size,
+            activeWorkflows: Array.from(this.workflows.values()).filter(w => w.enabled).length,
             available_agents: Array.from(this.agents.keys()),
             available_workflows: Array.from(this.workflows.keys()),
             is_running: this.isRunning
@@ -337,6 +348,34 @@ class AgentOrchestrator {
     }
     generateId() {
         return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    }
+    async startWorkflow(workflow, eventData) {
+        const workflowExecutionId = this.generateId();
+        console.log(`Starting workflow execution: ${workflow.id} (${workflowExecutionId})`);
+        const taskIds = [];
+        let previousTaskId;
+        for (const step of workflow.steps) {
+            if (step.condition && !step.condition(eventData)) {
+                console.log(`Skipping step ${step.agent}:${step.type} - condition not met`);
+                continue;
+            }
+            const taskId = await this.createTask({
+                type: step.type,
+                agent: step.agent,
+                priority: 5,
+                payload: { ...eventData, workflow_id: workflow.id, execution_id: workflowExecutionId },
+                orgId: eventData.orgId,
+                userId: eventData.userId,
+                dependencies: previousTaskId ? [previousTaskId] : [],
+                maxRetries: step.retries || 1
+            });
+            taskIds.push(taskId);
+            previousTaskId = taskId;
+        }
+        return workflowExecutionId;
+    }
+    getRegisteredWorkflows() {
+        return Array.from(this.workflows.values());
     }
     sleep(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));

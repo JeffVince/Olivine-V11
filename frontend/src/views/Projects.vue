@@ -1,17 +1,27 @@
 <template>
   <div>
     <v-row class="mb-4">
-      <v-col cols="12" md="8">
-        <h1 class="text-h4 font-weight-bold">Projects</h1>
+      <v-col
+        cols="12"
+        md="8"
+      >
+        <h1 class="text-h4 font-weight-bold">
+          Projects
+        </h1>
         <p class="text-subtitle-1 text-medium-emphasis">
           Manage your production projects and connect storage sources
         </p>
       </v-col>
-      <v-col cols="12" md="4" class="text-right">
+      <v-col
+        cols="12"
+        md="4"
+        class="text-right"
+      >
         <v-btn 
           color="primary" 
           size="large"
           prepend-icon="mdi-plus"
+          class="liquid-button"
           @click="showCreateDialog = true"
         >
           New Project
@@ -29,12 +39,17 @@
         lg="4"
       >
         <v-card 
-          class="project-card" 
+          class="project-card glass-card" 
           hover
           @click="openProject(project.id)"
         >
           <v-card-title class="d-flex align-center">
-            <v-icon class="mr-2" color="primary">mdi-folder-multiple</v-icon>
+            <v-icon
+              class="mr-2"
+              color="primary"
+            >
+              mdi-folder-multiple
+            </v-icon>
             {{ project.name }}
           </v-card-title>
           
@@ -50,7 +65,7 @@
             </div>
             
             <div class="text-caption text-medium-emphasis mb-2">
-              Last activity: {{ formatDate(project.lastActivity) }}
+              Last activity: {{ project.lastActivity ? formatDate(project.lastActivity) : 'N/A' }}
             </div>
             
             <!-- Integration Status -->
@@ -62,7 +77,12 @@
                 :color="integration.connected ? 'success' : 'warning'"
                 variant="outlined"
               >
-                <v-icon start size="x-small">{{ getIntegrationIcon(integration.type) }}</v-icon>
+                <v-icon
+                  start
+                  size="x-small"
+                >
+                  {{ getIntegrationIcon(integration.type) }}
+                </v-icon>
                 {{ integration.type }}
               </v-chip>
             </div>
@@ -78,7 +98,7 @@
             </v-btn>
             <v-spacer />
             <v-menu>
-              <template v-slot:activator="{ props }">
+              <template #activator="{ props }">
                 <v-btn 
                   icon="mdi-dots-vertical" 
                   variant="text" 
@@ -90,20 +110,29 @@
               <v-list>
                 <v-list-item @click="editProject(project)">
                   <v-list-item-title>
-                    <v-icon start>mdi-pencil</v-icon>
+                    <v-icon start>
+                      mdi-pencil
+                    </v-icon>
                     Edit
                   </v-list-item-title>
                 </v-list-item>
                 <v-list-item @click="archiveProject(project)">
                   <v-list-item-title>
-                    <v-icon start>mdi-archive</v-icon>
+                    <v-icon start>
+                      mdi-archive
+                    </v-icon>
                     Archive
                   </v-list-item-title>
                 </v-list-item>
                 <v-divider />
-                <v-list-item @click="deleteProject(project)" class="text-error">
+                <v-list-item
+                  class="text-error"
+                  @click="deleteProject(project)"
+                >
                   <v-list-item-title>
-                    <v-icon start>mdi-delete</v-icon>
+                    <v-icon start>
+                      mdi-delete
+                    </v-icon>
                     Delete
                   </v-list-item-title>
                 </v-list-item>
@@ -115,9 +144,20 @@
     </v-row>
 
     <!-- Empty State -->
-    <v-card v-else class="text-center pa-8">
-      <v-icon size="64" color="grey-lighten-1" class="mb-4">mdi-folder-plus</v-icon>
-      <h3 class="text-h6 mb-2">No Projects Yet</h3>
+    <v-card
+      v-else
+      class="text-center pa-8 glass-card"
+    >
+      <v-icon
+        size="64"
+        color="grey-lighten-1"
+        class="mb-4"
+      >
+        mdi-folder-plus
+      </v-icon>
+      <h3 class="text-h6 mb-2">
+        No Projects Yet
+      </h3>
       <p class="text-body-2 text-medium-emphasis mb-4">
         Create your first project to get started with Olivine
       </p>
@@ -132,14 +172,20 @@
     </v-card>
 
     <!-- Create Project Dialog -->
-    <v-dialog v-model="showCreateDialog" max-width="600">
+    <v-dialog
+      v-model="showCreateDialog"
+      max-width="600"
+    >
       <v-card>
         <v-card-title>
           <span class="text-h5">Create New Project</span>
         </v-card-title>
         
         <v-card-text>
-          <v-form ref="createForm" v-model="formValid">
+          <v-form
+            ref="createForm"
+            v-model="formValid"
+          >
             <v-text-field
               v-model="newProject.name"
               label="Project Name"
@@ -164,16 +210,20 @@
             
             <v-divider class="my-4" />
             
-            <h4 class="text-subtitle-1 mb-3">Connect Storage Source</h4>
+            <h4 class="text-subtitle-1 mb-3">
+              Connect Storage Source
+            </h4>
             
             <v-radio-group v-model="newProject.storageType">
               <v-radio
                 label="Google Drive"
                 value="googledrive"
               >
-                <template v-slot:label>
+                <template #label>
                   <div class="d-flex align-center">
-                    <v-icon class="mr-2">mdi-google-drive</v-icon>
+                    <v-icon class="mr-2">
+                      mdi-google-drive
+                    </v-icon>
                     Google Drive
                   </div>
                 </template>
@@ -182,9 +232,11 @@
                 label="Dropbox"
                 value="dropbox"
               >
-                <template v-slot:label>
+                <template #label>
                   <div class="d-flex align-center">
-                    <v-icon class="mr-2">mdi-dropbox</v-icon>
+                    <v-icon class="mr-2">
+                      mdi-dropbox
+                    </v-icon>
                     Dropbox
                   </div>
                 </template>
@@ -207,7 +259,10 @@
         
         <v-card-actions>
           <v-spacer />
-          <v-btn variant="text" @click="showCreateDialog = false">
+          <v-btn
+            variant="text"
+            @click="showCreateDialog = false"
+          >
             Cancel
           </v-btn>
           <v-btn 
@@ -223,14 +278,19 @@
     </v-dialog>
 
     <!-- Delete Confirmation Dialog -->
-    <v-dialog v-model="showDeleteDialog" max-width="400">
+    <v-dialog
+      v-model="showDeleteDialog"
+      max-width="400"
+    >
       <v-card>
         <v-card-title class="text-h6">
           Delete Project
         </v-card-title>
         <v-card-text>
           <p>Are you sure you want to delete <strong>{{ projectToDelete?.name }}</strong>?</p>
-          <p class="text-error">This action cannot be undone.</p>
+          <p class="text-error">
+            This action cannot be undone.
+          </p>
           
           <v-text-field
             v-model="deleteConfirmation"
@@ -241,7 +301,10 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer />
-          <v-btn variant="text" @click="showDeleteDialog = false">
+          <v-btn
+            variant="text"
+            @click="showDeleteDialog = false"
+          >
             Cancel
           </v-btn>
           <v-btn 
@@ -269,8 +332,8 @@ interface Project {
   name: string
   company?: string
   status: 'active' | 'syncing' | 'error' | 'archived'
-  lastActivity: string
-  integrations: Array<{
+  lastActivity?: string
+  integrations?: Array<{
     type: 'dropbox' | 'googledrive' | 'frameio'
     connected: boolean
   }>

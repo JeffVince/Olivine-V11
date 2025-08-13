@@ -15,7 +15,7 @@ interface SyncJobData {
   orgId: string;
   action: 'create' | 'update' | 'delete';
   filePath: string;
-  metadata: any;
+  metadata: Record<string, unknown>;
 }
 
 interface ClassificationJobData {
@@ -45,9 +45,19 @@ export class EventProcessingService {
   private fileProcessingService: FileProcessingService;
   
   // Agent monitoring and status tracking
-  private agentStatus: Map<string, any> = new Map();
+  private agentStatus: Map<string, {
+    agentType: string;
+    orgId: string;
+    status: string;
+    lastExecution: string;
+    executionCount: number;
+    successCount: number;
+    errorCount: number;
+    averageExecutionTime: number;
+    lastError?: string;
+  }> = new Map();
   private retryAttempts: Map<string, number> = new Map();
-  private maxRetryAttempts: number = 3;
+  private maxRetryAttempts = 3;
   
   // BullMQ queues as specified in the implementation plan
   private fileSyncQueue: Queue<SyncJobData>;
@@ -63,33 +73,43 @@ export class EventProcessingService {
     this.taxonomyService = new TaxonomyService();
     this.fileProcessingService = fileProcessingService;
     
-    // Initialize BullMQ queues with prioritization as specified in the plan
-    this.fileSyncQueue = new Queue('file-sync', {
-      connection: {
-        host: process.env.REDIS_HOST || 'localhost',
-        port: parseInt(process.env.REDIS_PORT || '6379'),
-        password: process.env.REDIS_PASSWORD || undefined,
-        db: parseInt(process.env.REDIS_DB || '0')
-      }
-    });
-    
-    this.fileClassificationQueue = new Queue('file-classification', {
-      connection: {
-        host: process.env.REDIS_HOST || 'localhost',
-        port: parseInt(process.env.REDIS_PORT || '6379'),
-        password: process.env.REDIS_PASSWORD || undefined,
-        db: parseInt(process.env.REDIS_DB || '0')
-      }
-    });
-    
-    this.contentExtractionQueue = new Queue('content-extraction', {
-      connection: {
-        host: process.env.REDIS_HOST || 'localhost',
-        port: parseInt(process.env.REDIS_PORT || '6379'),
-        password: process.env.REDIS_PASSWORD || undefined,
-        db: parseInt(process.env.REDIS_DB || '0')
-      }
-    });
+    const isTestMode = process.env.TEST_MODE === 'true' || process.env.NODE_ENV === 'test';
+    if (isTestMode) {
+      const mockQueue = {
+        add: async (_name: string, _data: any, _opts?: any) => ({ id: `${Date.now()}` })
+      } as unknown as Queue<any>;
+      this.fileSyncQueue = mockQueue;
+      this.fileClassificationQueue = mockQueue;
+      this.contentExtractionQueue = mockQueue;
+    } else {
+      // Initialize BullMQ queues with prioritization as specified in the plan
+      this.fileSyncQueue = new Queue('file-sync', {
+        connection: {
+          host: process.env.REDIS_HOST || 'localhost',
+          port: parseInt(process.env.REDIS_PORT || '6379'),
+          password: process.env.REDIS_PASSWORD || undefined,
+          db: parseInt(process.env.REDIS_DB || '0')
+        }
+      });
+      
+      this.fileClassificationQueue = new Queue('file-classification', {
+        connection: {
+          host: process.env.REDIS_HOST || 'localhost',
+          port: parseInt(process.env.REDIS_PORT || '6379'),
+          password: process.env.REDIS_PASSWORD || undefined,
+          db: parseInt(process.env.REDIS_DB || '0')
+        }
+      });
+      
+      this.contentExtractionQueue = new Queue('content-extraction', {
+        connection: {
+          host: process.env.REDIS_HOST || 'localhost',
+          port: parseInt(process.env.REDIS_PORT || '6379'),
+          password: process.env.REDIS_PASSWORD || undefined,
+          db: parseInt(process.env.REDIS_DB || '0')
+        }
+      });
+    }
   }
 
   /**
@@ -98,7 +118,7 @@ export class EventProcessingService {
    * @param priority Job priority (1 = highest, with sync events having higher priority than classification/extraction)
    * @returns Job ID
    */
-  async addSyncJob(jobData: SyncJobData, priority: number = 1): Promise<string> {
+  async addSyncJob(jobData: SyncJobData, priority = 1): Promise<string> {
     const job = await this.fileSyncQueue.add('sync', jobData, { priority });
     return job.id as string;
   }
@@ -109,7 +129,7 @@ export class EventProcessingService {
    * @param priority Job priority (2 = medium)
    * @returns Job ID
    */
-  async addClassificationJob(jobData: ClassificationJobData, priority: number = 2): Promise<string> {
+  async addClassificationJob(jobData: ClassificationJobData, priority = 2): Promise<string> {
     const job = await this.fileClassificationQueue.add('classify', jobData, { priority });
     return job.id as string;
   }
@@ -120,7 +140,7 @@ export class EventProcessingService {
    * @param priority Job priority (3 = lowest)
    * @returns Job ID
    */
-  async addExtractionJob(jobData: ExtractionJobData, priority: number = 3): Promise<string> {
+  async addExtractionJob(jobData: ExtractionJobData, priority = 3): Promise<string> {
     const job = await this.contentExtractionQueue.add('extract', jobData, { priority });
     return job.id as string;
   }
@@ -240,7 +260,7 @@ export class EventProcessingService {
   /**
    * Sync file to Neo4j graph using FileModel
    */
-  private async syncFileToGraph(fileId: string, sourceId: string, orgId: string, filePath: string, metadata: any): Promise<void> {
+  private async syncFileToGraph(fileId: string, sourceId: string, orgId: string, filePath: string, metadata: Record<string, unknown>): Promise<void> {
     console.log(`Syncing file ${fileId} to Neo4j graph`);
     
     try {
@@ -277,7 +297,7 @@ export class EventProcessingService {
   /**
    * Update file classification in PostgreSQL
    */
-  private async updateFileClassificationInPostgres(fileId: string, orgId: string, classification: any): Promise<void> {
+  private async updateFileClassificationInPostgres(fileId: string, orgId: string, classification: Record<string, unknown>): Promise<void> {
     const query = `
       UPDATE files 
       SET classification = $1, classification_confidence = $2
@@ -295,7 +315,7 @@ export class EventProcessingService {
   /**
    * Update file classification in Neo4j
    */
-  private async updateFileClassificationInNeo4j(fileId: string, orgId: string, classification: any): Promise<void> {
+  private async updateFileClassificationInNeo4j(fileId: string, orgId: string, classification: Record<string, unknown>): Promise<void> {
     const session = this.neo4jService.getSession();
     
     try {
@@ -507,7 +527,7 @@ export class EventProcessingService {
   /**
    * Create commit record for provenance tracking
    */
-  private async createCommit(orgId: string, commitData: any): Promise<string> {
+  private async createCommit(orgId: string, commitData: Record<string, unknown>): Promise<string> {
     const commitId = uuidv4();
     
     const query = `
@@ -538,7 +558,7 @@ export class EventProcessingService {
   /**
    * Create action record for audit trail
    */
-  private async createAction(commitId: string, actionData: any): Promise<void> {
+  private async createAction(commitId: string, actionData: Record<string, unknown>): Promise<void> {
     const actionId = uuidv4();
     
     const query = `
@@ -577,7 +597,7 @@ export class EventProcessingService {
   /**
    * Create entity version for change tracking
    */
-  private async createEntityVersion(entityId: string, entityType: string, properties: any, commitId: string): Promise<void> {
+  private async createEntityVersion(entityId: string, entityType: string, properties: Record<string, unknown>, commitId: string): Promise<void> {
     const versionId = uuidv4();
     
     const query = `
@@ -606,7 +626,7 @@ export class EventProcessingService {
    */
   private async updateAgentStatus(agentType: string, orgId: string, status: 'success' | 'error', executionTime: number, error?: string): Promise<void> {
     const statusKey = `${orgId}:${agentType}`;
-    let agentStatus = this.agentStatus.get(statusKey) || {
+    const agentStatus = this.agentStatus.get(statusKey) || {
       agentType,
       orgId,
       status: 'idle',
@@ -759,7 +779,7 @@ export class EventProcessingService {
   /**
    * Create classification relationships
    */
-  private async createClassificationRelationships(fileId: string, orgId: string, classification: any, commitId: string): Promise<void> {
+  private async createClassificationRelationships(fileId: string, orgId: string, classification: Record<string, unknown>, commitId: string): Promise<void> {
     if (classification.type && classification.type !== 'UNCLASSIFIED') {
       const query = `
         MATCH (f:File {id: $fileId, orgId: $orgId})
@@ -780,7 +800,7 @@ export class EventProcessingService {
   /**
    * Create content extraction relationships
    */
-  private async createContentExtractionRelationships(fileId: string, orgId: string, content: string, metadata: any, commitId: string): Promise<void> {
+  private async createContentExtractionRelationships(fileId: string, orgId: string, content: string, metadata: Record<string, unknown>, commitId: string): Promise<void> {
     const query = `
       MATCH (f:File {id: $fileId, orgId: $orgId})
       CREATE (e:ExtractedContent {

@@ -22,7 +22,10 @@ describe('Complete Olivine V11 Workflow E2E Tests', () => {
   beforeAll(async () => {
     // Initialize services
     graphqlServer = new GraphQLServer();
-    agentOrchestrator = new AgentOrchestrator();
+    queueService = new QueueService();
+    neo4jService = new Neo4jService();
+    postgresService = new PostgresService();
+    agentOrchestrator = new AgentOrchestrator(queueService, neo4jService, postgresService);
     queueService = new QueueService();
     neo4jService = new Neo4jService();
     postgresService = new PostgresService();

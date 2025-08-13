@@ -7,7 +7,7 @@ interface SyncJobData {
     orgId: string;
     action: 'create' | 'update' | 'delete';
     filePath: string;
-    metadata: any;
+    metadata: Record<string, unknown>;
 }
 interface ClassificationJobData {
     fileId: string;

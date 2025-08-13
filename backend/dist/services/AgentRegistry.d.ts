@@ -1,11 +1,20 @@
 import { BaseAgent } from '../agents/BaseAgent';
+import { CrossLayerEnforcementService } from './CrossLayerEnforcementService';
+import { QueueService } from './queues/QueueService';
+import { Neo4jService } from './Neo4jService';
+import { PostgresService } from './PostgresService';
 export declare class AgentRegistry {
     private static instance;
     private agents;
+    private crossLayerService;
     private logger;
     private queueService;
-    private constructor();
+    private neo4jService;
+    private postgresService;
+    private clusterMode;
+    constructor(queueService?: QueueService, crossLayerService?: CrossLayerEnforcementService);
     static getInstance(): AgentRegistry;
+    setServices(neo4jService: Neo4jService, postgresService: PostgresService, queueService: QueueService): void;
     initializeAgents(): Promise<void>;
     registerAgent(name: string, agent: BaseAgent): void;
     startAllAgents(): Promise<void>;
@@ -17,18 +26,20 @@ export declare class AgentRegistry {
     getAllAgents(): BaseAgent[];
     getActiveAgents(): BaseAgent[];
     getAgent(name: string): BaseAgent | undefined;
-    getAgentStatus(): {
-        [key: string]: boolean;
+    getRegisteredAgents(): string[];
+    getHealthStatus(): {
+        healthy: boolean;
+        agents: Record<string, boolean>;
     };
+    validateCrossLayerLinks(orgId: string): Promise<void>;
     performHealthCheck(): Promise<{
         healthy: boolean;
-        agents: {
-            [key: string]: {
-                running: boolean;
-                error?: string;
-            };
-        };
+        agents: Record<string, {
+            healthy: boolean;
+            error?: string;
+        }>;
     }>;
     shutdown(): Promise<void>;
+    disableClusterMode(): void;
 }
 //# sourceMappingURL=AgentRegistry.d.ts.map

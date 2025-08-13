@@ -13,8 +13,7 @@
     "skipLibCheck": true,
     "types": [
       "vite/client",
-      "node",
-      "@apollo/client"
+      "node"
     ],
     "typeRoots": [
       "./node_modules/@types",

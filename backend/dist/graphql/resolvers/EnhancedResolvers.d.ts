@@ -8,6 +8,7 @@ export declare class EnhancedResolvers {
     private queueService;
     private tenantService;
     private authService;
+    private userService;
     private logger;
     constructor();
     getResolvers(): {
@@ -99,6 +100,12 @@ export declare class EnhancedResolvers {
             systemHealth: (_: any, __: any, context: any) => Promise<any>;
         };
         Mutation: {
+            updateProfile: (_: any, { input }: {
+                input: any;
+            }, context: any) => Promise<any>;
+            updateNotificationPrefs: (_: any, { input }: {
+                input: any;
+            }, context: any) => Promise<any>;
             createProject: (_: any, { input }: {
                 input: any;
             }, context: any) => Promise<any>;
@@ -236,6 +243,7 @@ export declare class EnhancedResolvers {
     private getClassificationStats;
     private getProvenanceStats;
     private updateProject;
+    private updateProjectInGraph;
     private deleteProject;
     private createSource;
     private updateSource;
@@ -244,6 +252,8 @@ export declare class EnhancedResolvers {
     private createContent;
     private updateContent;
     private deleteContent;
+    private updateProfile;
+    private updateNotificationPrefs;
     private createCommit;
     private rebuildIndex;
     private getFileChildren;

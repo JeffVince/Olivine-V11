@@ -20,12 +20,24 @@ class SourceResolvers {
         this.googleDriveService = new GoogleDriveService_1.GoogleDriveService();
     }
     async getSources(organizationId) {
+        if (!organizationId || organizationId.trim() === '') {
+            throw new Error('Organization ID is required');
+        }
         return await this.sourceModel.getSourcesByOrganization(organizationId);
     }
     async getSource(sourceId, organizationId) {
+        if (!sourceId || sourceId.trim() === '') {
+            throw new Error('Source ID is required');
+        }
+        if (!organizationId || organizationId.trim() === '') {
+            throw new Error('Organization ID is required');
+        }
         return await this.sourceModel.getSource(sourceId, organizationId);
     }
     async createSource(organizationId, name, type, config) {
+        if (!organizationId || organizationId.trim() === '') {
+            throw new Error('Organization ID is required');
+        }
         const source = await this.sourceModel.createSource({
             organizationId,
             name,
@@ -37,6 +49,9 @@ class SourceResolvers {
         return source;
     }
     async updateSourceConfig(sourceId, organizationId, config) {
+        if (!organizationId || organizationId.trim() === '') {
+            throw new Error('Organization ID is required');
+        }
         const success = await this.sourceModel.updateSourceConfig(sourceId, organizationId, config);
         if (success) {
             const source = await this.sourceModel.getSource(sourceId, organizationId);
@@ -47,6 +62,9 @@ class SourceResolvers {
         return success;
     }
     async updateSourceStatus(sourceId, organizationId, active) {
+        if (!organizationId || organizationId.trim() === '') {
+            throw new Error('Organization ID is required');
+        }
         const success = await this.sourceModel.updateSourceStatus(sourceId, organizationId, active);
         if (success) {
             const source = await this.sourceModel.getSource(sourceId, organizationId);
@@ -57,6 +75,9 @@ class SourceResolvers {
         return success;
     }
     async deleteSource(sourceId, organizationId) {
+        if (!organizationId || organizationId.trim() === '') {
+            throw new Error('Organization ID is required');
+        }
         try {
             const files = await this.fileModel.getFilesBySource(sourceId, organizationId, 10000);
             for (const file of files) {
@@ -73,6 +94,9 @@ class SourceResolvers {
         }
     }
     async getSourceStats(sourceId, organizationId) {
+        if (!organizationId || organizationId.trim() === '') {
+            throw new Error('Organization ID is required');
+        }
         const files = await this.fileModel.getFilesBySource(sourceId, organizationId, 10000);
         const stats = {
             fileCount: files.length,
@@ -87,6 +111,9 @@ class SourceResolvers {
         return stats;
     }
     async triggerSourceResync(sourceId, organizationId) {
+        if (!organizationId || organizationId.trim() === '') {
+            throw new Error('Organization ID is required');
+        }
         try {
             const source = await this.sourceModel.getSource(sourceId, organizationId);
             if (!source) {
@@ -129,7 +156,7 @@ class SourceResolvers {
                 let pageToken = undefined;
                 do {
                     const data = await this.googleDriveService.listFiles(organizationId, sourceId, pageToken);
-                    const files = data.files || [];
+                    const files = Array.isArray(data) ? data : (data.files || []);
                     for (const f of files) {
                         if (f.mimeType === 'application/vnd.google-apps.folder')
                             continue;

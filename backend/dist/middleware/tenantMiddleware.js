@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.tenantMiddleware = void 0;
 const tenantMiddleware = (req, res, next) => {
     try {
-        let orgId = req.headers['x-org-id'];
+        const orgId = req.headers['x-org-id'];
         if (!orgId && req.headers.authorization) {
         }
         if (!orgId) {

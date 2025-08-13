@@ -2,16 +2,26 @@
   <div>
     <!-- Header -->
     <v-row class="mb-4">
-      <v-col cols="12" md="8">
-        <h1 class="text-h4 font-weight-bold">Agent Console</h1>
+      <v-col
+        cols="12"
+        md="8"
+      >
+        <h1 class="text-h4 font-weight-bold">
+          Agent Console
+        </h1>
         <p class="text-subtitle-1 text-medium-emphasis">
           Manage and monitor AI agents and automation workflows
         </p>
       </v-col>
-      <v-col cols="12" md="4" class="text-right">
+      <v-col
+        cols="12"
+        md="4"
+        class="text-right"
+      >
         <v-btn 
           color="primary"
           prepend-icon="mdi-plus"
+          class="liquid-button"
           @click="showCreateDialog = true"
         >
           Create Agent
@@ -21,39 +31,91 @@
 
     <!-- System Status -->
     <v-row class="mb-6">
-      <v-col cols="12" md="3">
-        <v-card>
+      <v-col
+        cols="12"
+        md="3"
+      >
+        <v-card class="glass-card">
           <v-card-text class="text-center">
-            <v-icon size="48" color="success" class="mb-2">mdi-robot</v-icon>
-            <div class="text-h4">{{ activeAgents }}</div>
-            <div class="text-subtitle-2 text-medium-emphasis">Active Agents</div>
+            <v-icon
+              size="48"
+              color="success"
+              class="mb-2"
+            >
+              mdi-robot
+            </v-icon>
+            <div class="text-h4">
+              {{ activeAgents }}
+            </div>
+            <div class="text-subtitle-2 text-medium-emphasis">
+              Active Agents
+            </div>
           </v-card-text>
         </v-card>
       </v-col>
-      <v-col cols="12" md="3">
-        <v-card>
+      <v-col
+        cols="12"
+        md="3"
+      >
+        <v-card class="glass-card">
           <v-card-text class="text-center">
-            <v-icon size="48" color="primary" class="mb-2">mdi-play</v-icon>
-            <div class="text-h4">{{ totalActive }}</div>
-            <div class="text-subtitle-2 text-medium-emphasis">Running Tasks</div>
+            <v-icon
+              size="48"
+              color="primary"
+              class="mb-2"
+            >
+              mdi-play
+            </v-icon>
+            <div class="text-h4">
+              {{ totalActive }}
+            </div>
+            <div class="text-subtitle-2 text-medium-emphasis">
+              Running Tasks
+            </div>
           </v-card-text>
         </v-card>
       </v-col>
-      <v-col cols="12" md="3">
+      <v-col
+        cols="12"
+        md="3"
+      >
         <v-card>
           <v-card-text class="text-center">
-            <v-icon size="48" color="warning" class="mb-2">mdi-clock</v-icon>
-            <div class="text-h4">{{ totalWaiting }}</div>
-            <div class="text-subtitle-2 text-medium-emphasis">Queued Tasks</div>
+            <v-icon
+              size="48"
+              color="warning"
+              class="mb-2"
+            >
+              mdi-clock
+            </v-icon>
+            <div class="text-h4">
+              {{ totalWaiting }}
+            </div>
+            <div class="text-subtitle-2 text-medium-emphasis">
+              Queued Tasks
+            </div>
           </v-card-text>
         </v-card>
       </v-col>
-      <v-col cols="12" md="3">
+      <v-col
+        cols="12"
+        md="3"
+      >
         <v-card>
           <v-card-text class="text-center">
-            <v-icon size="48" color="error" class="mb-2">mdi-alert</v-icon>
-            <div class="text-h4">{{ totalFailed }}</div>
-            <div class="text-subtitle-2 text-medium-emphasis">Failed Tasks</div>
+            <v-icon
+              size="48"
+              color="error"
+              class="mb-2"
+            >
+              mdi-alert
+            </v-icon>
+            <div class="text-h4">
+              {{ totalFailed }}
+            </div>
+            <div class="text-subtitle-2 text-medium-emphasis">
+              Failed Tasks
+            </div>
           </v-card-text>
         </v-card>
       </v-col>
@@ -65,7 +127,9 @@
         <v-card>
           <v-card-title class="d-flex align-center justify-space-between">
             <div>
-              <v-icon class="mr-2">mdi-robot</v-icon>
+              <v-icon class="mr-2">
+                mdi-robot
+              </v-icon>
               AI Agents
             </div>
             <div class="d-flex align-center gap-2">
@@ -115,7 +179,9 @@
                       <v-icon :icon="getAgentIcon(agent.type)" />
                     </v-avatar>
                     <div class="flex-grow-1">
-                      <div class="text-subtitle-1">{{ agent.name }}</div>
+                      <div class="text-subtitle-1">
+                        {{ agent.name }}
+                      </div>
                       <v-chip 
                         :color="getStatusColor(agent.status)"
                         size="x-small"
@@ -125,7 +191,7 @@
                       </v-chip>
                     </div>
                     <v-menu>
-                      <template v-slot:activator="{ props }">
+                      <template #activator="{ props }">
                         <v-btn 
                           v-bind="props"
                           icon="mdi-dots-vertical"
@@ -136,26 +202,37 @@
                       <v-list>
                         <v-list-item @click="viewAgent(agent)">
                           <v-list-item-title>
-                            <v-icon start>mdi-eye</v-icon>
+                            <v-icon start>
+                              mdi-eye
+                            </v-icon>
                             View Details
                           </v-list-item-title>
                         </v-list-item>
                         <v-list-item @click="editAgent(agent)">
                           <v-list-item-title>
-                            <v-icon start>mdi-pencil</v-icon>
+                            <v-icon start>
+                              mdi-pencil
+                            </v-icon>
                             Edit
                           </v-list-item-title>
                         </v-list-item>
                         <v-list-item @click="duplicateAgent(agent)">
                           <v-list-item-title>
-                            <v-icon start>mdi-content-copy</v-icon>
+                            <v-icon start>
+                              mdi-content-copy
+                            </v-icon>
                             Duplicate
                           </v-list-item-title>
                         </v-list-item>
                         <v-divider />
-                        <v-list-item @click="deleteAgent(agent)" class="text-error">
+                        <v-list-item
+                          class="text-error"
+                          @click="deleteAgent(agent)"
+                        >
                           <v-list-item-title>
-                            <v-icon start>mdi-delete</v-icon>
+                            <v-icon start>
+                              mdi-delete
+                            </v-icon>
                             Delete
                           </v-list-item-title>
                         </v-list-item>
@@ -164,26 +241,43 @@
                   </v-card-title>
 
                   <v-card-text>
-                    <p class="text-body-2 mb-3">{{ agent.description }}</p>
+                    <p class="text-body-2 mb-3">
+                      {{ agent.description }}
+                    </p>
                     
                     <!-- Agent Stats -->
                     <v-row class="text-center mb-3">
                       <v-col cols="4">
-                        <div class="text-h6">{{ agent.tasksCompleted }}</div>
-                        <div class="text-caption text-medium-emphasis">Completed</div>
+                        <div class="text-h6">
+                          {{ agent.tasksCompleted }}
+                        </div>
+                        <div class="text-caption text-medium-emphasis">
+                          Completed
+                        </div>
                       </v-col>
                       <v-col cols="4">
-                        <div class="text-h6">{{ agent.tasksRunning }}</div>
-                        <div class="text-caption text-medium-emphasis">Running</div>
+                        <div class="text-h6">
+                          {{ agent.tasksRunning }}
+                        </div>
+                        <div class="text-caption text-medium-emphasis">
+                          Running
+                        </div>
                       </v-col>
                       <v-col cols="4">
-                        <div class="text-h6">{{ agent.uptime }}</div>
-                        <div class="text-caption text-medium-emphasis">Uptime</div>
+                        <div class="text-h6">
+                          {{ agent.uptime }}
+                        </div>
+                        <div class="text-caption text-medium-emphasis">
+                          Uptime
+                        </div>
                       </v-col>
                     </v-row>
 
                     <!-- Last Activity -->
-                    <div v-if="agent.lastActivity" class="text-caption text-medium-emphasis">
+                    <div
+                      v-if="agent.lastActivity"
+                      class="text-caption text-medium-emphasis"
+                    >
                       Last activity: {{ formatDateTime(agent.lastActivity) }}
                     </div>
                   </v-card-text>
@@ -193,8 +287,8 @@
                       :color="agent.status === 'active' ? 'warning' : 'success'"
                       variant="outlined"
                       size="small"
-                      @click="toggleAgentStatus(agent)"
                       :loading="toggling === agent.id"
+                      @click="toggleAgentStatus(agent)"
                     >
                       {{ agent.status === 'active' ? 'Stop' : 'Start' }}
                     </v-btn>
@@ -219,10 +313,12 @@
     <!-- Jobs Table -->
     <v-row class="mt-6">
       <v-col cols="12">
-        <v-card>
+         <v-card class="glass-card">
           <v-card-title class="d-flex align-center justify-space-between">
             <div>
-              <v-icon class="mr-2">mdi-format-list-bulleted</v-icon>
+              <v-icon class="mr-2">
+                mdi-format-list-bulleted
+              </v-icon>
               Jobs
             </div>
             <div class="d-flex align-center gap-2">
@@ -249,12 +345,28 @@
             </div>
           </v-card-title>
           <v-card-text>
-            <v-data-table :headers="jobHeaders" :items="jobs" item-key="id" density="comfortable">
+            <v-data-table
+              :headers="jobHeaders"
+              :items="jobs"
+              item-key="id"
+              density="comfortable"
+            >
               <template #item.actions="{ item }">
-                <v-btn size="x-small" color="primary" variant="tonal" @click="openLogs(item)">
+                <v-btn
+                  size="x-small"
+                  color="primary"
+                  variant="tonal"
+                  @click="openLogs(item)"
+                >
                   Logs
                 </v-btn>
-                <v-btn size="x-small" color="error" variant="text" class="ml-2" @click="onCancelJob(item)">
+                <v-btn
+                  size="x-small"
+                  color="error"
+                  variant="text"
+                  class="ml-2"
+                  @click="onCancelJob(item)"
+                >
                   Cancel
                 </v-btn>
               </template>
@@ -265,36 +377,65 @@
     </v-row>
 
     <!-- Logs Dialog -->
-    <v-dialog v-model="showLogDialog" max-width="900">
-      <v-card>
+    <v-dialog
+      v-model="showLogDialog"
+      max-width="900"
+    >
+      <v-card class="glass-card">
         <v-card-title>Job Logs</v-card-title>
         <v-card-text style="max-height: 60vh; overflow: auto;">
           <v-list v-if="selectedLogs.length">
-            <v-list-item v-for="log in selectedLogs" :key="log.timestamp + log.message">
+            <v-list-item
+              v-for="log in selectedLogs"
+              :key="log.timestamp + log.message"
+            >
               <v-list-item-title>
                 <strong>{{ new Date(log.timestamp).toLocaleString() }}</strong>
-                <v-chip :color="log.level === 'error' ? 'error' : log.level === 'warn' ? 'warning' : 'info'" size="x-small" class="ml-2" variant="tonal">
+                <v-chip
+                  :color="log.level === 'error' ? 'error' : log.level === 'warn' ? 'warning' : 'info'"
+                  size="x-small"
+                  class="ml-2"
+                  variant="tonal"
+                >
                   {{ log.level }}
                 </v-chip>
               </v-list-item-title>
-              <v-list-item-subtitle class="mt-1">{{ log.message }}</v-list-item-subtitle>
+              <v-list-item-subtitle class="mt-1">
+                {{ log.message }}
+              </v-list-item-subtitle>
             </v-list-item>
           </v-list>
-          <div v-else class="text-medium-emphasis">No logs yet.</div>
+          <div
+            v-else
+            class="text-medium-emphasis"
+          >
+            No logs yet.
+          </div>
         </v-card-text>
         <v-card-actions>
           <v-spacer />
-          <v-btn variant="text" @click="showLogDialog = false">Close</v-btn>
+          <v-btn
+            variant="text"
+            @click="showLogDialog = false"
+          >
+            Close
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
 
     <!-- Create Agent Dialog -->
-    <v-dialog v-model="showCreateDialog" max-width="600">
-      <v-card>
+    <v-dialog
+      v-model="showCreateDialog"
+      max-width="600"
+    >
+      <v-card class="glass-card">
         <v-card-title>Create New Agent</v-card-title>
         <v-card-text>
-          <v-form ref="createForm" v-model="createValid">
+          <v-form
+            ref="createForm"
+            v-model="createValid"
+          >
             <v-text-field
               v-model="newAgent.name"
               label="Agent Name"
@@ -322,7 +463,12 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer />
-          <v-btn variant="text" @click="showCreateDialog = false">Cancel</v-btn>
+          <v-btn
+            variant="text"
+            @click="showCreateDialog = false"
+          >
+            Cancel
+          </v-btn>
           <v-btn 
             color="primary" 
             :disabled="!createValid"

@@ -33,9 +33,27 @@ class AuthService {
         };
         return jsonwebtoken_1.default.sign(payload, this.jwtSecret, options);
     }
+    static JwtPayloadGuard(payload) {
+        return payload && typeof payload.userId === 'string' && typeof payload.orgId === 'string';
+    }
     verifyToken(token) {
         try {
-            return jsonwebtoken_1.default.verify(token, this.jwtSecret);
+            const decoded = jsonwebtoken_1.default.verify(token, this.jwtSecret);
+            if (typeof decoded === 'string') {
+                throw new Error('Invalid JWT payload');
+            }
+            const payload = decoded;
+            if (!AuthService.JwtPayloadGuard(payload)) {
+                throw new Error('Invalid JWT payload structure');
+            }
+            return {
+                userId: payload.userId,
+                orgId: payload.orgId,
+                role: payload.role,
+                iat: payload.iat,
+                exp: payload.exp,
+                iss: payload.iss
+            };
         }
         catch (error) {
             console.error('Error verifying JWT token:', error);
@@ -44,7 +62,7 @@ class AuthService {
     }
     async authenticateUser(email, password) {
         try {
-            const result = await this.postgresService.executeQuery('SELECT id, organization_id, password_hash, role FROM users WHERE email = $1', [email]);
+            const result = await this.postgresService.executeQuery('SELECT id, organization_id, password_hash, role, name, avatar_url, notification_prefs FROM users WHERE email = $1', [email]);
             if (result.rows.length === 0) {
                 return null;
             }
@@ -56,9 +74,12 @@ class AuthService {
             const token = this.generateToken(user.id, user.organization_id, user.role);
             await this.postgresService.executeQuery('UPDATE users SET last_login = NOW() WHERE id = $1', [user.id]);
             return {
-                userId: user.id,
+                id: user.id,
                 orgId: user.organization_id,
                 role: user.role,
+                name: user.name,
+                avatar: user.avatar_url,
+                notificationPrefs: user.notification_prefs,
                 token
             };
         }
@@ -80,7 +101,7 @@ class AuthService {
     }
     async getUserById(userId) {
         try {
-            const result = await this.postgresService.executeQuery('SELECT id, organization_id, email, role, created_at, last_login FROM users WHERE id = $1', [userId]);
+            const result = await this.postgresService.executeQuery('SELECT id, organization_id, email, role, name, avatar_url, notification_prefs, created_at, last_login FROM users WHERE id = $1', [userId]);
             if (result.rows.length === 0) {
                 return null;
             }
@@ -90,6 +111,9 @@ class AuthService {
                 orgId: user.organization_id,
                 email: user.email,
                 role: user.role,
+                name: user.name,
+                avatar: user.avatar_url,
+                notificationPrefs: user.notification_prefs,
                 createdAt: user.created_at,
                 lastLogin: user.last_login
             };

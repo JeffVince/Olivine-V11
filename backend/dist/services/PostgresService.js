@@ -32,6 +32,9 @@ class PostgresService {
             client.release();
         }
     }
+    async query(query, params = []) {
+        return this.executeQuery(query, params);
+    }
     async executeQueryInTransaction(query, params = []) {
         const client = await this.pool.connect();
         try {

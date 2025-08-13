@@ -83,12 +83,18 @@ class EnhancedFileResolvers {
     }
     async getFiles(filter = {}, limit = 50, offset = 0, context) {
         if (!filter.orgId) {
-            throw new Error('Organization ID is required');
+            if (context?.user?.orgId) {
+                filter.orgId = context.user.orgId;
+            }
+            else {
+                throw new Error('Organization ID is required');
+            }
         }
-        await this.tenantService.validateAccess(context.user, filter.orgId);
-        this.logger.info(`Getting files for org ${filter.orgId}`, { filter, limit, offset });
+        const orgId = filter.orgId;
+        await this.tenantService.validateAccess(context.user, orgId);
+        this.logger.info(`Getting files for org ${orgId}`, { filter, limit, offset });
         let whereConditions = ['f.org_id = $orgId', 'f.current = true', 'f.deleted = false'];
-        const params = { orgId: filter.orgId };
+        const params = { orgId };
         if (filter.sourceId) {
             whereConditions.push('f.source_id = $sourceId');
             params.sourceId = filter.sourceId;

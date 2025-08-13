@@ -1,9 +1,8 @@
 // Simplified test setup - load environment variables if available
-try {
-  require('dotenv').config();
-} catch (e) {
-  // dotenv not available, continue without it
-}
+export {};
+
+import { config } from 'dotenv';
+config();
 
 // Set test environment
 process.env.NODE_ENV = 'test';
@@ -12,10 +11,10 @@ process.env.NODE_ENV = 'test';
 jest.setTimeout(30000);
 
 // Global test utilities
-(global as any).testUtils = {
+(global as Record<string, unknown>).testUtils = {
   generateTestId: () => `test-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
   
-  waitForCondition: async (condition: () => Promise<boolean>, timeout: number = 5000, interval: number = 100) => {
+  waitForCondition: async (condition: () => Promise<boolean>, timeout = 5000, interval = 100) => {
     const startTime = Date.now();
     while (Date.now() - startTime < timeout) {
       if (await condition()) {
@@ -26,9 +25,9 @@ jest.setTimeout(30000);
     throw new Error(`Condition not met within ${timeout}ms`);
   },
 
-  cleanupDatabase: async (services: { neo4j?: any; postgres?: any }, orgId: string) => {
+  cleanupDatabase: async (services: { neo4j?: Record<string, unknown>; postgres?: Record<string, unknown> }, orgId: string) => {
     if (services.neo4j) {
-      await services.neo4j.run('MATCH (n {org_id: $orgId}) DETACH DELETE n', { orgId });
+      await (services.neo4j as unknown as { run: (query: string, params: Record<string, unknown>) => Promise<unknown> }).run('MATCH (n {org_id: $orgId}) DETACH DELETE n', { orgId });
     }
     if (services.postgres) {
       const tables = [
@@ -36,7 +35,7 @@ jest.setTimeout(30000);
         'organizations', 'projects', 'users'
       ];
       for (const table of tables) {
-        await services.postgres.executeQuery(`DELETE FROM ${table} WHERE org_id = $1`, [orgId]);
+        await (services.postgres as unknown as { executeQuery: (query: string, params: unknown[]) => Promise<unknown> }).executeQuery(`DELETE FROM ${table} WHERE org_id = $1`, [orgId]);
       }
     }
   }
@@ -85,16 +84,14 @@ process.on('uncaughtException', (error) => {
 
 // TypeScript global declaration
 declare global {
-  namespace NodeJS {
-    interface Global {
-      testUtils: {
-        generateTestId: () => string;
-        waitForCondition: (condition: () => Promise<boolean>, timeout?: number, interval?: number) => Promise<boolean>;
-        cleanupDatabase: (services: { neo4j?: any; postgres?: any }, orgId: string) => Promise<void>;
-      };
-    }
-  }
+  let testUtils: {
+    generateTestId: () => string;
+    waitForCondition: (condition: () => Promise<boolean>, timeout?: number, interval?: number) => Promise<boolean>;
+    cleanupDatabase: (services: { neo4j?: Record<string, unknown>; postgres?: Record<string, unknown> }, orgId: string) => Promise<void>;
+  };
 }
+
+export {};
 
 // This export makes the file an external module, which is required for global declarations
 export {};

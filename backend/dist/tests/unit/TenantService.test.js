@@ -132,7 +132,7 @@ describe('TenantService', () => {
             await expect(tenantService.validateAccess(user, orgId)).resolves.not.toThrow();
         });
         test('should throw error for user without orgId', async () => {
-            const user = {};
+            const user = { orgId: undefined };
             const orgId = 'test-org';
             await expect(tenantService.validateAccess(user, orgId)).rejects.toThrow('User organization information is required');
         });

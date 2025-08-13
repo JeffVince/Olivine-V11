@@ -1,0 +1,220 @@
+:root {
+  /* Color palette */
+  --color-obsidian-900: #18181b;
+  --color-obsidian-800: #1f1f23;
+  --color-olivine-500: #22c55e;
+  --color-amber-500: #f59e0b;
+  --color-noir: #000000;
+  --color-blanc: #ffffff;
+
+  /* Typography */
+  --font-sans: "Neue Haas Grotesk Display", Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+  --font-mono: "SF Mono", Monaco, Consolas, "Liberation Mono", Menlo, monospace;
+
+  /* Spacing (4px grid) */
+  --grid-1: 4px;  --grid-2: 8px;  --grid-3: 12px;  --grid-4: 16px;
+  --grid-5: 20px; --grid-6: 24px; --grid-8: 32px; --grid-12: 48px;
+  --grid-16: 64px; --grid-24: 96px;
+
+  /* Radii */
+  --radius-sm: 2px; --radius: 4px; --radius-lg: 8px; --radius-xl: 12px; --radius-2xl: 16px;
+
+  /* Shadows */
+  --shadow-soft: 0 2px 6px rgba(0,0,0,0.25);
+  --shadow-hard: 0 8px 24px rgba(0,0,0,0.45);
+  --shadow-glass: 0 8px 32px rgba(0,0,0,0.35);
+}
+
+/* Base */
+html { color-scheme: dark; }
+body {
+  margin: 0;
+  background-color: var(--color-obsidian-900);
+  color: var(--color-blanc);
+  font-family: var(--font-sans);
+}
+
+code, pre, kbd, samp { font-family: var(--font-mono); }
+
+/* Glassmorphism utilities */
+.glass {
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: saturate(120%) blur(10px);
+  -webkit-backdrop-filter: saturate(120%) blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: var(--shadow-glass);
+}
+
+.glass-sm {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: saturate(110%) blur(6px);
+  -webkit-backdrop-filter: saturate(110%) blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.glass-lg {
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: saturate(140%) blur(16px);
+  -webkit-backdrop-filter: saturate(140%) blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+}
+
+.glass-panel { border-radius: var(--radius); padding: var(--grid-6); }
+.glass-card { border-radius: var(--radius-lg); padding: var(--grid-6); }
+.glass-modal { border-radius: var(--radius-xl); padding: var(--grid-8); }
+.glass-sidebar { border-radius: 0; }
+.glass-header { border-radius: 0; }
+
+/* Accent helpers */
+.accent-olivine { color: var(--color-olivine-500); }
+.accent-amber { color: var(--color-amber-500); }
+.bg-obsidian { background-color: var(--color-obsidian-900); }
+
+/* Interactive sheen */
+.liquid-button {
+  position: relative;
+  overflow: hidden;
+}
+.liquid-button::after {
+  content: "";
+  position: absolute; inset: 0;
+  background: radial-gradient(600px circle at var(--x, 50%) var(--y, 50%), rgba(255,255,255,0.1), transparent 40%);
+  transition: opacity 200ms ease;
+  opacity: 0;
+}
+.liquid-button:hover::after { opacity: 1; }
+
+/* Reduced motion/transparency accessibility */
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .glass, .glass-sm, .glass-lg, .glass-panel, .glass-card, .glass-modal, .glass-sidebar, .glass-header {
+    background: transparent !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; border-color: rgba(255,255,255,0.12);
+  }
+}
+
+/* Vuetify element defaults aligned to glass aesthetic */
+.v-app-bar.glass, .v-navigation-drawer.glass { background-color: transparent; }
+.v-card {
+  background: rgba(255, 255, 255, 0.04) !important;
+  backdrop-filter: saturate(120%) blur(8px);
+  -webkit-backdrop-filter: saturate(120%) blur(8px);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: var(--radius-lg);
+}
+.v-sheet { border-radius: var(--radius); }
+.v-btn { border-radius: var(--radius); }
+
+/* Layout spacing and z-index fixes */
+.v-app-bar { z-index: 1010; }
+.v-navigation-drawer { z-index: 1005; }
+.v-main { padding-top: 64px !important; }
+
+/* Container spacing using grid tokens */
+.v-container { padding: var(--grid-6) !important; }
+.v-container.fluid { max-width: none !important; }
+
+/* Card spacing consistency */
+.glass-card { margin-bottom: var(--grid-6); }
+.glass-card:last-child { margin-bottom: 0; }
+
+/* Form spacing */
+.v-form .v-text-field, 
+.v-form .v-select, 
+.v-form .v-textarea,
+.v-form .v-switch,
+.v-form .v-combobox { margin-bottom: var(--grid-4); }
+
+/* Row and column spacing */
+.v-row { margin-bottom: var(--grid-4); }
+.v-row:last-child { margin-bottom: 0; }
+
+/* List spacing */
+.v-list .v-list-item { padding: var(--grid-2) var(--grid-4); }
+
+/* Tabs spacing */
+.v-tabs { margin-bottom: var(--grid-4); }
+
+/* Button spacing */
+.v-btn { margin-right: var(--grid-2); }
+.v-btn:last-child { margin-right: 0; }
+
+/* Chip spacing */
+.v-chip { margin-right: var(--grid-1); margin-bottom: var(--grid-1); }
+
+/* Prevent content overlap with sidebar */
+.v-main .v-container { min-height: calc(100vh - 64px); }
+
+/* Glass panel padding consistency */
+.glass-panel { padding: var(--grid-6); }
+.glass-card { padding: var(--grid-6); }
+
+/* Header title spacing */
+.v-toolbar-title { font-weight: 600; letter-spacing: -0.025em; }
+
+/* Navigation list styling */
+.v-navigation-drawer .v-list-item { 
+  border-radius: var(--radius); 
+  margin: var(--grid-1) var(--grid-2);
+}
+.v-navigation-drawer .v-list-item--active {
+  background: rgba(34, 197, 94, 0.12);
+  color: var(--color-olivine-500);
+}
+
+/* Dialog and overlay styling */
+.v-dialog .v-card { 
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-glass);
+}
+.v-overlay__scrim { background: rgba(24, 24, 27, 0.8); }
+
+/* Data table styling */
+.v-data-table { background: transparent; }
+.v-data-table-header { background: rgba(255, 255, 255, 0.02); }
+.v-data-table .v-data-table__tr:hover { background: rgba(255, 255, 255, 0.04); }
+
+/* Menu and list styling */
+.v-menu .v-list { 
+  background: rgba(24, 24, 27, 0.95);
+  backdrop-filter: saturate(120%) blur(12px);
+  -webkit-backdrop-filter: saturate(120%) blur(12px);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: var(--radius-lg);
+}
+
+/* Snackbar styling */
+.v-snackbar .v-snackbar__wrapper {
+  background: rgba(24, 24, 27, 0.95) !important;
+  backdrop-filter: saturate(120%) blur(12px);
+  -webkit-backdrop-filter: saturate(120%) blur(12px);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: var(--radius-lg);
+}
+
+/* Tab styling */
+.v-tabs .v-tab { border-radius: var(--radius); }
+.v-tabs .v-tab--selected { background: rgba(34, 197, 94, 0.12); }
+
+/* Input and form control styling */
+.v-field { border-radius: var(--radius) !important; }
+.v-field--variant-outlined .v-field__outline { border-radius: var(--radius); }
+
+/* Expansion panel styling */
+.v-expansion-panels .v-expansion-panel { 
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--grid-2);
+}
+
+/* Avatar and icon consistency */
+.v-avatar { border-radius: var(--radius); }
+
+/* Remove default shadows */
+.v-card, .v-sheet, .v-btn, .v-menu .v-list, .v-dialog .v-card { 
+  box-shadow: none; 
+}
+
+
+

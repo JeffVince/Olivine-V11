@@ -10,25 +10,25 @@ jest.mock('../../services/SupabaseService');
 
 describe('StorageProvider', () => {
   describe('StorageProviderFactory', () => {
-    it('should create DropboxService instance', () => {
-      const provider = StorageProviderFactory.createProvider('dropbox');
+    it('should create DropboxService instance', async () => {
+      const provider = await StorageProviderFactory.createProvider('dropbox');
       expect(provider).toBeInstanceOf(DropboxService);
     });
 
-    it('should create GoogleDriveService instance', () => {
-      const provider = StorageProviderFactory.createProvider('gdrive');
+    it('should create GoogleDriveService instance', async () => {
+      const provider = await StorageProviderFactory.createProvider('gdrive');
       expect(provider).toBeInstanceOf(GoogleDriveService);
     });
 
-    it('should create SupabaseService instance', () => {
-      const provider = StorageProviderFactory.createProvider('supabase');
+    it('should create SupabaseService instance', async () => {
+      const provider = await StorageProviderFactory.createProvider('supabase');
       expect(provider).toBeInstanceOf(SupabaseService);
     });
 
-    it('should throw error for unsupported provider type', () => {
+    it('should throw error for unsupported provider type', async () => {
       expect(() => {
         // @ts-ignore - Testing invalid type
-        StorageProviderFactory.createProvider('unsupported');
+        await StorageProviderFactory.createProvider('unsupported');
       }).toThrow('Unsupported storage provider type: unsupported');
     });
   });

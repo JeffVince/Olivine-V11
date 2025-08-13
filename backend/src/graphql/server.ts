@@ -14,7 +14,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 import { GraphQLError } from 'graphql';
 
-import { EnhancedResolvers } from './resolvers/EnhancedResolvers';
+
 import { SecurityMiddleware, GraphQLContext } from './middleware/SecurityMiddleware';
 import { buildCoreResolvers } from './resolvers/core';
 import { Neo4jService } from '../services/Neo4jService';
@@ -27,7 +27,7 @@ export class GraphQLServer {
   private httpServer: any;
   private apolloServer?: ApolloServer<BaseContext>;
   private wsServer?: WebSocketServer;
-  private enhancedResolvers: EnhancedResolvers;
+  // private enhancedResolvers: EnhancedResolvers;
   private securityMiddleware: SecurityMiddleware;
   private pubSub: PubSub;
   private logger: winston.Logger;
@@ -42,9 +42,8 @@ export class GraphQLServer {
   constructor() {
     this.app = express();
     this.httpServer = createServer(this.app);
-    this.enhancedResolvers = new EnhancedResolvers();
     this.securityMiddleware = new SecurityMiddleware();
-    this.pubSub = this.enhancedResolvers.getPubSub();
+    this.pubSub = new PubSub();
     this.neo4jService = new Neo4jService();
     this.postgresService = new PostgresService();
     this.queueService = new QueueService();
@@ -74,7 +73,7 @@ export class GraphQLServer {
   /**
    * Initialize and start the GraphQL server
    */
-  async start(port: number = 4000): Promise<void> {
+  async start(port = 4000): Promise<void> {
     try {
       // Initialize services
       await this.initializeServices();
@@ -174,14 +173,18 @@ export class GraphQLServer {
   private async createSchema() {
     this.logger.info('Creating GraphQL schema...');
 
-    // Load schema files
+    // Load schema files - adjust path for compiled code in dist directory
+    const schemaPath = __dirname.includes('/dist/') 
+      ? join(__dirname, 'schema')
+      : join(process.cwd(), 'dist', 'graphql', 'schema');
+      
     const enhancedTypeDefs = readFileSync(
-      join(__dirname, 'schema', 'enhanced.graphql'),
+      join(schemaPath, 'enhanced.graphql'),
       'utf8'
     );
     
     const coreTypeDefs = readFileSync(
-      join(__dirname, 'schema', 'core.graphql'),
+      join(schemaPath, 'core.graphql'),
       'utf8'
     );
 
@@ -194,22 +197,10 @@ export class GraphQLServer {
     `;
 
     // Get resolvers
-    const enhancedResolvers = this.enhancedResolvers.getResolvers();
     const coreResolvers = buildCoreResolvers();
 
-    // Merge resolvers (enhanced takes precedence)
-    const resolvers = {
-      ...coreResolvers,
-      ...enhancedResolvers,
-      Query: {
-        ...coreResolvers.Query,
-        ...enhancedResolvers.Query
-      },
-      Mutation: {
-        ...coreResolvers.Mutation,
-        ...enhancedResolvers.Mutation
-      }
-    };
+    // Use only core resolvers since enhanced resolvers are missing
+    const resolvers = coreResolvers;
 
     return makeExecutableSchema({
       typeDefs,
@@ -238,9 +229,26 @@ export class GraphQLServer {
       context: async (ctx: Context) => {
         // Create context for WebSocket connections
         try {
+          const rawReq = (ctx.extra as any)?.request;
+          const connectionParams = (ctx as any).connectionParams || {};
+          // Build a request-like shim that supports get('Header-Name') and headers
+          const reqShim: any = {
+            ...rawReq,
+            headers: {
+              ...(rawReq?.headers || {}),
+              // Allow Authorization from connectionParams
+              ...(connectionParams && typeof connectionParams === 'object' ? connectionParams : {})
+            },
+            get: (name: string) => {
+              const key = name.toLowerCase();
+              const headers = reqShim.headers || {};
+              return headers[name] || headers[key];
+            }
+          };
+          const resShim: any = (ctx.extra as any)?.response || {};
           return await this.securityMiddleware.createContext({
-            req: (ctx.extra as any)?.request,
-            res: (ctx.extra as any)?.response || {}
+            req: reqShim,
+            res: resShim
           } as any);
         } catch (error) {
           this.logger.error('WebSocket context creation failed:', error);
@@ -281,20 +289,21 @@ export class GraphQLServer {
         // Custom plugin for request logging
         {
           async requestDidStart() {
+            const logger = (this as any).logger || (global as any).logger || console;
             return {
-              async didResolveOperation(requestContext) {
-                winston.debug('GraphQL operation resolved', {
+              async didResolveOperation(requestContext: any) {
+                logger?.debug?.('GraphQL operation resolved', {
                   operationName: requestContext.request.operationName,
                   query: requestContext.request.query
                 });
               },
-              async didEncounterErrors(requestContext) {
-                winston.error('GraphQL errors encountered', {
+              async didEncounterErrors(requestContext: any) {
+                logger?.error?.('GraphQL errors encountered', {
                   operationName: requestContext.request.operationName,
                   errors: requestContext.errors
                 });
               }
-            };
+            } as any;
           }
         },
 
@@ -302,16 +311,17 @@ export class GraphQLServer {
         {
           async requestDidStart() {
             const startTime = Date.now();
+            const logger = (this as any).logger || (global as any).logger || console;
             return {
-              async willSendResponse(requestContext) {
+              async willSendResponse(requestContext: any) {
                 const duration = Date.now() - startTime;
-                winston.info('GraphQL request completed', {
+                logger?.info?.('GraphQL request completed', {
                   operationName: requestContext.request.operationName,
                   duration: `${duration}ms`,
                   success: !requestContext.errors?.length
                 });
               }
-            };
+            } as any;
           }
         }
       ],

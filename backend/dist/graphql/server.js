@@ -43,13 +43,13 @@ const drainHttpServer_1 = require("@apollo/server/plugin/drainHttpServer");
 const default_1 = require("@apollo/server/plugin/landingPage/default");
 const schema_1 = require("@graphql-tools/schema");
 const ws_1 = require("ws");
+const graphql_subscriptions_1 = require("graphql-subscriptions");
 const http_1 = require("http");
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
 const fs_1 = require("fs");
 const path_1 = require("path");
 const graphql_1 = require("graphql");
-const EnhancedResolvers_1 = require("./resolvers/EnhancedResolvers");
 const SecurityMiddleware_1 = require("./middleware/SecurityMiddleware");
 const core_1 = require("./resolvers/core");
 const Neo4jService_1 = require("../services/Neo4jService");
@@ -63,9 +63,8 @@ class GraphQLServer {
     constructor() {
         this.app = (0, express_1.default)();
         this.httpServer = (0, http_1.createServer)(this.app);
-        this.enhancedResolvers = new EnhancedResolvers_1.EnhancedResolvers();
         this.securityMiddleware = new SecurityMiddleware_1.SecurityMiddleware();
-        this.pubSub = this.enhancedResolvers.getPubSub();
+        this.pubSub = new graphql_subscriptions_1.PubSub();
         this.neo4jService = new Neo4jService_1.Neo4jService();
         this.postgresService = new PostgresService_1.PostgresService();
         this.queueService = new QueueService_1.QueueService();
@@ -143,28 +142,19 @@ class GraphQLServer {
     }
     async createSchema() {
         this.logger.info('Creating GraphQL schema...');
-        const enhancedTypeDefs = (0, fs_1.readFileSync)((0, path_1.join)(__dirname, 'schema', 'enhanced.graphql'), 'utf8');
-        const coreTypeDefs = (0, fs_1.readFileSync)((0, path_1.join)(__dirname, 'schema', 'core.graphql'), 'utf8');
+        const schemaPath = __dirname.includes('/dist/')
+            ? (0, path_1.join)(__dirname, 'schema')
+            : (0, path_1.join)(process.cwd(), 'dist', 'graphql', 'schema');
+        const enhancedTypeDefs = (0, fs_1.readFileSync)((0, path_1.join)(schemaPath, 'enhanced.graphql'), 'utf8');
+        const coreTypeDefs = (0, fs_1.readFileSync)((0, path_1.join)(schemaPath, 'core.graphql'), 'utf8');
         const typeDefs = `
       ${enhancedTypeDefs}
       
       # Core types for backward compatibility
       ${coreTypeDefs}
     `;
-        const enhancedResolvers = this.enhancedResolvers.getResolvers();
         const coreResolvers = (0, core_1.buildCoreResolvers)();
-        const resolvers = {
-            ...coreResolvers,
-            ...enhancedResolvers,
-            Query: {
-                ...coreResolvers.Query,
-                ...enhancedResolvers.Query
-            },
-            Mutation: {
-                ...coreResolvers.Mutation,
-                ...enhancedResolvers.Mutation
-            }
-        };
+        const resolvers = coreResolvers;
         return (0, schema_1.makeExecutableSchema)({
             typeDefs,
             resolvers
@@ -176,14 +166,29 @@ class GraphQLServer {
             server: this.httpServer,
             path: '/graphql'
         });
-        const { useServer } = await Promise.resolve().then(() => __importStar(require('graphql-ws/dist/use/ws.js')));
+        const { useServer } = await Promise.resolve().then(() => __importStar(require('graphql-ws/use/ws')));
         useServer({
             schema,
             context: async (ctx) => {
                 try {
+                    const rawReq = ctx.extra?.request;
+                    const connectionParams = ctx.connectionParams || {};
+                    const reqShim = {
+                        ...rawReq,
+                        headers: {
+                            ...(rawReq?.headers || {}),
+                            ...(connectionParams && typeof connectionParams === 'object' ? connectionParams : {})
+                        },
+                        get: (name) => {
+                            const key = name.toLowerCase();
+                            const headers = reqShim.headers || {};
+                            return headers[name] || headers[key];
+                        }
+                    };
+                    const resShim = ctx.extra?.response || {};
                     return await this.securityMiddleware.createContext({
-                        req: ctx.extra?.request,
-                        res: ctx.extra?.response || {}
+                        req: reqShim,
+                        res: resShim
                     });
                 }
                 catch (error) {
@@ -215,15 +220,16 @@ class GraphQLServer {
                     : (0, default_1.ApolloServerPluginLandingPageLocalDefault)(),
                 {
                     async requestDidStart() {
+                        const logger = this.logger || global.logger || console;
                         return {
                             async didResolveOperation(requestContext) {
-                                winston_1.default.debug('GraphQL operation resolved', {
+                                logger?.debug?.('GraphQL operation resolved', {
                                     operationName: requestContext.request.operationName,
                                     query: requestContext.request.query
                                 });
                             },
                             async didEncounterErrors(requestContext) {
-                                winston_1.default.error('GraphQL errors encountered', {
+                                logger?.error?.('GraphQL errors encountered', {
                                     operationName: requestContext.request.operationName,
                                     errors: requestContext.errors
                                 });
@@ -234,10 +240,11 @@ class GraphQLServer {
                 {
                     async requestDidStart() {
                         const startTime = Date.now();
+                        const logger = this.logger || global.logger || console;
                         return {
                             async willSendResponse(requestContext) {
                                 const duration = Date.now() - startTime;
-                                winston_1.default.info('GraphQL request completed', {
+                                logger?.info?.('GraphQL request completed', {
                                     operationName: requestContext.request.operationName,
                                     duration: `${duration}ms`,
                                     success: !requestContext.errors?.length

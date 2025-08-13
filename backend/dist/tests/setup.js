@@ -1,10 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-try {
-    require('dotenv').config();
-}
-catch (e) {
-}
+const dotenv_1 = require("dotenv");
+(0, dotenv_1.config)();
 process.env.NODE_ENV = 'test';
 jest.setTimeout(30000);
 global.testUtils = {

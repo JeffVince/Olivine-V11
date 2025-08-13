@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { AuthService } from '../services/AuthService';
+import { AuthService, JwtPayload } from '../services/AuthService';
 
 const authService = new AuthService();
 
@@ -22,7 +22,7 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
     const token = authHeader.substring(7);
     
     // Verify token
-    const decoded = authService.verifyToken(token);
+    const decoded: JwtPayload = authService.verifyToken(token);
     
     // Store user info in request
     req.userId = decoded.userId;

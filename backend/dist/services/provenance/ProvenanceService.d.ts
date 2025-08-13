@@ -1,6 +1,6 @@
 import { Neo4jService } from '../Neo4jService';
 import { CryptoService } from '../crypto/CryptoService';
-export interface CommitInput {
+export interface CommitInput extends Record<string, unknown> {
     orgId: string;
     message: string;
     author: string;

@@ -10,7 +10,7 @@ export interface FileProcessingJobData {
   sourceId: string;
   filePath: string;
   action: 'create' | 'update' | 'delete';
-  metadata?: any;
+  metadata?: Record<string, unknown>;
 }
 
 export class FileProcessingService {
@@ -38,13 +38,20 @@ export class FileProcessingService {
    * @param mimeType The MIME type of the file (optional if using object param)
    * @returns The extracted content
    */
-  async extractContent(params: { sourceId: string; path: string; mimeType: string } | string, path?: string, mimeType?: string): Promise<string> {
+  async extractContent(
+    params: { orgId: string; sourceId: string; path: string; mimeType: string } | string,
+    path?: string,
+    mimeType?: string,
+    orgIdParam?: string
+  ): Promise<string> {
     // Handle both object parameter and separate parameters for backward compatibility
+    let orgId: string;
     let sourceId: string;
     let filePath: string;
     let fileMimeType: string;
     
     if (typeof params === 'object') {
+      orgId = params.orgId;
       sourceId = params.sourceId;
       filePath = params.path;
       fileMimeType = params.mimeType;
@@ -52,23 +59,36 @@ export class FileProcessingService {
       sourceId = params;
       filePath = path!;
       fileMimeType = mimeType!;
+      orgId = orgIdParam!;
     }
     // TODO: Implementation Checklist - 07-Testing-QA-Checklist.md - Backend file processing tests
     try {
       // Handle different mime types for content extraction
-      if (fileMimeType.startsWith('text/')) {
-        // For text files, return the content as is
-        return `Extracted content from text file: ${filePath}`;
-      } else if (fileMimeType.startsWith('image/')) {
-        // For image files, return a placeholder description
-        return `Image content from file: ${filePath}`;
-      } else if (fileMimeType.startsWith('application/')) {
-        // For application files (documents, etc.), return a placeholder
-        return `Application content from file: ${filePath}`;
-      } else {
-        // For other file types, return a generic placeholder
-        return `Content from file: ${filePath}`;
+      // Try to download from provider first to extract real content
+      const source = await this.sourceModel.getSource(sourceId, orgId);
+      if (source) {
+        const syntheticFile: FileMetadata = {
+          id: 'temp',
+          organizationId: orgId,
+          sourceId: sourceId,
+          path: filePath,
+          name: this.extractFileName(filePath),
+          extension: this.extractFileExtension(this.extractFileName(filePath)),
+          mimeType: fileMimeType,
+          size: undefined,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          classificationStatus: 'pending'
+        };
+        const downloaded = await this.downloadFileContent(syntheticFile, source);
+        if (downloaded) return downloaded;
       }
+
+      // Fallback: synthesize content when provider download is not available
+      if (fileMimeType.startsWith('text/')) return `Extracted content from text file: ${filePath}`;
+      if (fileMimeType.startsWith('image/')) return `Image content from file: ${filePath}`;
+      if (fileMimeType.startsWith('application/')) return `Application content from file: ${filePath}`;
+      return `Content from file: ${filePath}`;
     } catch (error) {
       console.error(`Error extracting content from file ${filePath}:`, error);
       throw error;
@@ -120,14 +140,17 @@ export class FileProcessingService {
     organizationId: string,
     source: SourceMetadata,
     filePath: string,
-    metadata: any
+    metadata: unknown
   ): Promise<void> {
     // Extract file information from path and metadata
     const fileName = this.extractFileName(filePath);
     const fileExtension = this.extractFileExtension(fileName);
-    const mimeType = this.determineMimeType(fileExtension, metadata);
+    const mimeType = this.determineMimeType(fileExtension, metadata as Record<string, unknown>);
     
     // Create or update file record
+    const modifiedRaw = (metadata as any)?.modified_at || (metadata as any)?.modified || (metadata as any)?.modifiedTime;
+    const parsedModifiedAt = modifiedRaw ? new Date(modifiedRaw as string) : undefined;
+
     const fileData: Partial<FileMetadata> = {
       id: fileId,
       organizationId,
@@ -136,9 +159,9 @@ export class FileProcessingService {
       name: fileName,
       extension: fileExtension,
       mimeType,
-      size: metadata?.size,
-      modifiedAt: metadata?.modified_at ? new Date(metadata.modified_at) : undefined,
-      metadata: metadata,
+      size: (metadata as any)?.size as number | undefined,
+      modifiedAt: parsedModifiedAt,
+      metadata: metadata as Record<string, unknown>,
       classificationStatus: 'pending'
     };
 
@@ -163,7 +186,7 @@ export class FileProcessingService {
       orgId: organizationId,
       action: 'update',
       filePath,
-      metadata
+      metadata: metadata as Record<string, unknown>
     });
   }
 
@@ -278,10 +301,41 @@ export class FileProcessingService {
   private async downloadFromDropbox(file: FileMetadata, source: SourceMetadata): Promise<string | null> {
     try {
       // Use DropboxService to download file content
-      // This would need to be implemented in DropboxService
-      console.log(`Downloading from Dropbox: ${file.path}`);
-      // Placeholder - would implement actual download logic
-      return null;
+      const result: any = await this.dropboxService.downloadFile(
+        file.organizationId,
+        source.id,
+        file.path
+      );
+
+      // Dropbox SDK returns different shapes depending on environment
+      // Prefer ArrayBuffer/Uint8Array if available; fallback to Blob
+      let buffer: Buffer | null = null;
+
+      if (result?.fileBinary) {
+        const binary = result.fileBinary as ArrayBuffer | Uint8Array | string;
+        if (binary instanceof ArrayBuffer) {
+          buffer = Buffer.from(binary);
+        } else if (binary instanceof Uint8Array) {
+          buffer = Buffer.from(binary);
+        } else if (typeof binary === 'string') {
+          buffer = Buffer.from(binary, 'binary');
+        }
+      } else if (result?.fileBlob && typeof result.fileBlob.arrayBuffer === 'function') {
+        const arr = await result.fileBlob.arrayBuffer();
+        buffer = Buffer.from(arr);
+      } else if (result?.fileContent && (result.fileContent instanceof Uint8Array || result.fileContent instanceof ArrayBuffer)) {
+        const fc = result.fileContent as Uint8Array | ArrayBuffer;
+        buffer = Buffer.from(fc as any);
+      }
+
+      if (!buffer) {
+        console.warn(`Dropbox download returned no binary for ${file.path}`);
+        return null;
+      }
+
+      const mimeType = file.mimeType || 'application/octet-stream';
+      const isText = this.isTextMimeType(mimeType);
+      return isText ? buffer.toString('utf8') : buffer.toString('base64');
     } catch (error) {
       console.error(`Error downloading from Dropbox: ${file.path}`, error);
       return null;
@@ -293,15 +347,70 @@ export class FileProcessingService {
    */
   private async downloadFromGoogleDrive(file: FileMetadata, source: SourceMetadata): Promise<string | null> {
     try {
-      // Use GoogleDriveService to download file content
-      // This would need to be implemented in GoogleDriveService
-      console.log(`Downloading from Google Drive: ${file.path}`);
-      // Placeholder - would implement actual download logic
-      return null;
+      // We need a Google Drive file ID to download. Try to resolve from stored metadata
+      const meta = (file.metadata || {}) as Record<string, unknown>;
+      const candidateId = (meta['id'] || meta['file_id']) as string | undefined;
+
+      if (!candidateId) {
+        console.warn(`Missing Google Drive file ID in metadata for ${file.path}`);
+        return null;
+      }
+
+      const streamOrData: any = await this.googleDriveService.downloadFile(
+        file.organizationId,
+        source.id,
+        candidateId
+      );
+
+      // downloadFile returns a stream for media. Normalize to Buffer
+      let buffer: Buffer | null = null;
+
+      if (streamOrData && typeof streamOrData.read === 'function') {
+        buffer = await this.streamToBuffer(streamOrData);
+      } else if (Buffer.isBuffer(streamOrData)) {
+        buffer = streamOrData as Buffer;
+      } else if (streamOrData instanceof Uint8Array || streamOrData instanceof ArrayBuffer) {
+        buffer = Buffer.from(streamOrData as any);
+      }
+
+      if (!buffer) {
+        console.warn(`Google Drive download returned no binary for ${file.path}`);
+        return null;
+      }
+
+      const mimeType = file.mimeType || 'application/octet-stream';
+      const isText = this.isTextMimeType(mimeType);
+      return isText ? buffer.toString('utf8') : buffer.toString('base64');
     } catch (error) {
       console.error(`Error downloading from Google Drive: ${file.path}`, error);
       return null;
     }
+  }
+
+  /**
+   * Determine whether the mime type should be treated as text
+   */
+  private isTextMimeType(mimeType: string): boolean {
+    if (!mimeType) return false;
+    return (
+      mimeType.startsWith('text/') ||
+      mimeType === 'application/json' ||
+      mimeType === 'application/javascript' ||
+      mimeType === 'application/typescript' ||
+      mimeType === 'application/xml'
+    );
+  }
+
+  /**
+   * Convert a readable stream into a Buffer
+   */
+  private streamToBuffer(stream: NodeJS.ReadableStream): Promise<Buffer> {
+    return new Promise((resolve, reject) => {
+      const chunks: Buffer[] = [];
+      stream.on('data', (chunk: Buffer) => chunks.push(Buffer.from(chunk)));
+      stream.on('error', (err) => reject(err));
+      stream.on('end', () => resolve(Buffer.concat(chunks)));
+    });
   }
 
   /**
@@ -322,9 +431,9 @@ export class FileProcessingService {
   /**
    * Determine MIME type from extension and metadata
    */
-  private determineMimeType(extension?: string, metadata?: any): string | undefined {
+  private determineMimeType(extension?: string, metadata?: Record<string, unknown>): string | undefined {
     if (metadata?.mime_type) {
-      return metadata.mime_type;
+      return metadata.mime_type as string;
     }
     
     if (!extension) {
@@ -400,5 +509,55 @@ export class FileProcessingService {
     ];
     
     return extractableMimeTypes.includes(mimeType);
+  }
+  
+  /**
+   * Get processing statistics
+   */
+  async getProcessingStatistics(orgId: string): Promise<{ total_files: number; classified_files: number; classification_rate: number }> {
+    const postgresService = (this.fileModel as any)?.postgresService || new (require('../services/PostgresService').PostgresService)();
+    const totalQuery = `
+      SELECT COUNT(*)::int AS total
+      FROM files
+      WHERE organization_id = $1 AND deleted_at IS NULL
+    `;
+    const classifiedQuery = `
+      SELECT COUNT(*)::int AS classified
+      FROM files
+      WHERE organization_id = $1 AND deleted_at IS NULL AND classification_status = 'completed'
+    `;
+
+    const [totalRes, classifiedRes] = await Promise.all([
+      postgresService.executeQuery(totalQuery, [orgId]),
+      postgresService.executeQuery(classifiedQuery, [orgId])
+    ]);
+
+    const total = totalRes.rows[0]?.total || 0;
+    const classified = classifiedRes.rows[0]?.classified || 0;
+    const rate = total > 0 ? classified / total : 0;
+
+    return {
+      total_files: total,
+      classified_files: classified,
+      classification_rate: rate
+    };
+  }
+  
+  /**
+   * Process file with AI
+   */
+  async processFileWithAI(fileRequest: { fileId: string; orgId: string; content: string; mimeType: string }): Promise<{ fileId: string; classification: FileClassification; extractedText: string }> {
+    // For now, return placeholder results
+    // In a full implementation, this would actually process the file with AI
+    return {
+      fileId: fileRequest.fileId,
+      classification: {
+        type: 'document',
+        confidence: 0.8,
+        categories: ['general'],
+        tags: ['processed']
+      },
+      extractedText: 'Extracted text from file'
+    };
   }
 }

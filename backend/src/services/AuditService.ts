@@ -9,7 +9,7 @@ export interface AuditLogEntry {
   targetType?: string;
   targetId?: string;
   requestId?: string;
-  payload?: Record<string, any>;
+  payload?: Record<string, unknown>;
   ipAddress?: string;
   userAgent?: string;
   timestamp?: Date;
@@ -73,7 +73,7 @@ export class AuditService {
     action: string,
     targetType?: string,
     targetId?: string,
-    payload?: Record<string, any>,
+    payload?: Record<string, unknown>,
     requestId?: string
   ): Promise<void> {
     await this.log({
@@ -103,7 +103,7 @@ export class AuditService {
     action: string,
     targetType?: string,
     targetId?: string,
-    payload?: Record<string, any>
+    payload?: Record<string, unknown>
   ): Promise<void> {
     await this.log({
       tenantId,
@@ -129,7 +129,7 @@ export class AuditService {
     action: string,
     targetType?: string,
     targetId?: string,
-    payload?: Record<string, any>
+    payload?: Record<string, unknown>
   ): Promise<void> {
     await this.log({
       tenantId,
@@ -160,12 +160,12 @@ export class AuditService {
       startDate?: Date;
       endDate?: Date;
     },
-    limit: number = 100,
-    offset: number = 0
+    limit = 100,
+    offset = 0
   ): Promise<AuditLogEntry[]> {
     try {
       let query = 'SELECT * FROM audit_log WHERE tenant_id = $1';
-      const values: any[] = [tenantId];
+      const values: unknown[] = [tenantId];
       let paramCount = 1;
 
       if (filters) {

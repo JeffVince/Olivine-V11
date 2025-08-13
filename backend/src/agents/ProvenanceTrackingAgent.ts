@@ -401,7 +401,7 @@ export class ProvenanceTrackingAgent extends BaseAgent {
   /**
    * Retrieves commit history for a branch
    */
-  async getCommitHistory(orgId: string, branchName: string, limit: number = 50): Promise<any[]> {
+  async getCommitHistory(orgId: string, branchName: string, limit = 50): Promise<any[]> {
     const query = `
       MATCH (c:Commit {org_id: $orgId, branch_name: $branchName})
       OPTIONAL MATCH (c)<-[:PART_OF]-(a:Action)

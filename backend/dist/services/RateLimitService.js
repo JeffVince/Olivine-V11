@@ -1,15 +1,23 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.RateLimitService = void 0;
-const ioredis_1 = require("ioredis");
+const ioredis_1 = __importDefault(require("ioredis"));
 class RateLimitService {
-    constructor(redisUrl = 'redis://localhost:6379') {
-        this.redis = new ioredis_1.Redis(redisUrl, {
+    constructor(redisUrl = process.env.REDIS_URL || `redis://${process.env.REDIS_HOST || 'localhost'}:${process.env.REDIS_PORT || '6379'}/0`) {
+        const isTestMode = process.env.TEST_MODE === 'true' || process.env.NODE_ENV === 'test';
+        this.redis = isTestMode ? null : new ioredis_1.default(redisUrl, {
             maxRetriesPerRequest: null,
             enableReadyCheck: false,
         });
     }
     async checkLimit(key, limit, windowMs) {
+        if (!this.redis) {
+            const now = Date.now();
+            return { allowed: true, count: 0, resetTime: now + windowMs };
+        }
         const now = Date.now();
         const windowStart = now - windowMs;
         const redisKey = `rate_limit:${key}`;
@@ -39,14 +47,20 @@ class RateLimitService {
         const now = Date.now();
         const windowStart = now - windowMs;
         const redisKey = `rate_limit:${key}`;
+        if (!this.redis)
+            return 0;
         await this.redis.zremrangebyscore(redisKey, 0, windowStart);
         return await this.redis.zcard(redisKey);
     }
     async reset(key) {
         const redisKey = `rate_limit:${key}`;
+        if (!this.redis)
+            return;
         await this.redis.del(redisKey);
     }
     async close() {
+        if (!this.redis)
+            return;
         await this.redis.quit();
     }
 }

@@ -59,13 +59,13 @@ export abstract class BaseAgent extends EventEmitter implements AgentLifecycle {
   protected readonly logService: LogService
   protected readonly config: AgentConfig
   
-  protected running: boolean = false
-  protected paused: boolean = false
+  protected running = false
+  protected paused = false
   protected startTime?: Date
   protected lastActivity?: Date
-  protected processedJobs: number = 0
-  protected failedJobs: number = 0
-  protected errorCount: number = 0
+  protected processedJobs = 0
+  protected failedJobs = 0
+  protected errorCount = 0
   protected lastError?: string
   protected healthCheckTimer?: NodeJS.Timeout
   protected performanceMetrics: {

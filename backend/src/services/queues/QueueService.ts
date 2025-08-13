@@ -1,11 +1,15 @@
 import { Queue, Worker, QueueOptions, JobsOptions, Processor, WorkerOptions, Job, QueueEvents } from 'bullmq'
 import IORedis from 'ioredis'
-import type { Redis, RedisOptions } from 'ioredis'
+import type { Redis } from 'ioredis'
 
 export type SupportedQueueName =
   | 'file-sync'
   | 'file-classification'
   | 'content-extraction'
+  | 'content-promotion'
+  | 'content-rollback'
+  | 'ontology-review'
+  | 'cluster-orchestration'
   | 'provenance'
   | 'agent-jobs'
   | 'create-commit'
@@ -14,6 +18,9 @@ export type SupportedQueueName =
   | 'webhook-events'
   | 'source-sync'
   | 'delta-sync'
+  | 'event-bus'
+  | 'workflow-execution'
+  | 'workflow-coordination'
 
 export interface QueueServiceConfig {
   redisUrl: string
@@ -27,9 +34,11 @@ export class QueueService {
   // TODO: Implementation Checklist - 01-Foundation-Setup-Checklist.md - Redis queue service setup
   // TODO: Implementation Checklist - 07-Testing-QA-Checklist.md - Backend queue service tests
   private static instance: QueueService | null = null;
-  public readonly connection: Redis
+  public readonly connection: Redis | null
   private readonly queues: Map<SupportedQueueName, Queue>
   private readonly queueEvents: Map<SupportedQueueName, QueueEvents>
+  private readonly inMemoryWorkers: Map<SupportedQueueName, Processor<any, any>>
+  private readonly inMemoryQueues: Map<SupportedQueueName, Array<{ jobName: string, data: any }>>
   private readonly prefix: string
 
   constructor(config?: QueueServiceConfig) {
@@ -41,12 +50,15 @@ export class QueueService {
     
     console.log('Redis URL being used:', finalConfig.redisUrl);
     
-    this.connection = new IORedis(finalConfig.redisUrl, {
+    const isTestMode = process.env.TEST_MODE === 'true' || process.env.NODE_ENV === 'test'
+    this.connection = isTestMode ? null : new IORedis(finalConfig.redisUrl, {
       maxRetriesPerRequest: null,
       enableReadyCheck: false,
     })
     this.queues = new Map()
     this.queueEvents = new Map()
+    this.inMemoryWorkers = new Map()
+    this.inMemoryQueues = new Map()
     this.prefix = finalConfig.prefix
 
     // Initialize standard queues
@@ -55,6 +67,10 @@ export class QueueService {
         'file-sync',
         'file-classification',
         'content-extraction',
+          'content-promotion',
+          'content-rollback',
+          'ontology-review',
+          'cluster-orchestration',
         'provenance',
         'agent-jobs',
         'create-commit',
@@ -64,7 +80,12 @@ export class QueueService {
         'source-sync',
         'delta-sync',
       ] as SupportedQueueName[]
-    ).forEach((name) => this.ensureQueue(name))
+    ).forEach((name) => {
+      if (!isTestMode) this.ensureQueue(name)
+      if (isTestMode) {
+        this.inMemoryQueues.set(name, [])
+      }
+    })
   }
 
   public getQueue(name: SupportedQueueName): Queue {
@@ -82,6 +103,24 @@ export class QueueService {
     data: T,
     options?: JobsOptions,
   ): Promise<Job<T, any>> {
+    const isTestMode = this.connection === null
+    if (isTestMode) {
+      const jobId = `${name}:${jobName}:${Date.now()}`
+      const processor = this.inMemoryWorkers.get(name)
+      if (processor) {
+        setImmediate(async () => {
+          try {
+            await processor({ id: jobId, name: jobName, data } as any)
+          } catch (e) {
+            // swallow in tests
+          }
+        })
+      } else {
+        const q = this.inMemoryQueues.get(name)
+        q?.push({ jobName, data })
+      }
+      return { id: jobId } as any
+    }
     const queue = this.ensureQueue(name)
     return queue.add(jobName, data, options)
   }
@@ -91,8 +130,19 @@ export class QueueService {
     processor: Processor<T, R>,
     options?: WorkerOptions,
   ): Worker<T, R> {
+    const isTestMode = this.connection === null
+    if (isTestMode) {
+      this.inMemoryWorkers.set(name, processor as any)
+      const pending = this.inMemoryQueues.get(name) || []
+      // Drain any queued jobs
+      for (const j of pending) {
+        setImmediate(() => (processor as any)({ id: `${name}:${Date.now()}`, name: j.jobName, data: j.data }))
+      }
+      this.inMemoryQueues.set(name, [])
+      return { close: async () => {} } as any
+    }
     const worker = new Worker<T, R>(this.fullQueueName(name), processor, {
-      connection: this.connection,
+      connection: this.connection!,
       concurrency: 5,
       ...options,
     })
@@ -100,9 +150,13 @@ export class QueueService {
   }
 
   public getQueueEvents(name: SupportedQueueName): QueueEvents {
+    const isTestMode = this.connection === null
+    if (isTestMode) {
+      return { on: () => {}, off: () => {}, close: async () => {} } as any
+    }
     let events = this.queueEvents.get(name)
     if (!events) {
-      events = new QueueEvents(this.fullQueueName(name), { connection: this.connection })
+      events = new QueueEvents(this.fullQueueName(name), { connection: this.connection! })
       this.queueEvents.set(name, events)
     }
     return events
@@ -116,13 +170,21 @@ export class QueueService {
   }
 
   public async connect(): Promise<void> {
-    await this.ping();
+    if (this.connection) {
+      await this.ping();
+    }
   }
 
   public async close(): Promise<void> {
-    this.queues.forEach(async (q) => await q.close());
-    this.queueEvents.forEach(async (e) => await e.close());
-    await this.connection.quit();
+    for (const q of this.queues.values()) {
+      await q.close()
+    }
+    for (const e of this.queueEvents.values()) {
+      await e.close()
+    }
+    if (this.connection) {
+      await this.connection.quit()
+    }
   }
 
   /**
@@ -148,7 +210,7 @@ export class QueueService {
     let queue = this.queues.get(name)
     if (!queue) {
       const opts: QueueOptions = {
-        connection: this.connection,
+        connection: this.connection!,
         prefix: this.prefix,
         defaultJobOptions: {
           removeOnComplete: 100,

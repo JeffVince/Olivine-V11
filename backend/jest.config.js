@@ -27,9 +27,8 @@ module.exports = {
   testTimeout: 30000,
   maxWorkers: 4,
   testSequencer: '<rootDir>/src/tests/testSequencer.js',
-  // Temporarily disable global setup/teardown for testing
-  // globalSetup: '<rootDir>/src/tests/globalSetup.ts',
-  // globalTeardown: '<rootDir>/src/tests/globalTeardown.ts',
+  globalSetup: '<rootDir>/src/tests/globalSetup.ts',
+  globalTeardown: '<rootDir>/src/tests/globalTeardown.ts',
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1'
   },

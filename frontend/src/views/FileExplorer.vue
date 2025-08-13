@@ -2,24 +2,35 @@
   <div>
     <!-- Header -->
     <v-row class="mb-4">
-      <v-col cols="12" md="8">
-        <h1 class="text-h4 font-weight-bold">File Explorer</h1>
+      <v-col
+        cols="12"
+        md="8"
+      >
+        <h1 class="text-h4 font-weight-bold">
+          File Explorer
+        </h1>
         <p class="text-subtitle-1 text-medium-emphasis">
           Browse and manage project files from connected storage
         </p>
       </v-col>
-      <v-col cols="12" md="4" class="text-right">
-        <v-btn-group>
+      <v-col
+        cols="12"
+        md="4"
+        class="text-right"
+      >
+        <v-btn-group density="compact">
           <v-btn 
             :color="syncStatus === 'syncing' ? 'warning' : 'primary'"
             :loading="syncStatus === 'syncing'"
-            @click="triggerSync"
             prepend-icon="mdi-sync"
+            class="liquid-button"
+            @click="triggerSync"
           >
             {{ syncStatus === 'syncing' ? 'Syncing...' : 'Sync Now' }}
           </v-btn>
           <v-btn 
             prepend-icon="mdi-upload"
+            class="liquid-button"
             @click="showUploadDialog = true"
           >
             Upload
@@ -29,17 +40,26 @@
     </v-row>
 
     <!-- View Mode Tabs -->
-    <v-tabs v-model="viewMode" class="mb-4">
+    <v-tabs
+      v-model="viewMode"
+      class="mb-4"
+    >
       <v-tab value="source">
-        <v-icon start>mdi-folder-outline</v-icon>
+        <v-icon start>
+          mdi-folder-outline
+        </v-icon>
         Source View
       </v-tab>
       <v-tab value="canonical">
-        <v-icon start>mdi-folder-star</v-icon>
+        <v-icon start>
+          mdi-folder-star
+        </v-icon>
         Canonical View
       </v-tab>
       <v-tab value="entity">
-        <v-icon start>mdi-sitemap</v-icon>
+        <v-icon start>
+          mdi-sitemap
+        </v-icon>
         Entity View
       </v-tab>
     </v-tabs>
@@ -47,10 +67,15 @@
     <!-- Main Content -->
     <v-row>
       <!-- Left Panel - Folder Tree -->
-      <v-col cols="12" lg="3">
-        <v-card>
+      <v-col
+        cols="12"
+        lg="3"
+      >
+        <v-card class="glass-card">
           <v-card-title class="d-flex align-center">
-            <v-icon class="mr-2">mdi-folder-multiple</v-icon>
+            <v-icon class="mr-2">
+              mdi-folder-multiple
+            </v-icon>
             Folders
             <v-spacer />
             <v-chip 
@@ -58,12 +83,17 @@
               size="small"
               variant="tonal"
             >
-              <v-icon start size="small">{{ getProviderIcon(currentProvider) }}</v-icon>
+              <v-icon
+                start
+                size="small"
+              >
+                {{ getProviderIcon(currentProvider) }}
+              </v-icon>
               {{ currentProvider }}
             </v-chip>
           </v-card-title>
           
-           <v-card-text class="pa-0">
+          <v-card-text class="pa-0">
             <!-- Search -->
             <v-text-field
               v-model="searchQuery"
@@ -76,7 +106,10 @@
             />
 
             <!-- Folder Tree (pending backend wiring) -->
-            <div v-if="folderTree.length === 0" class="text-medium-emphasis pa-4">
+            <div
+              v-if="folderTree.length === 0"
+              class="text-medium-emphasis pa-4"
+            >
               Folder tree integration is coming soon.
             </div>
             <v-treeview
@@ -91,7 +124,7 @@
               open-on-click
               @update:selected="onFolderSelect"
             >
-              <template v-slot:prepend="{ item }">
+              <template #prepend="{ item }">
                 <v-icon size="small">
                   {{ item.type === 'folder' ? 'mdi-folder' : 'mdi-file' }}
                 </v-icon>
@@ -102,10 +135,15 @@
       </v-col>
 
       <!-- Center Panel - File List -->
-      <v-col cols="12" lg="6">
-        <v-card>
+      <v-col
+        cols="12"
+        lg="6"
+      >
+        <v-card class="glass-card">
           <v-card-title class="d-flex align-center">
-            <v-icon class="mr-2">mdi-file-multiple</v-icon>
+            <v-icon class="mr-2">
+              mdi-file-multiple
+            </v-icon>
             Files
             <v-spacer />
             <v-btn-group density="compact">
@@ -135,7 +173,10 @@
                   hide-details
                   class="mb-2"
                 />
-                <v-chip-group v-model="selectedFilters" multiple>
+                <v-chip-group
+                  v-model="selectedFilters"
+                  multiple
+                >
                   <v-chip
                     v-for="filter in fileFilters"
                     :key="filter.key"
@@ -143,17 +184,31 @@
                     size="small"
                     variant="outlined"
                   >
-                    <v-icon start size="small">{{ filter.icon }}</v-icon>
+                    <v-icon
+                      start
+                      size="small"
+                    >
+                      {{ filter.icon }}
+                    </v-icon>
                     {{ filter.label }}
                   </v-chip>
                   <v-menu>
                     <template #activator="{ props }">
-                      <v-chip v-bind="props" size="small" variant="outlined" prepend-icon="mdi-filter">
+                      <v-chip
+                        v-bind="props"
+                        size="small"
+                        variant="outlined"
+                        prepend-icon="mdi-filter"
+                      >
                         Classification
                       </v-chip>
                     </template>
                     <v-list>
-                      <v-list-item v-for="s in classificationOptions" :key="s.value" @click="applyClassificationFilter(s.value)">
+                      <v-list-item
+                        v-for="s in classificationOptions"
+                        :key="s.value"
+                        @click="applyClassificationFilter(s.value)"
+                      >
                         <v-list-item-title>{{ s.label }}</v-list-item-title>
                       </v-list-item>
                     </v-list>
@@ -169,9 +224,14 @@
                 show-select
                 @click:row="onFileSelect"
               >
-                <template v-slot:item.name="{ item }">
+                <template #item.name="{ item }">
                   <div class="d-flex align-center">
-                    <v-icon class="mr-2" size="small">mdi-file</v-icon>
+                    <v-icon
+                      class="mr-2"
+                      size="small"
+                    >
+                      mdi-file
+                    </v-icon>
                     <span>{{ item.name }}</span>
                     <v-chip
                       v-if="item.classificationStatus && item.classificationStatus !== 'PENDING'"
@@ -205,22 +265,31 @@
                     </v-chip>
                   </div>
                 </template>
-                <template v-slot:item.size="{ item }">
+                <template #item.size="{ item }">
                   {{ formatFileSize(item.size || 0) }}
                 </template>
-                <template v-slot:item.updatedAt="{ item }">
+                <template #item.updatedAt="{ item }">
                   {{ formatDate(item.updatedAt) }}
                 </template>
-                <template v-slot:item.mimeType="{ item }">
+                <template #item.mimeType="{ item }">
                   <div class="d-flex align-center">
-                    <v-icon class="mr-1" size="x-small">{{ mimeIcon(item.mimeType) }}</v-icon>
+                    <v-icon
+                      class="mr-1"
+                      size="x-small"
+                    >
+                      {{ mimeIcon(item.mimeType) }}
+                    </v-icon>
                     <span>{{ item.mimeType }}</span>
                   </div>
                 </template>
-                <template v-slot:item.actions="{ item }">
+                <template #item.actions="{ item }">
                   <v-menu>
                     <template #activator="{ props }">
-                      <v-btn icon="mdi-dots-vertical" v-bind="props" variant="text" />
+                      <v-btn
+                        icon="mdi-dots-vertical"
+                        v-bind="props"
+                        variant="text"
+                      />
                     </template>
                     <v-list>
                       <v-list-item @click.stop="promptRename(item)">
@@ -241,36 +310,77 @@
               </v-data-table>
             </template>
 
-             <!-- Canonical View -->
+            <!-- Canonical View -->
             <template v-else-if="viewMode === 'canonical'">
-              <div v-if="Object.keys(filesByCanonical.value).length === 0" class="pa-6 text-center">
-                <v-icon size="56" color="primary" class="mb-3">mdi-folder-star</v-icon>
-                <div class="text-h6 mb-2">No canonical groupings yet</div>
+              <div
+                v-if="Object.keys(filesByCanonical.value).length === 0"
+                class="pa-6 text-center"
+              >
+                <v-icon
+                  size="56"
+                  color="primary"
+                  class="mb-3"
+                >
+                  mdi-folder-star
+                </v-icon>
+                <div class="text-h6 mb-2">
+                  No canonical groupings yet
+                </div>
                 <div class="text-body-2 text-medium-emphasis mb-4">
                   Configure taxonomy rules and classifications in Mapping Studio to enable canonical slot grouping.
                 </div>
-                <v-btn color="primary" prepend-icon="mdi-map" @click="openMappingStudio">
+                <v-btn
+                  color="primary"
+                  prepend-icon="mdi-map"
+                  @click="openMappingStudio"
+                >
                   Open Mapping Studio
                 </v-btn>
               </div>
-              <div v-else class="pa-4">
+              <div
+                v-else
+                class="pa-4"
+              >
                 <v-expansion-panels variant="accordion">
-                  <v-expansion-panel v-for="group in filesByCanonicalList" :key="group.key">
+                  <v-expansion-panel
+                    v-for="group in filesByCanonicalList"
+                    :key="group.key"
+                  >
                     <v-expansion-panel-title>
-                      <v-icon start>mdi-folder-star</v-icon>
+                      <v-icon start>
+                        mdi-folder-star
+                      </v-icon>
                       <span class="ml-2">{{ group.key || 'Unassigned' }}</span>
-                      <v-chip class="ml-3" size="x-small" label>{{ group.items.length }}</v-chip>
+                      <v-chip
+                        class="ml-3"
+                        size="x-small"
+                        label
+                      >
+                        {{ group.items.length }}
+                      </v-chip>
                     </v-expansion-panel-title>
                     <v-expansion-panel-text>
                       <v-list density="compact">
-                        <v-list-item v-for="f in group.items" :key="f.id" @click="selectedFile = f">
+                        <v-list-item
+                          v-for="f in group.items"
+                          :key="f.id"
+                          @click="selectedFile = f"
+                        >
                           <template #prepend>
-                            <v-icon size="small">{{ mimeIcon(f.mimeType) }}</v-icon>
+                            <v-icon size="small">
+                              {{ mimeIcon(f.mimeType) }}
+                            </v-icon>
                           </template>
                           <v-list-item-title>{{ f.name }}</v-list-item-title>
                           <v-list-item-subtitle>{{ f.path }}</v-list-item-subtitle>
                           <template #append>
-                            <v-chip size="x-small" :color="classificationColor(f.classificationStatus)" variant="tonal">{{ f.classificationStatus }}</v-chip>
+                            <v-chip
+                              size="x-small"
+                              :color="classificationColor(f.classificationStatus)"
+                              variant="tonal"
+                            >
+                              {{ f.classificationStatus }}
+                            </v-chip>
                           </template>
                         </v-list-item>
                       </v-list>
@@ -283,22 +393,51 @@
             <!-- Entity View -->
             <template v-else-if="viewMode === 'entity'">
               <div class="pa-4">
-                <v-tabs v-model="entityGroupBy" density="compact" class="mb-3">
-                  <v-tab value="project"><v-icon start>mdi-view-module</v-icon>By Project</v-tab>
-                  <v-tab value="source"><v-icon start>mdi-cloud</v-icon>By Source</v-tab>
+                <v-tabs
+                  v-model="entityGroupBy"
+                  density="compact"
+                  class="mb-3"
+                >
+                  <v-tab value="project">
+                    <v-icon start>
+                      mdi-view-module
+                    </v-icon>By Project
+                  </v-tab>
+                  <v-tab value="source">
+                    <v-icon start>
+                      mdi-cloud
+                    </v-icon>By Source
+                  </v-tab>
                 </v-tabs>
                 <v-expansion-panels>
-                  <v-expansion-panel v-for="group in entityGroups" :key="group.key">
+                  <v-expansion-panel
+                    v-for="group in entityGroups"
+                    :key="group.key"
+                  >
                     <v-expansion-panel-title>
-                      <v-icon start>{{ entityGroupIcon }}</v-icon>
+                      <v-icon start>
+                        {{ entityGroupIcon }}
+                      </v-icon>
                       <span class="ml-2">{{ group.label }}</span>
-                      <v-chip class="ml-3" size="x-small" label>{{ group.items.length }}</v-chip>
+                      <v-chip
+                        class="ml-3"
+                        size="x-small"
+                        label
+                      >
+                        {{ group.items.length }}
+                      </v-chip>
                     </v-expansion-panel-title>
                     <v-expansion-panel-text>
                       <v-list density="compact">
-                        <v-list-item v-for="f in group.items" :key="f.id" @click="selectedFile = f">
+                        <v-list-item
+                          v-for="f in group.items"
+                          :key="f.id"
+                          @click="selectedFile = f"
+                        >
                           <template #prepend>
-                            <v-icon size="small">{{ mimeIcon(f.mimeType) }}</v-icon>
+                            <v-icon size="small">
+                              {{ mimeIcon(f.mimeType) }}
+                            </v-icon>
                           </template>
                           <v-list-item-title>{{ f.name }}</v-list-item-title>
                           <v-list-item-subtitle>{{ f.path }}</v-list-item-subtitle>
@@ -314,16 +453,23 @@
       </v-col>
 
       <!-- Right Panel - Inspector -->
-      <v-col cols="12" lg="3">
+      <v-col
+        cols="12"
+        lg="3"
+      >
         <!-- Right Panel - Inspector / Facets -->
-        <v-card v-if="selectedFile">
+        <v-card v-if="selectedFile" class="glass-card">
           <v-card-title>
-            <v-icon class="mr-2">mdi-information</v-icon>
+            <v-icon class="mr-2">
+              mdi-information
+            </v-icon>
             Inspector
           </v-card-title>
           
-            <v-card-text>
-            <h4 class="text-subtitle-2 mb-2">{{ selectedFile.name }}</h4>
+          <v-card-text>
+            <h4 class="text-subtitle-2 mb-2">
+              {{ selectedFile.name }}
+            </h4>
             <v-list density="compact">
               <v-list-item>
                 <v-list-item-title>Size</v-list-item-title>
@@ -335,68 +481,130 @@
               </v-list-item>
               <v-list-item>
                 <v-list-item-title>Path</v-list-item-title>
-                <v-list-item-subtitle class="text-wrap">{{ selectedFile.path }}</v-list-item-subtitle>
+                <v-list-item-subtitle class="text-wrap">
+                  {{ selectedFile.path }}
+                </v-list-item-subtitle>
               </v-list-item>
               <v-list-item>
                 <v-list-item-title>MIME</v-list-item-title>
-                <v-list-item-subtitle class="text-wrap">{{ selectedFile.mimeType }}</v-list-item-subtitle>
+                <v-list-item-subtitle class="text-wrap">
+                  {{ selectedFile.mimeType }}
+                </v-list-item-subtitle>
               </v-list-item>
               <v-list-item v-if="selectedFile.metadata?.preview || selectedFile.extractedText">
                 <v-list-item-title>Preview</v-list-item-title>
-                <v-list-item-subtitle class="text-wrap" style="white-space: pre-wrap; max-height: 240px; overflow: auto;">
+                <v-list-item-subtitle
+                  class="text-wrap"
+                  style="white-space: pre-wrap; max-height: 240px; overflow: auto;"
+                >
                   {{ selectedFile.metadata?.preview || selectedFile.extractedText }}
                 </v-list-item-subtitle>
               </v-list-item>
-                <v-list-item>
-                  <v-list-item-title>Classification</v-list-item-title>
-                  <v-list-item-subtitle>
-                    <v-chip :color="classificationColor(selectedFile.classificationStatus)" size="small" label variant="tonal">
-                      {{ selectedFile.classificationStatus }}
-                    </v-chip>
-                    <span v-if="selectedFile.classificationConfidence" class="ml-2 text-medium-emphasis">
-                      {{ (selectedFile.classificationConfidence * 100).toFixed(0) }}%
-                    </span>
-                  </v-list-item-subtitle>
-                </v-list-item>
-                <v-list-item v-if="selectedFile.canonicalSlot">
-                  <v-list-item-title>Canonical Slot</v-list-item-title>
-                  <v-list-item-subtitle>{{ selectedFile.canonicalSlot }}</v-list-item-subtitle>
-                </v-list-item>
+              <v-list-item>
+                <v-list-item-title>Classification</v-list-item-title>
+                <v-list-item-subtitle>
+                  <v-chip
+                    :color="classificationColor(selectedFile.classificationStatus)"
+                    size="small"
+                    label
+                    variant="tonal"
+                  >
+                    {{ selectedFile.classificationStatus }}
+                  </v-chip>
+                  <span
+                    v-if="selectedFile.classificationConfidence"
+                    class="ml-2 text-medium-emphasis"
+                  >
+                    {{ (selectedFile.classificationConfidence * 100).toFixed(0) }}%
+                  </span>
+                </v-list-item-subtitle>
+              </v-list-item>
+              <v-list-item v-if="selectedFile.canonicalSlot">
+                <v-list-item-title>Canonical Slot</v-list-item-title>
+                <v-list-item-subtitle>{{ selectedFile.canonicalSlot }}</v-list-item-subtitle>
+              </v-list-item>
             </v-list>
-              <div class="mt-4 d-flex gap-2">
-                <v-btn color="primary" prepend-icon="mdi-refresh" @click="triggerReprocess" :loading="actionLoading">
-                  Reprocess
-                </v-btn>
-                <v-btn color="secondary" prepend-icon="mdi-tag" @click="showClassify = true">
-                  Classify
-                </v-btn>
-                <v-btn v-if="selectedFile.metadata?.downloadUrl" :href="selectedFile.metadata.downloadUrl" target="_blank" prepend-icon="mdi-download">
-                  Download
-                </v-btn>
-                <v-btn v-if="selectedFile.metadata?.previewUrl" :href="selectedFile.metadata.previewUrl" target="_blank" prepend-icon="mdi-open-in-new">
-                  Open Preview
-                </v-btn>
-              </div>
+            <div class="mt-4 d-flex gap-2">
+              <v-btn
+                color="primary"
+                prepend-icon="mdi-refresh"
+                :loading="actionLoading"
+                @click="triggerReprocess"
+              >
+                Reprocess
+              </v-btn>
+              <v-btn
+                color="secondary"
+                prepend-icon="mdi-tag"
+                @click="showClassify = true"
+              >
+                Classify
+              </v-btn>
+              <v-btn
+                v-if="selectedFile.metadata?.downloadUrl"
+                :href="selectedFile.metadata.downloadUrl"
+                target="_blank"
+                prepend-icon="mdi-download"
+              >
+                Download
+              </v-btn>
+              <v-btn
+                v-if="selectedFile.metadata?.previewUrl"
+                :href="selectedFile.metadata.previewUrl"
+                target="_blank"
+                prepend-icon="mdi-open-in-new"
+              >
+                Open Preview
+              </v-btn>
+            </div>
           </v-card-text>
         </v-card>
         
         <!-- Empty Inspector State -->
-        <v-card v-else class="text-center pa-8">
-          <v-icon size="48" color="grey-lighten-1">mdi-cursor-default-click</v-icon>
-          <p class="text-medium-emphasis mt-2">Select a file to view details</p>
+        <v-card
+          v-else
+          class="text-center pa-8 glass-card"
+        >
+          <v-icon
+            size="48"
+            color="grey-lighten-1"
+          >
+            mdi-cursor-default-click
+          </v-icon>
+          <p class="text-medium-emphasis mt-2">
+            Select a file to view details
+          </p>
           <v-divider class="my-4" />
           <div class="text-left">
-            <div class="text-subtitle-2 mb-2">Facets</div>
+            <div class="text-subtitle-2 mb-2">
+              Facets
+            </div>
             <v-list density="compact">
               <v-list-subheader>Classification</v-list-subheader>
-              <v-list-item v-for="s in classificationOptions" :key="s.value" @click="applyClassificationFilter(s.value)">
-                <template #prepend><v-icon size="x-small">mdi-tag</v-icon></template>
+              <v-list-item
+                v-for="s in classificationOptions"
+                :key="s.value"
+                @click="applyClassificationFilter(s.value)"
+              >
+                <template #prepend>
+                  <v-icon size="x-small">
+                    mdi-tag
+                  </v-icon>
+                </template>
                 <v-list-item-title>{{ s.label }}</v-list-item-title>
               </v-list-item>
               <v-divider class="my-2" />
               <v-list-subheader>MIME Type</v-list-subheader>
-              <v-list-item v-for="m in mimeOptions" :key="m.value" @click="applyMimeFilter(m.value)">
-                <template #prepend><v-icon size="x-small">{{ mimeIcon(m.value) }}</v-icon></template>
+              <v-list-item
+                v-for="m in mimeOptions"
+                :key="m.value"
+                @click="applyMimeFilter(m.value)"
+              >
+                <template #prepend>
+                  <v-icon size="x-small">
+                    {{ mimeIcon(m.value) }}
+                  </v-icon>
+                </template>
                 <v-list-item-title>{{ m.label }}</v-list-item-title>
               </v-list-item>
             </v-list>
@@ -406,26 +614,49 @@
     </v-row>
 
     <!-- Classify Dialog -->
-    <v-dialog v-model="showClassify" max-width="500">
-      <v-card>
+    <v-dialog
+      v-model="showClassify"
+      max-width="500"
+    >
+      <v-card class="glass-card">
         <v-card-title>
-          <v-icon class="mr-2">mdi-tag</v-icon>
+          <v-icon class="mr-2">
+            mdi-tag
+          </v-icon>
           Classify File
         </v-card-title>
         <v-card-text>
           <v-select
+            v-model="form.canonicalSlot"
             :items="canonicalSlots"
             item-title="key"
             item-value="key"
             label="Canonical Slot"
-            v-model="form.canonicalSlot"
           />
-          <v-slider v-model="form.confidence" min="0" max="1" step="0.01" label="Confidence" class="mt-4" />
+          <v-slider
+            v-model="form.confidence"
+            min="0"
+            max="1"
+            step="0.01"
+            label="Confidence"
+            class="mt-4"
+          />
         </v-card-text>
         <v-card-actions>
           <v-spacer />
-          <v-btn variant="text" @click="showClassify = false">Cancel</v-btn>
-          <v-btn color="primary" :loading="actionLoading" @click="submitClassification">Save</v-btn>
+          <v-btn
+            variant="text"
+            @click="showClassify = false"
+          >
+            Cancel
+          </v-btn>
+          <v-btn
+            color="primary"
+            :loading="actionLoading"
+            @click="submitClassification"
+          >
+            Save
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>

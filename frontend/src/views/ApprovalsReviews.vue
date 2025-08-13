@@ -1,11 +1,30 @@
 <template>
   <div>
     <h2>Approvals & Reviews</h2>
-    <v-card>
-      <v-data-table :items="items" :headers="headers" :loading="loading" item-key="id" density="compact">
+  <v-card class="glass-card">
+      <v-data-table
+        :items="items"
+        :headers="headers"
+        :loading="loading"
+        item-key="id"
+        density="compact"
+      >
         <template #item.actions="{ item }">
-          <v-btn size="small" color="success" class="mr-2" @click="onApprove(item.id)">Approve</v-btn>
-          <v-btn size="small" color="error" @click="onReject(item.id)">Reject</v-btn>
+          <v-btn
+            size="small"
+            color="success"
+            class="mr-2"
+            @click="onApprove(item.id)"
+          >
+            Approve
+          </v-btn>
+          <v-btn
+            size="small"
+            color="error"
+            @click="onReject(item.id)"
+          >
+            Reject
+          </v-btn>
         </template>
       </v-data-table>
     </v-card>

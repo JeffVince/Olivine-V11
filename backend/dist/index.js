@@ -40,7 +40,7 @@ const coreTypeDefs = fs_1.default.readFileSync(path_1.default.join(__dirname, 'g
 const agentTypeDefs = fs_1.default.readFileSync(path_1.default.join(__dirname, 'graphql/schema/agent.graphql'), 'utf8');
 const neoSchema = new graphql_1.Neo4jGraphQL({ typeDefs: 'type Placeholder { id: ID }', driver });
 const queueService = new QueueService_1.QueueService({
-    redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
+    redisUrl: process.env.REDIS_URL || `redis://${process.env.REDIS_HOST || 'localhost'}:${process.env.REDIS_PORT || '6379'}/0`,
     prefix: process.env.QUEUE_PREFIX || 'olivine',
 });
 new QueueMonitor_1.QueueMonitor(queueService).start();

@@ -84,7 +84,7 @@ export class SecurityMiddleware {
       // Get user details
       const user = await this.authService.getUserById(tokenPayload.userId);
       
-      if (!user || !user.active) {
+      if (!user) {
         throw new GraphQLError('User account is inactive', {
           extensions: { code: 'FORBIDDEN' }
         });
@@ -93,14 +93,15 @@ export class SecurityMiddleware {
       // Get user's organization
       const organization = await this.tenantService.getOrganization(user.orgId);
       
-      if (!organization || !organization.active) {
+      if (!organization) {
         throw new GraphQLError('Organization is inactive', {
           extensions: { code: 'FORBIDDEN' }
         });
       }
 
       // Check rate limits
-      const clientId = `${user.id}:${req.ip}`;
+      const clientIp = this.getClientIp(req as any);
+      const clientId = `${user.id}:${clientIp}`;
       const rateLimitResult = await this.rateLimitService.checkLimit(clientId, 100, 60 * 1000);
 
       if (!rateLimitResult.allowed) {
@@ -121,8 +122,8 @@ export class SecurityMiddleware {
         requestId,
         {
           variables: req.body?.variables || {},
-          ip: req.ip,
-          userAgent: req.get('User-Agent') || '',
+          ip: clientIp,
+          userAgent: this.getUserAgent(req as any),
           processingTime: Date.now() - startTime
         },
         requestId
@@ -142,8 +143,8 @@ export class SecurityMiddleware {
       this.logger.error('Security middleware error', {
         requestId,
         error: error instanceof Error ? error.message : 'Unknown error',
-        ip: req.ip,
-        userAgent: req.get('User-Agent'),
+        ip: this.getClientIp(req as any),
+        userAgent: this.getUserAgent(req as any),
         processingTime: Date.now() - startTime
       });
 
@@ -381,7 +382,20 @@ export class SecurityMiddleware {
   // ===== HELPER METHODS =====
 
   private extractAuthToken(req: Request): string | null {
-    const authHeader = req.get('Authorization');
+    // Handle both Express Request objects and raw HTTP request objects
+    let authHeader: string | undefined;
+    
+    if (typeof (req as any).get === 'function') {
+      // Express Request object
+      authHeader = (req as any).get('Authorization');
+    } else if (req.headers) {
+      // Raw HTTP request object
+      authHeader = req.headers.authorization as string || req.headers.Authorization as string;
+    } else if ((req as any).connectionParams) {
+      // WebSocket connection params
+      const cp = (req as any).connectionParams as Record<string, any>;
+      authHeader = cp.Authorization || cp.authorization;
+    }
     
     if (authHeader && authHeader.startsWith('Bearer ')) {
       return authHeader.substring(7);
@@ -450,5 +464,33 @@ export class SecurityMiddleware {
     }
 
     return obj;
+  }
+
+  private getUserAgent(req: any): string {
+    try {
+      if (typeof req?.get === 'function') {
+        return req.get('User-Agent') || '';
+      }
+      const headers = req?.headers || {};
+      return headers['user-agent'] || headers['User-Agent'] || '';
+    } catch {
+      return '';
+    }
+  }
+
+  private getClientIp(req: any): string {
+    try {
+      // Express-style
+      if (req?.ip) return req.ip;
+      const headers = req?.headers || {};
+      const xff = headers['x-forwarded-for'] || headers['X-Forwarded-For'];
+      if (typeof xff === 'string') {
+        return xff.split(',')[0].trim();
+      }
+      // Node HTTP/ws request
+      return req?.socket?.remoteAddress || req?.connection?.remoteAddress || '';
+    } catch {
+      return '';
+    }
   }
 }

@@ -1,17 +1,18 @@
 import { BaseAgent } from '../agents/BaseAgent';
 import { ScriptBreakdownAgent } from '../agents/ScriptBreakdownAgent';
-import { EnhancedClassificationAgent, ClassificationRequest } from '../agents/EnhancedClassificationAgent';
+import { TaxonomyClassificationAgent } from '../agents/TaxonomyClassificationAgent';
 import { NoveltyDetectionAgent } from '../agents/NoveltyDetectionAgent';
 import { QueueService } from './queues/QueueService';
 import { ProvenanceService } from './provenance/ProvenanceService';
 import { Neo4jService } from './Neo4jService';
+import { PostgresService } from './PostgresService';
 
 interface AgentTask {
   id: string;
   type: string;
   agent: string;
   priority: number;
-  payload: Record<string, any>;
+  payload: Record<string, unknown>;
   orgId: string;
   userId: string;
   status: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
@@ -19,7 +20,7 @@ interface AgentTask {
   startedAt?: Date;
   completedAt?: Date;
   error?: string;
-  result?: any;
+  result?: unknown;
   dependencies?: string[];
   retryCount: number;
   maxRetries: number;
@@ -32,13 +33,13 @@ interface AgentWorkflow {
   steps: Array<{
     agent: string;
     type: string;
-    condition?: (context: any) => boolean;
+    condition?: (context: Record<string, unknown>) => boolean;
     timeout?: number;
     retries?: number;
   }>;
   trigger: {
     event: string;
-    conditions?: Record<string, any>;
+    conditions?: Record<string, unknown>;
   };
   enabled: boolean;
 }
@@ -50,12 +51,14 @@ export class AgentOrchestrator {
   private queueService: QueueService;
   private provenance: ProvenanceService;
   private neo4j: Neo4jService;
+  private postgres: PostgresService;
   private isRunning = false;
 
-  constructor() {
-    this.queueService = new QueueService();
+  constructor(queueService: QueueService, neo4jService: Neo4jService, postgresService: PostgresService) {
+    this.queueService = queueService;
+    this.neo4j = neo4jService;
+    this.postgres = postgresService;
     this.provenance = new ProvenanceService();
-    this.neo4j = new Neo4jService();
     this.initializeAgents();
     this.initializeWorkflows();
   }
@@ -65,11 +68,11 @@ export class AgentOrchestrator {
    */
   private initializeAgents(): void {
     const scriptBreakdownAgent = new ScriptBreakdownAgent(this.queueService);
-    const classificationAgent = new EnhancedClassificationAgent(this.queueService);
+    const taxonomyClassificationAgent = new TaxonomyClassificationAgent(this.queueService);
     const noveltyAgent = new NoveltyDetectionAgent(this.queueService);
 
     this.agents.set('script_breakdown_agent', scriptBreakdownAgent);
-    this.agents.set('enhanced_classification_agent', classificationAgent);
+    this.agents.set('taxonomy_classification_agent', taxonomyClassificationAgent);
     this.agents.set('novelty_detection_agent', noveltyAgent);
   }
 
@@ -92,7 +95,10 @@ export class AgentOrchestrator {
         {
           agent: 'novelty_detection_agent',
           type: 'detect_novelty',
-          condition: (context) => context.classification_confidence < 0.8,
+          condition: (context) => {
+            const value = (context as any).classification_confidence as number | undefined;
+            return typeof value === 'number' && value < 0.8;
+          },
           timeout: 15000,
           retries: 1
         }
@@ -121,7 +127,10 @@ export class AgentOrchestrator {
         {
           agent: 'script_breakdown_agent',
           type: 'process_script',
-          condition: (context) => context.classification?.slot === 'SCRIPT_PRIMARY',
+          condition: (context) => {
+            const cls: any = (context as any).classification;
+            return !!cls && cls.slot === 'SCRIPT_PRIMARY';
+          },
           timeout: 120000,
           retries: 1
         },
@@ -193,7 +202,7 @@ export class AgentOrchestrator {
    */
   async executeWorkflow(
     workflowId: string, 
-    context: Record<string, any>,
+    context: Record<string, unknown>,
     orgId: string,
     userId: string
   ): Promise<string> {
@@ -245,7 +254,7 @@ export class AgentOrchestrator {
     type: string;
     agent: string;
     priority: number;
-    payload: Record<string, any>;
+    payload: Record<string, unknown>;
     orgId: string;
     userId: string;
     dependencies?: string[];
@@ -283,12 +292,13 @@ export class AgentOrchestrator {
    */
   private async processQueue(): Promise<void> {
     // Register a worker to process agent jobs
-    this.queueService.registerWorker('agent-jobs', async (job) => {
-      await this.executeTask(job.data.taskId);
-    }, { 
-      concurrency: 5,
-      connection: this.queueService.connection 
-    });
+    {
+      const opts: any = { concurrency: 5 };
+      if (this.queueService.connection) opts.connection = this.queueService.connection;
+      this.queueService.registerWorker('agent-jobs', async (job) => {
+        await this.executeTask(job.data.taskId);
+      }, opts);
+    }
   }
 
   /**
@@ -331,9 +341,9 @@ export class AgentOrchestrator {
       let result;
       switch (task.type) {
         case 'classify_file':
-          if (task.agent === 'enhanced_classification_agent') {
-            result = await (agent as unknown as EnhancedClassificationAgent).classifyFile(
-              task.payload as ClassificationRequest
+          if (task.agent === 'taxonomy_classification_agent') {
+            result = await (agent as unknown as TaxonomyClassificationAgent).classifyFile(
+              task.payload
             );
           }
           break;
@@ -341,8 +351,8 @@ export class AgentOrchestrator {
         case 'process_script':
           if (task.agent === 'script_breakdown_agent') {
             result = await (agent as unknown as ScriptBreakdownAgent).processScript(
-              task.payload.scriptText,
-              task.payload.projectId,
+               (task.payload as any).scriptText,
+               (task.payload as any).projectId,
               task.orgId,
               task.userId
             );
@@ -352,12 +362,12 @@ export class AgentOrchestrator {
         case 'detect_novelty':
           if (task.agent === 'novelty_detection_agent') {
             result = await (agent as unknown as NoveltyDetectionAgent).detectNovelty({
-              entityId: task.payload.entityId,
-              entityType: task.payload.entityType,
-              newProperties: task.payload.newProperties,
+              entityId: (task.payload as any).entityId,
+              entityType: (task.payload as any).entityType,
+              newProperties: (task.payload as any).newProperties,
               orgId: task.orgId,
               userId: task.userId,
-              context: task.payload.context
+              context: (task.payload as any).context
             });
           }
           break;
@@ -437,7 +447,7 @@ export class AgentOrchestrator {
   /**
    * Handle incoming events and trigger workflows
    */
-  private async handleEvent(eventType: string, eventData: any): Promise<void> {
+  private async handleEvent(eventType: string, eventData: Record<string, unknown>): Promise<void> {
     console.log(`Received event: ${eventType}`);
 
     for (const [workflowId, workflow] of this.workflows.entries()) {
@@ -445,7 +455,7 @@ export class AgentOrchestrator {
         // Check trigger conditions
         if (this.matchesConditions(eventData, workflow.trigger.conditions)) {
           try {
-            await this.executeWorkflow(workflowId, eventData, eventData.orgId, eventData.userId);
+            await this.executeWorkflow(workflowId, eventData, eventData.orgId as string, eventData.userId as string);
             console.log(`Triggered workflow: ${workflowId}`);
           } catch (error) {
             console.error(`Failed to trigger workflow ${workflowId}:`, error);
@@ -458,7 +468,7 @@ export class AgentOrchestrator {
   /**
    * Check if event data matches workflow trigger conditions
    */
-  private matchesConditions(eventData: any, conditions?: Record<string, any>): boolean {
+  private matchesConditions(eventData: Record<string, unknown>, conditions?: Record<string, unknown>): boolean {
     if (!conditions) {
       return true;
     }
@@ -488,14 +498,19 @@ export class AgentOrchestrator {
   /**
    * Get workflow status
    */
-  getWorkflowStatus(workflowId: string): AgentWorkflow | undefined {
-    return this.workflows.get(workflowId);
+  getWorkflowStatus(workflowExecutionId: string): { results: Map<string, unknown>; errors: Map<string, string> } | undefined {
+    // For now, return empty maps since we don't have a way to track workflow execution results
+    // In a full implementation, this would track the actual results and errors for a workflow execution
+    return {
+      results: new Map(),
+      errors: new Map()
+    };
   }
 
   /**
    * Get orchestrator statistics
    */
-  getStatistics(): any {
+  getStatistics(): { tasksByStatus: Record<string, number>; tasksByAgent: Record<string, number>; totalTasks: number; activeWorkflows: number; available_agents: string[]; available_workflows: string[]; is_running: boolean } {
     const tasksByStatus = new Map();
     const tasksByAgent = new Map();
 
@@ -508,9 +523,10 @@ export class AgentOrchestrator {
     }
 
     return {
-      total_tasks: this.tasks.size,
-      tasks_by_status: Object.fromEntries(tasksByStatus),
-      tasks_by_agent: Object.fromEntries(tasksByAgent),
+      tasksByStatus: Object.fromEntries(tasksByStatus) as Record<string, number>,
+      tasksByAgent: Object.fromEntries(tasksByAgent) as Record<string, number>,
+      totalTasks: this.tasks.size,
+      activeWorkflows: Array.from(this.workflows.values()).filter(w => w.enabled).length,
       available_agents: Array.from(this.agents.keys()),
       available_workflows: Array.from(this.workflows.keys()),
       is_running: this.isRunning
@@ -521,6 +537,49 @@ export class AgentOrchestrator {
     return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   }
 
+  /**
+   * Start a workflow execution
+   */
+  async startWorkflow(workflow: AgentWorkflow, eventData: Record<string, unknown>): Promise<string> {
+    const workflowExecutionId = this.generateId();
+    console.log(`Starting workflow execution: ${workflow.id} (${workflowExecutionId})`);
+    
+    // Create tasks for each step
+    const taskIds: string[] = [];
+    let previousTaskId: string | undefined;
+    
+    for (const step of workflow.steps) {
+      // Check condition if present
+      if (step.condition && !step.condition(eventData)) {
+        console.log(`Skipping step ${step.agent}:${step.type} - condition not met`);
+        continue;
+      }
+      
+      const taskId = await this.createTask({
+        type: step.type,
+        agent: step.agent,
+        priority: 5,
+        payload: { ...eventData, workflow_id: workflow.id, execution_id: workflowExecutionId },
+        orgId: eventData.orgId as string,
+        userId: eventData.userId as string,
+        dependencies: previousTaskId ? [previousTaskId] : [],
+        maxRetries: step.retries || 1
+      });
+      
+      taskIds.push(taskId);
+      previousTaskId = taskId;
+    }
+    
+    return workflowExecutionId;
+  }
+  
+  /**
+   * Get all registered workflows
+   */
+  getRegisteredWorkflows(): AgentWorkflow[] {
+    return Array.from(this.workflows.values());
+  }
+  
   private sleep(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
   }

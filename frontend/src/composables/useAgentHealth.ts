@@ -1,6 +1,15 @@
-import { ref, watchEffect } from 'vue'
+import { ref } from 'vue'
 import { useQuery } from '@vue/apollo-composable'
 import gql from 'graphql-tag'
+
+interface QueueData {
+  name: string
+  waiting: number
+  active: number
+  completed: number
+  failed: number
+  delayed: number
+}
 
 const AGENT_HEALTH = gql`
   query AgentHealth($orgId: ID!) {
@@ -19,13 +28,13 @@ const AGENT_HEALTH = gql`
   }
 `
 
-export function useAgentHealth(orgIdRef: any) {
+export function useAgentHealth(orgIdRef: { value: string }) {
   const status = ref<'ok' | 'degraded' | 'unknown'>('unknown')
   const agents = ref<string[]>([])
-  const queues = ref<any[]>([])
+  const queues = ref<QueueData[]>([])
 
   const { onResult, refetch } = useQuery(AGENT_HEALTH, () => ({ orgId: orgIdRef.value }))
-  onResult((r) => {
+  onResult((r: { data?: { agentHealth?: { status: 'ok' | 'degraded' | 'unknown'; agents: string[] }; queues: QueueData[] } }) => {
     status.value = r.data?.agentHealth?.status ?? 'unknown'
     agents.value = r.data?.agentHealth?.agents ?? []
     queues.value = r.data?.queues ?? []

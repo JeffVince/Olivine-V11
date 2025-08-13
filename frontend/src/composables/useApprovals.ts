@@ -3,6 +3,16 @@ import { useQuery, useMutation } from '@vue/apollo-composable'
 import gql from 'graphql-tag'
 import { useOrganizationStore } from '@/stores/organizationStore'
 
+interface ApprovalItem {
+  id: string
+  type: string
+  orgId: string
+  status: string
+  createdAt: string
+  targetId: string
+  context: string
+}
+
 const LIST_REVIEWS = gql`
   query TaskReviews($orgId: ID!, $limit: Int, $offset: Int) {
     taskReviews(orgId: $orgId, limit: $limit, offset: $offset) {
@@ -34,7 +44,7 @@ export function useApprovals() {
   const { result, loading, refetch } = useQuery(LIST_REVIEWS, variables)
   const { mutate: approve } = useMutation(APPROVE)
   const { mutate: reject } = useMutation(REJECT)
-  const items = ref<any[]>([])
+  const items = ref<ApprovalItem[]>([])
 
   watchEffect(() => { variables.value.orgId = org.currentOrg?.id || '' })
   watchEffect(() => { if (result.value?.taskReviews) items.value = result.value.taskReviews })

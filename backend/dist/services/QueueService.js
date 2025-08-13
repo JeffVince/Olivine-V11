@@ -54,7 +54,7 @@ class QueueService {
             try {
                 const result = await this.redis.brpop(`queue:${queueName}`, 5);
                 if (result) {
-                    const [_, jobString] = result;
+                    const [, jobString] = result;
                     const job = JSON.parse(jobString);
                     job.status = 'processing';
                     job.startedAt = new Date().toISOString();

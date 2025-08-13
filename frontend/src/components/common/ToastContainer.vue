@@ -5,9 +5,9 @@
     location="bottom right"
     timeout="5000"
   >
-    <div>{{ current?.message }}</div>
+    <div class="accent-amber">{{ current?.message }}</div>
     <template #actions>
-      <v-btn icon @click="visible = false">
+      <v-btn icon class="liquid-button" @click="visible = false">
         <v-icon>mdi-close</v-icon>
       </v-btn>
     </template>

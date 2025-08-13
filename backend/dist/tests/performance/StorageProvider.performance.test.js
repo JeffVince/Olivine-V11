@@ -3,10 +3,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const StorageProvider_1 = require("../../services/StorageProvider");
 describe('StorageProvider Performance', () => {
     describe('Factory Pattern Performance', () => {
-        it('should create providers quickly', () => {
+        it('should create providers quickly', async () => {
             const startTime = performance.now();
             for (let i = 0; i < 1000; i++) {
-                StorageProvider_1.StorageProviderFactory.createProvider('dropbox');
+                await StorageProvider_1.StorageProviderFactory.createProvider('dropbox');
             }
             const endTime = performance.now();
             const duration = endTime - startTime;

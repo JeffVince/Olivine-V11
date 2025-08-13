@@ -1,7 +1,7 @@
 <template>
   <div>
     <h2>Notifications & Inbox</h2>
-    <v-card>
+    <v-card class="glass-card">
       <v-list density="comfortable">
         <v-list-item
           v-for="n in notifications"
@@ -13,13 +13,24 @@
           </v-list-item-title>
           <v-list-item-subtitle>{{ formatDate(n.createdAt) }}</v-list-item-subtitle>
           <template #append>
-            <v-btn icon="mdi-close" @click.stop="remove(n.id)" />
+            <v-btn
+              icon="mdi-close"
+              @click.stop="remove(n.id)"
+            />
           </template>
         </v-list-item>
-        <v-list-item v-if="notifications.length === 0" title="No notifications" />
+        <v-list-item
+          v-if="notifications.length === 0"
+          title="No notifications"
+        />
       </v-list>
       <v-card-actions>
-        <v-btn variant="text" @click="clear">Clear All</v-btn>
+        <v-btn
+          variant="text"
+          @click="clear"
+        >
+          Clear All
+        </v-btn>
       </v-card-actions>
     </v-card>
   </div>

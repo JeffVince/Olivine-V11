@@ -20,30 +20,41 @@ class EventProcessingService {
         this.sourceModel = new Source_1.SourceModel();
         this.taxonomyService = new TaxonomyService_1.TaxonomyService();
         this.fileProcessingService = fileProcessingService;
-        this.fileSyncQueue = new bullmq_1.Queue('file-sync', {
-            connection: {
-                host: process.env.REDIS_HOST || 'localhost',
-                port: parseInt(process.env.REDIS_PORT || '6379'),
-                password: process.env.REDIS_PASSWORD || undefined,
-                db: parseInt(process.env.REDIS_DB || '0')
-            }
-        });
-        this.fileClassificationQueue = new bullmq_1.Queue('file-classification', {
-            connection: {
-                host: process.env.REDIS_HOST || 'localhost',
-                port: parseInt(process.env.REDIS_PORT || '6379'),
-                password: process.env.REDIS_PASSWORD || undefined,
-                db: parseInt(process.env.REDIS_DB || '0')
-            }
-        });
-        this.contentExtractionQueue = new bullmq_1.Queue('content-extraction', {
-            connection: {
-                host: process.env.REDIS_HOST || 'localhost',
-                port: parseInt(process.env.REDIS_PORT || '6379'),
-                password: process.env.REDIS_PASSWORD || undefined,
-                db: parseInt(process.env.REDIS_DB || '0')
-            }
-        });
+        const isTestMode = process.env.TEST_MODE === 'true' || process.env.NODE_ENV === 'test';
+        if (isTestMode) {
+            const mockQueue = {
+                add: async (_name, _data, _opts) => ({ id: `${Date.now()}` })
+            };
+            this.fileSyncQueue = mockQueue;
+            this.fileClassificationQueue = mockQueue;
+            this.contentExtractionQueue = mockQueue;
+        }
+        else {
+            this.fileSyncQueue = new bullmq_1.Queue('file-sync', {
+                connection: {
+                    host: process.env.REDIS_HOST || 'localhost',
+                    port: parseInt(process.env.REDIS_PORT || '6379'),
+                    password: process.env.REDIS_PASSWORD || undefined,
+                    db: parseInt(process.env.REDIS_DB || '0')
+                }
+            });
+            this.fileClassificationQueue = new bullmq_1.Queue('file-classification', {
+                connection: {
+                    host: process.env.REDIS_HOST || 'localhost',
+                    port: parseInt(process.env.REDIS_PORT || '6379'),
+                    password: process.env.REDIS_PASSWORD || undefined,
+                    db: parseInt(process.env.REDIS_DB || '0')
+                }
+            });
+            this.contentExtractionQueue = new bullmq_1.Queue('content-extraction', {
+                connection: {
+                    host: process.env.REDIS_HOST || 'localhost',
+                    port: parseInt(process.env.REDIS_PORT || '6379'),
+                    password: process.env.REDIS_PASSWORD || undefined,
+                    db: parseInt(process.env.REDIS_DB || '0')
+                }
+            });
+        }
     }
     async addSyncJob(jobData, priority = 1) {
         const job = await this.fileSyncQueue.add('sync', jobData, { priority });
@@ -399,7 +410,7 @@ class EventProcessingService {
     }
     async updateAgentStatus(agentType, orgId, status, executionTime, error) {
         const statusKey = `${orgId}:${agentType}`;
-        let agentStatus = this.agentStatus.get(statusKey) || {
+        const agentStatus = this.agentStatus.get(statusKey) || {
             agentType,
             orgId,
             status: 'idle',

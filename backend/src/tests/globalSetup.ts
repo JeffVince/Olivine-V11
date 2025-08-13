@@ -7,6 +7,7 @@ export default async function globalSetup() {
 
   // Set test environment
   process.env.NODE_ENV = 'test';
+  process.env.TEST_MODE = 'true';
   
   // Override database configurations for testing
   process.env.NEO4J_URI = process.env.NEO4J_TEST_URI || 'bolt://localhost:7687';
@@ -84,6 +85,14 @@ export default async function globalSetup() {
         status VARCHAR(100) NOT NULL,
         created_at TIMESTAMP DEFAULT NOW()
       )`,
+      `CREATE TABLE IF NOT EXISTS sources (
+        id VARCHAR(255) PRIMARY KEY,
+        organization_id VARCHAR(255) NOT NULL,
+        type VARCHAR(50),
+        metadata JSONB DEFAULT '{}'::jsonb,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      )`,
       `CREATE TABLE IF NOT EXISTS taxonomy_profiles (
         id VARCHAR(255) PRIMARY KEY,
         org_id VARCHAR(255) NOT NULL,
@@ -104,6 +113,95 @@ export default async function globalSetup() {
         metadata JSONB DEFAULT '{}',
         created_at TIMESTAMP DEFAULT NOW(),
         updated_at TIMESTAMP DEFAULT NOW()
+      )`,
+      // Minimal tables used by integration tests
+      `CREATE TABLE IF NOT EXISTS parser_registry (
+        id VARCHAR(255) PRIMARY KEY,
+        org_id VARCHAR(255) NOT NULL,
+        slot VARCHAR(255),
+        mime_type VARCHAR(255),
+        extension VARCHAR(50),
+        parser_name VARCHAR(255),
+        parser_version VARCHAR(50),
+        min_confidence NUMERIC DEFAULT 0,
+        feature_flag BOOLEAN DEFAULT false,
+        enabled BOOLEAN DEFAULT true,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      )`,
+      // Seed minimal parser row used in tests
+      `INSERT INTO parser_registry (id, org_id, slot, mime_type, extension, parser_name, parser_version, min_confidence, feature_flag, enabled)
+       VALUES ('test-parser-1', 'test-org-123', 'SCRIPT_PRIMARY', '*/*', 'txt', 'script-parser-v1', '1.0.0', 0.5, true, true)
+       ON CONFLICT (id) DO NOTHING`,
+      `CREATE TABLE IF NOT EXISTS promotion_audit (
+        id VARCHAR(255) PRIMARY KEY,
+        job_id VARCHAR(255) NOT NULL,
+        actor VARCHAR(255),
+        action VARCHAR(50),
+        before_json JSONB,
+        after_json JSONB,
+        timestamp TIMESTAMP DEFAULT NOW()
+      )`,
+      `CREATE TABLE IF NOT EXISTS extraction_job (
+        id VARCHAR(255) PRIMARY KEY,
+        org_id VARCHAR(255) NOT NULL,
+        file_id VARCHAR(255) NOT NULL,
+        project_id VARCHAR(255),
+        parser_name VARCHAR(255),
+        parser_version VARCHAR(50),
+        method VARCHAR(50),
+        dedupe_key VARCHAR(255) UNIQUE,
+        status VARCHAR(50),
+        confidence NUMERIC,
+        promoted_at TIMESTAMP,
+        created_at TIMESTAMP DEFAULT NOW(),
+        completed_at TIMESTAMP,
+        metadata JSONB DEFAULT '{}'::jsonb
+      )`,
+      `CREATE TABLE IF NOT EXISTS extracted_entity_temp (
+        id SERIAL PRIMARY KEY,
+        job_id VARCHAR(255) NOT NULL,
+        kind VARCHAR(100) NOT NULL,
+        raw_json JSONB NOT NULL,
+        hash VARCHAR(255) NOT NULL,
+        confidence NUMERIC,
+        source_offset VARCHAR(255),
+        created_at TIMESTAMP DEFAULT NOW()
+      )`,
+      `CREATE TABLE IF NOT EXISTS extracted_link_temp (
+        id SERIAL PRIMARY KEY,
+        job_id VARCHAR(255) NOT NULL,
+        from_hash VARCHAR(255) NOT NULL,
+        to_hash VARCHAR(255) NOT NULL,
+        rel_type VARCHAR(100) NOT NULL,
+        raw_json JSONB,
+        confidence NUMERIC,
+        created_at TIMESTAMP DEFAULT NOW()
+      )`,
+      `CREATE TABLE IF NOT EXISTS content_cluster (
+        id VARCHAR(255) PRIMARY KEY,
+        file_id VARCHAR(255),
+        entities_count INTEGER DEFAULT 0,
+        links_count INTEGER DEFAULT 0,
+        updated_at TIMESTAMP DEFAULT NOW(),
+        status VARCHAR(50)
+      )`,
+      `CREATE TABLE IF NOT EXISTS sync_errors (
+        id SERIAL PRIMARY KEY,
+        file_id VARCHAR(255),
+        org_id VARCHAR(255),
+        error_message TEXT,
+        error_stack TEXT,
+        job_data JSONB,
+        created_at TIMESTAMP DEFAULT NOW()
+      )`,
+      `CREATE TABLE IF NOT EXISTS files (
+        id VARCHAR(255) PRIMARY KEY,
+        org_id VARCHAR(255) NOT NULL,
+        name VARCHAR(255),
+        mime_type VARCHAR(100),
+        size INTEGER,
+        checksum VARCHAR(255)
       )`
     ];
 
@@ -113,6 +211,24 @@ export default async function globalSetup() {
       } catch (error) {
         console.warn('Error creating test table:', (error as Error).message);
       }
+    }
+
+    // Copy compiled GraphQL schema for tests expecting dist path
+    try {
+      const fs = await import('fs');
+      const path = await import('path');
+      const srcSchemaDir = path.join(process.cwd(), 'dist', 'graphql', 'schema');
+      const dstSchemaDir = path.join(process.cwd(), 'src', 'dist', 'graphql', 'schema');
+      fs.mkdirSync(dstSchemaDir, { recursive: true });
+      for (const file of ['enhanced.graphql', 'core.graphql']) {
+        const src = path.join(srcSchemaDir, file);
+        const dst = path.join(dstSchemaDir, file);
+        if (fs.existsSync(src)) {
+          fs.copyFileSync(src, dst);
+        }
+      }
+    } catch (e) {
+      console.warn('Schema copy skipped:', (e as Error).message);
     }
 
     // Close connections

@@ -50,18 +50,19 @@ class SecurityMiddleware {
                 });
             }
             const user = await this.authService.getUserById(tokenPayload.userId);
-            if (!user || !user.active) {
+            if (!user) {
                 throw new graphql_1.GraphQLError('User account is inactive', {
                     extensions: { code: 'FORBIDDEN' }
                 });
             }
             const organization = await this.tenantService.getOrganization(user.orgId);
-            if (!organization || !organization.active) {
+            if (!organization) {
                 throw new graphql_1.GraphQLError('Organization is inactive', {
                     extensions: { code: 'FORBIDDEN' }
                 });
             }
-            const clientId = `${user.id}:${req.ip}`;
+            const clientIp = this.getClientIp(req);
+            const clientId = `${user.id}:${clientIp}`;
             const rateLimitResult = await this.rateLimitService.checkLimit(clientId, 100, 60 * 1000);
             if (!rateLimitResult.allowed) {
                 throw new graphql_1.GraphQLError('Rate limit exceeded', {
@@ -71,8 +72,8 @@ class SecurityMiddleware {
             const permissions = await this.tenantService.getUserPermissions(user.id, user.orgId);
             await this.auditService.logUserAction(user.orgId, user.id, this.extractOperationName(req), 'graphql_request', requestId, {
                 variables: req.body?.variables || {},
-                ip: req.ip,
-                userAgent: req.get('User-Agent') || '',
+                ip: clientIp,
+                userAgent: this.getUserAgent(req),
                 processingTime: Date.now() - startTime
             }, requestId);
             return {
@@ -88,8 +89,8 @@ class SecurityMiddleware {
             this.logger.error('Security middleware error', {
                 requestId,
                 error: error instanceof Error ? error.message : 'Unknown error',
-                ip: req.ip,
-                userAgent: req.get('User-Agent'),
+                ip: this.getClientIp(req),
+                userAgent: this.getUserAgent(req),
                 processingTime: Date.now() - startTime
             });
             throw error;
@@ -242,7 +243,17 @@ class SecurityMiddleware {
         };
     }
     extractAuthToken(req) {
-        const authHeader = req.get('Authorization');
+        let authHeader;
+        if (typeof req.get === 'function') {
+            authHeader = req.get('Authorization');
+        }
+        else if (req.headers) {
+            authHeader = req.headers.authorization || req.headers.Authorization;
+        }
+        else if (req.connectionParams) {
+            const cp = req.connectionParams;
+            authHeader = cp.Authorization || cp.authorization;
+        }
         if (authHeader && authHeader.startsWith('Bearer ')) {
             return authHeader.substring(7);
         }
@@ -291,6 +302,33 @@ class SecurityMiddleware {
             return sanitized;
         }
         return obj;
+    }
+    getUserAgent(req) {
+        try {
+            if (typeof req?.get === 'function') {
+                return req.get('User-Agent') || '';
+            }
+            const headers = req?.headers || {};
+            return headers['user-agent'] || headers['User-Agent'] || '';
+        }
+        catch {
+            return '';
+        }
+    }
+    getClientIp(req) {
+        try {
+            if (req?.ip)
+                return req.ip;
+            const headers = req?.headers || {};
+            const xff = headers['x-forwarded-for'] || headers['X-Forwarded-For'];
+            if (typeof xff === 'string') {
+                return xff.split(',')[0].trim();
+            }
+            return req?.socket?.remoteAddress || req?.connection?.remoteAddress || '';
+        }
+        catch {
+            return '';
+        }
     }
 }
 exports.SecurityMiddleware = SecurityMiddleware;

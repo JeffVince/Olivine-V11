@@ -108,7 +108,7 @@ export class FileModel {
   /**
    * Get files by source and organization
    */
-  async getFilesBySource(sourceId: string, organizationId: string, limit: number = 100): Promise<FileMetadata[]> {
+  async getFilesBySource(sourceId: string, organizationId: string, limit = 100): Promise<FileMetadata[]> {
     const query = `
       SELECT * FROM files 
       WHERE source_id = $1 AND organization_id = $2 AND deleted_at IS NULL

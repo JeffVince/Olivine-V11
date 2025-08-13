@@ -305,7 +305,7 @@ class DropboxService extends events_1.EventEmitter {
         });
         return enhancedError;
     }
-    async generateAuthUrl() {
+    async generateAuthUrl(state = '') {
         return this.executeWithRetry(async () => {
             const scopes = [
                 'files.metadata.read',
@@ -318,7 +318,7 @@ class DropboxService extends events_1.EventEmitter {
                 'sharing.read',
                 'sharing.write'
             ];
-            const authUrl = await this.dropboxAuth.getAuthenticationUrl(this.redirectUri, undefined, 'code', 'offline', scopes);
+            const authUrl = await this.dropboxAuth.getAuthenticationUrl(this.redirectUri, state || undefined, 'code', 'offline', scopes);
             return authUrl.toString();
         }, 'generateAuthUrl');
     }
@@ -549,7 +549,7 @@ class DropboxService extends events_1.EventEmitter {
     }
     async uploadLargeFile(client, filePath, fileBuffer) {
         const CHUNK_SIZE = 8 * 1024 * 1024;
-        let sessionResponse = await client.filesUploadSessionStart({
+        const sessionResponse = await client.filesUploadSessionStart({
             close: false,
             contents: fileBuffer.slice(0, CHUNK_SIZE)
         });
@@ -597,19 +597,16 @@ class DropboxService extends events_1.EventEmitter {
             return response.result;
         }, 'deleteFile');
     }
-    async listFiles(orgId, sourceId, options = {}) {
+    async listFiles(orgId, sourceId, pageToken) {
         return this.executeWithRetry(async () => {
-            const path = options.path || '';
-            const recursive = options.recursive || false;
-            const limit = options.limit || 100;
             const client = await this.getClient(orgId, sourceId);
             if (!client) {
                 throw new Error('Could not initialize Dropbox client');
             }
             const response = await client.filesListFolder({
-                path: path,
-                recursive: recursive,
-                limit: limit,
+                path: '',
+                recursive: false,
+                limit: 100,
                 include_media_info: true,
                 include_deleted: false,
                 include_has_explicit_shared_members: true

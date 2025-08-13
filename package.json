@@ -1,0 +1,19 @@
+{
+  "name": "olivine-v11",
+  "private": true,
+  "version": "1.0.0",
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "lint": "npm run lint:backend && npm run lint:frontend",
+    "lint:backend": "npm --prefix backend run lint",
+    "lint:frontend": "npm --prefix frontend run lint",
+    "type-check": "npm run type-check:backend && npm run type-check:frontend",
+    "type-check:backend": "npm --prefix backend run type-check",
+    "type-check:frontend": "npm --prefix frontend run type-check"
+  }
+}
+
+

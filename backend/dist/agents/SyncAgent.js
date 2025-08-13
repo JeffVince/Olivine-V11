@@ -21,24 +21,30 @@ class SyncAgent extends BaseAgent_1.BaseAgent {
     }
     async onStart() {
         this.logger.info('Starting SyncAgent...');
-        this.queueService.registerWorker('webhook-events', async (job) => {
-            await this.processWebhookEvent(job.data);
-        }, {
-            concurrency: 5,
-            connection: this.queueService.connection
-        });
-        this.queueService.registerWorker('source-sync', async (job) => {
-            await this.processBulkSync(job.data);
-        }, {
-            concurrency: 2,
-            connection: this.queueService.connection
-        });
-        this.queueService.registerWorker('delta-sync', async (job) => {
-            await this.processDeltaSync(job.data);
-        }, {
-            concurrency: 3,
-            connection: this.queueService.connection
-        });
+        {
+            const opts = { concurrency: 5 };
+            if (this.queueService.connection)
+                opts.connection = this.queueService.connection;
+            this.queueService.registerWorker('webhook-events', async (job) => {
+                await this.processWebhookEvent(job.data);
+            }, opts);
+        }
+        {
+            const opts = { concurrency: 2 };
+            if (this.queueService.connection)
+                opts.connection = this.queueService.connection;
+            this.queueService.registerWorker('source-sync', async (job) => {
+                await this.processBulkSync(job.data);
+            }, opts);
+        }
+        {
+            const opts = { concurrency: 3 };
+            if (this.queueService.connection)
+                opts.connection = this.queueService.connection;
+            this.queueService.registerWorker('delta-sync', async (job) => {
+                await this.processDeltaSync(job.data);
+            }, opts);
+        }
         this.startPeriodicHealthCheck();
         this.logger.info('SyncAgent started successfully');
     }

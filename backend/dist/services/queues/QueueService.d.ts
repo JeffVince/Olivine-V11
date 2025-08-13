@@ -1,15 +1,17 @@
 import { Queue, Worker, JobsOptions, Processor, WorkerOptions, Job, QueueEvents } from 'bullmq';
 import type { Redis } from 'ioredis';
-export type SupportedQueueName = 'file-sync' | 'file-classification' | 'content-extraction' | 'provenance' | 'agent-jobs' | 'create-commit' | 'create-action' | 'create-version' | 'webhook-events' | 'source-sync' | 'delta-sync';
+export type SupportedQueueName = 'file-sync' | 'file-classification' | 'content-extraction' | 'content-promotion' | 'content-rollback' | 'ontology-review' | 'cluster-orchestration' | 'provenance' | 'agent-jobs' | 'create-commit' | 'create-action' | 'create-version' | 'webhook-events' | 'source-sync' | 'delta-sync' | 'event-bus' | 'workflow-execution' | 'workflow-coordination';
 export interface QueueServiceConfig {
     redisUrl: string;
     prefix?: string;
 }
 export declare class QueueService {
     private static instance;
-    readonly connection: Redis;
+    readonly connection: Redis | null;
     private readonly queues;
     private readonly queueEvents;
+    private readonly inMemoryWorkers;
+    private readonly inMemoryQueues;
     private readonly prefix;
     constructor(config?: QueueServiceConfig);
     getQueue(name: SupportedQueueName): Queue;

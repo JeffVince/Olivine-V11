@@ -16,6 +16,9 @@ class FileResolvers {
         this.eventProcessingService = eventProcessingService;
     }
     async getFiles(organizationId, sourceId, limit = 100) {
+        if (!organizationId || organizationId.trim() === '') {
+            throw new Error('Organization ID is required');
+        }
         if (sourceId) {
             return await this.fileModel.getFilesBySource(sourceId, organizationId, limit);
         }
@@ -30,22 +33,29 @@ class FileResolvers {
             .slice(0, limit);
     }
     async getFile(fileId, organizationId) {
+        if (!fileId || fileId.trim() === '') {
+            throw new Error('File ID is required');
+        }
+        if (!organizationId || organizationId.trim() === '') {
+            throw new Error('Organization ID is required');
+        }
         return await this.fileModel.getFile(fileId, organizationId);
     }
     async reprocessFile(fileId, organizationId) {
+        if (!fileId || fileId.trim() === '') {
+            throw new Error('File ID is required');
+        }
+        if (!organizationId || organizationId.trim() === '') {
+            throw new Error('Organization ID is required');
+        }
         try {
             const file = await this.fileModel.getFile(fileId, organizationId);
             if (!file) {
-                throw new Error(`File not found: ${fileId}`);
+                throw new Error('File not found');
             }
-            const source = await this.sourceModel.getSource(file.sourceId, organizationId);
-            if (!source) {
-                throw new Error(`Source not found: ${file.sourceId}`);
-            }
-            await this.fileModel.updateClassification(fileId, organizationId, { type: 'unknown', confidence: 0, categories: [], tags: [] }, 'pending');
             await this.fileProcessingService.processFileChange({
-                fileId,
-                organizationId,
+                fileId: file.id,
+                organizationId: file.organizationId,
                 sourceId: file.sourceId,
                 filePath: file.path,
                 action: 'update',

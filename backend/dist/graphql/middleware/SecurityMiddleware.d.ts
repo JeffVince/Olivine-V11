@@ -45,5 +45,7 @@ export declare class SecurityMiddleware {
     private hasAccessToItem;
     private sanitizeArgs;
     private sanitizeInputRecursive;
+    private getUserAgent;
+    private getClientIp;
 }
 //# sourceMappingURL=SecurityMiddleware.d.ts.map

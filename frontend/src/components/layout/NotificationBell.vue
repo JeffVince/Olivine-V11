@@ -1,7 +1,7 @@
 <template>
   <v-menu v-model="menu" location="bottom end">
     <template #activator="{ props }">
-      <v-btn v-bind="props" icon>
+      <v-btn v-bind="props" icon class="liquid-button">
         <v-badge v-if="unread > 0" :content="unread" color="error" overlap>
           <v-icon>mdi-bell</v-icon>
         </v-badge>

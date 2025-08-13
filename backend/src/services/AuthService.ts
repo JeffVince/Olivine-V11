@@ -61,13 +61,33 @@ export class AuthService {
   }
 
   /**
-   * Verify a JWT token
-   * @param token JWT token
-   * @returns Decoded token payload
+   * JWT payload
    */
-  verifyToken(token: string): any {
+  public static JwtPayloadGuard(payload: any): payload is JwtPayload {
+    return payload && typeof payload.userId === 'string' && typeof payload.orgId === 'string';
+  }
+
+  /**
+   * Verify a JWT token
+   */
+  verifyToken(token: string): JwtPayload {
     try {
-      return jwt.verify(token, this.jwtSecret);
+      const decoded = jwt.verify(token, this.jwtSecret) as jwt.JwtPayload | string;
+      if (typeof decoded === 'string') {
+        throw new Error('Invalid JWT payload');
+      }
+      const payload: any = decoded;
+      if (!AuthService.JwtPayloadGuard(payload)) {
+        throw new Error('Invalid JWT payload structure');
+      }
+      return {
+        userId: payload.userId,
+        orgId: payload.orgId,
+        role: payload.role,
+        iat: payload.iat as number | undefined,
+        exp: payload.exp as number | undefined,
+        iss: payload.iss as string | undefined
+      };
     } catch (error) {
       console.error('Error verifying JWT token:', error);
       throw error;
@@ -76,11 +96,8 @@ export class AuthService {
 
   /**
    * Authenticate a user with email and password
-   * @param email User email
-   * @param password User password
-   * @returns User object with token if authentication is successful
    */
-  async authenticateUser(email: string, password: string): Promise<any> {
+  async authenticateUser(email: string, password: string): Promise<{ id: string; orgId: string; role: string; name: string; avatar: string; notificationPrefs: Record<string, unknown>; token: string } | null> {
     try {
       // Find user by email
       const result = await this.postgresService.executeQuery(
@@ -111,7 +128,7 @@ export class AuthService {
       );
 
       return {
-        userId: user.id,
+        id: user.id,
         orgId: user.organization_id,
         role: user.role,
         name: user.name,
@@ -149,7 +166,7 @@ export class AuthService {
    * @param userId User ID
    * @returns User object
    */
-  async getUserById(userId: string): Promise<any> {
+  async getUserById(userId: string): Promise<{ id: string; orgId: string; email: string; role: string; name: string; avatar: string; notificationPrefs: Record<string, unknown>; createdAt: Date; lastLogin: Date } | null> {
     try {
       const result = await this.postgresService.executeQuery(
         'SELECT id, organization_id, email, role, name, avatar_url, notification_prefs, created_at, last_login FROM users WHERE id = $1',
@@ -184,4 +201,13 @@ export class AuthService {
   async close(): Promise<void> {
     await this.postgresService.close();
   }
+}
+
+export interface JwtPayload {
+  userId: string;
+  orgId: string;
+  role: string;
+  iat?: number;
+  exp?: number;
+  iss?: string;
 }

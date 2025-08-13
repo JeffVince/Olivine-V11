@@ -8,12 +8,12 @@ describe('StorageProvider Performance', () => {
   // They are commented out by default as they may be slow
   
   describe('Factory Pattern Performance', () => {
-    it('should create providers quickly', () => {
+    it('should create providers quickly', async () => {
       const startTime = performance.now();
       
       // Create 1000 providers to test performance
       for (let i = 0; i < 1000; i++) {
-        StorageProviderFactory.createProvider('dropbox');
+        await StorageProviderFactory.createProvider('dropbox');
       }
       
       const endTime = performance.now();

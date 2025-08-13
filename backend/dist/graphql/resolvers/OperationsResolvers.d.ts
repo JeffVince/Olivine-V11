@@ -7,10 +7,10 @@ export declare class OperationsResolvers {
             budgetVsActualAnalysis: (_: any, { projectId, orgId }: {
                 projectId: string;
                 orgId: string;
-            }) => Promise<any>;
+            }) => Promise<unknown>;
             vendorPerformanceAnalysis: (_: any, { orgId }: {
                 orgId: string;
-            }) => Promise<any[]>;
+            }) => Promise<unknown[]>;
         };
         Mutation: {
             createVendor: (_: any, { input, userId }: {
@@ -41,10 +41,10 @@ export declare const operationsResolvers: {
         budgetVsActualAnalysis: (_: any, { projectId, orgId }: {
             projectId: string;
             orgId: string;
-        }) => Promise<any>;
+        }) => Promise<unknown>;
         vendorPerformanceAnalysis: (_: any, { orgId }: {
             orgId: string;
-        }) => Promise<any[]>;
+        }) => Promise<unknown[]>;
     };
     Mutation: {
         createVendor: (_: any, { input, userId }: {

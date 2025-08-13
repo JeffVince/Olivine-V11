@@ -7,6 +7,13 @@ export interface SyncJobData {
     resourcePath: string;
     eventData: any;
 }
+export interface ClusterProcessingResult {
+    fileId: string;
+    clusterId: string;
+    slots: string[];
+    extractionTriggered: boolean;
+    crossLayerLinksCreated: number;
+}
 export interface FileMetadata {
     name: string;
     size: number;
@@ -25,6 +32,8 @@ export declare class FileStewardAgent extends BaseAgent {
     private fileProcessingService;
     private classificationService;
     private taxonomyService;
+    private clusterMode;
+    private eventBus;
     constructor(queueService: QueueService, config?: Partial<AgentConfig>);
     protected onStart(): Promise<void>;
     protected onStop(): Promise<void>;
@@ -54,5 +63,22 @@ export declare class FileStewardAgent extends BaseAgent {
     private updateFileClassification;
     private extractContent;
     private updateFileContent;
+    private processFileWithCluster;
+    private createContentCluster;
+    private performMultiSlotClassification;
+    private getApplicableTaxonomyRules;
+    private calculateRuleConfidence;
+    private createSlotEdgeFact;
+    private getFallbackSlot;
+    private queueExtractionJobs;
+    private getApplicableParsers;
+    private createInitialCrossLayerLinks;
+    private getProjectScenes;
+    private getProjectPurchaseOrders;
+    private createCrossLayerLink;
+    enableClusterMode(): void;
+    disableClusterMode(): void;
+    processSyncEventWithCluster(eventData: any): Promise<ClusterProcessingResult>;
+    getEventBus(): any;
 }
 //# sourceMappingURL=FileStewardAgent.d.ts.map

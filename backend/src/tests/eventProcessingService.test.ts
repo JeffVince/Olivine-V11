@@ -7,10 +7,10 @@ describe('EventProcessingService', () => {
 
   beforeAll(() => {
     // Create services with proper dependencies to break circular dependency
-    const eventProcessingServiceInstance = new EventProcessingService(null as any, new QueueService());
+    const eventProcessingServiceInstance = new EventProcessingService(null as unknown as FileProcessingService, new QueueService());
     const fileProcessingService = new FileProcessingService(eventProcessingServiceInstance);
     // Set the fileProcessingService dependency in eventProcessingService
-    (eventProcessingServiceInstance as any).fileProcessingService = fileProcessingService;
+    (eventProcessingServiceInstance as unknown as Record<string, unknown>).fileProcessingService = fileProcessingService;
     eventProcessingService = eventProcessingServiceInstance;
   });
 

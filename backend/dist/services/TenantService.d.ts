@@ -5,7 +5,11 @@ export interface Organization {
     status: 'active' | 'suspended' | 'archived';
     created_at: Date;
     updated_at: Date;
-    metadata?: Record<string, any>;
+    metadata?: Record<string, unknown>;
+}
+export interface User {
+    orgId: string;
+    [key: string]: unknown;
 }
 export interface UserPermission {
     userId: string;
@@ -33,11 +37,11 @@ export declare class TenantService {
     private neo4jService;
     constructor();
     validateOrgId(orgId: string): boolean;
-    addOrgIdToParams(params: Record<string, any>, orgId: string): Record<string, any>;
+    addOrgIdToParams(params: Record<string, unknown>, orgId: string): Record<string, unknown>;
     createTenantQueryTemplate(query: string): string;
-    executeTenantQuery(query: string, params: Record<string, any> | undefined, orgId: string): Promise<any>;
-    validateAccess(user: any, orgId: string): Promise<void>;
-    getOrganization(orgId: string): Promise<any>;
+    executeTenantQuery(query: string, params: Record<string, unknown> | undefined, orgId: string): Promise<unknown>;
+    validateAccess(user: User, orgId: string): Promise<void>;
+    getOrganization(orgId: string): Promise<Organization>;
     getUserPermissions(userId: string, orgId: string): Promise<string[]>;
     validateCrossOrgAccess(userId: string, targetOrgId: string): Promise<boolean>;
     validateProjectAccess(userId: string, orgId: string, projectId: string): Promise<boolean>;

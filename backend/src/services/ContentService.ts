@@ -230,8 +230,8 @@ export class ContentService {
   async listContent(
     orgId: string, 
     contentType?: string, 
-    limit: number = 50, 
-    offset: number = 0
+    limit = 50, 
+    offset = 0
   ): Promise<Content[]> {
     const whereConditions = ['c.org_id = $orgId', 'c.current = true', 'c.deleted = false'];
     const params: Record<string, any> = { orgId, limit, offset };
@@ -252,7 +252,7 @@ export class ContentService {
 
     const result = await this.neo4jService.run(query, params);
 
-    return (result.records as Neo4jRecord[]).map((record: Neo4jRecord) => {
+    return result.records.map((record: any) => {
       const content = record.get('c')?.properties;
       return content ? this.mapToContent(content) : null;
     }).filter((c): c is Content => c !== null);
@@ -308,7 +308,7 @@ export class ContentService {
     orgId: string, 
     searchText: string, 
     contentType?: string,
-    limit: number = 20
+    limit = 20
   ): Promise<{ content: Content; score: number }[]> {
     const typeFilter = contentType ? `AND c.content_type = "${contentType}"` : '';
     
@@ -327,7 +327,7 @@ export class ContentService {
       limit
     });
 
-    return (result.records as Neo4jRecord[]).map((record: Neo4jRecord) => {
+    return result.records.map((record: any) => {
       const content = record.get('c')?.properties;
       const score = record.get('score')?.toNumber?.() || 0;
       return content ? { content: this.mapToContent(content), score } : null;

@@ -1,14 +1,28 @@
 <template>
   <div>
     <h2>Settings</h2>
-    <v-tabs v-model="tab" density="compact" class="mb-4">
-      <v-tab value="profile">Profile</v-tab>
-      <v-tab value="notifications">Notifications</v-tab>
-      <v-tab value="project">Project</v-tab>
+    <v-tabs
+      v-model="tab"
+      density="compact"
+      class="mb-4"
+    >
+      <v-tab value="profile">
+        Profile
+      </v-tab>
+      <v-tab value="notifications">
+        Notifications
+      </v-tab>
+      <v-tab value="project">
+        Project
+      </v-tab>
     </v-tabs>
     <v-window v-model="tab">
       <v-window-item value="profile">
-        <v-form ref="profileForm" @submit.prevent="saveProfile">
+        <v-form
+          ref="profileForm"
+          @submit.prevent="saveProfile"
+        >
+          <v-card class="glass-card pa-4 mb-4">
           <v-text-field
             v-model="profile.name"
             label="Name"
@@ -20,19 +34,48 @@
             label="Avatar URL"
             :rules="urlRules"
           />
-          <v-btn type="submit" color="primary">Save</v-btn>
+          <v-btn
+            type="submit"
+            color="primary"
+          >
+            Save
+          </v-btn>
+          </v-card>
         </v-form>
       </v-window-item>
       <v-window-item value="notifications">
-        <v-form ref="notifForm" @submit.prevent="saveNotifications">
-          <v-switch v-model="notif.email" label="Email" />
-          <v-switch v-model="notif.sms" label="SMS" />
-          <v-switch v-model="notif.inApp" label="In-App" />
-          <v-btn type="submit" color="primary">Save</v-btn>
+        <v-form
+          ref="notifForm"
+          @submit.prevent="saveNotifications"
+        >
+          <v-card class="glass-card pa-4 mb-4">
+          <v-switch
+            v-model="notif.email"
+            label="Email"
+          />
+          <v-switch
+            v-model="notif.sms"
+            label="SMS"
+          />
+          <v-switch
+            v-model="notif.inApp"
+            label="In-App"
+          />
+          <v-btn
+            type="submit"
+            color="primary"
+          >
+            Save
+          </v-btn>
+          </v-card>
         </v-form>
       </v-window-item>
       <v-window-item value="project">
-        <v-form ref="projectForm" @submit.prevent="saveProject">
+        <v-form
+          ref="projectForm"
+          @submit.prevent="saveProject"
+        >
+          <v-card class="glass-card pa-4 mb-4">
           <v-text-field
             v-model="projectOptions.name"
             label="Project Name"
@@ -50,7 +93,13 @@
             v-model="projectOptions.autoApprove"
             label="Auto-approve tasks"
           />
-          <v-btn type="submit" color="primary">Save</v-btn>
+          <v-btn
+            type="submit"
+            color="primary"
+          >
+            Save
+          </v-btn>
+          </v-card>
         </v-form>
       </v-window-item>
     </v-window>

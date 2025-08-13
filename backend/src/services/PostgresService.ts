@@ -30,7 +30,7 @@ export class PostgresService {
    * @param params Query parameters
    * @returns Query result
    */
-  async executeQuery(query: string, params: any[] = []): Promise<QueryResult> {
+  async executeQuery(query: string, params: unknown[] = []): Promise<QueryResult> {
     const client = await this.pool.connect();
     try {
       const result = await client.query(query, params);
@@ -44,12 +44,22 @@ export class PostgresService {
   }
 
   /**
+   * Alias for executeQuery to match cluster logic expectations
+   * @param query SQL query string
+   * @param params Query parameters
+   * @returns Query result
+   */
+  async query(query: string, params: unknown[] = []): Promise<QueryResult> {
+    return this.executeQuery(query, params);
+  }
+
+  /**
    * Execute a query within a transaction
    * @param query SQL query string
    * @param params Query parameters
    * @returns Query result
    */
-  async executeQueryInTransaction(query: string, params: any[] = []): Promise<QueryResult> {
+  async executeQueryInTransaction(query: string, params: unknown[] = []): Promise<QueryResult> {
     const client = await this.pool.connect();
     try {
       await client.query('BEGIN');
@@ -71,7 +81,7 @@ export class PostgresService {
    * @param paramsArray Array of parameters for each query
    * @returns Array of query results
    */
-  async executeBatchInTransaction(queries: string[], paramsArray: any[][] = []): Promise<QueryResult[]> {
+  async executeBatchInTransaction(queries: string[], paramsArray: unknown[][] = []): Promise<QueryResult[]> {
     const client = await this.pool.connect();
     try {
       await client.query('BEGIN');
@@ -93,7 +103,7 @@ export class PostgresService {
     }
   }
 
-  async executeTransaction(queries: Array<{query: string, params?: any[]}>) : Promise<QueryResult[]> {
+  async executeTransaction(queries: Array<{query: string, params?: unknown[]}>) : Promise<QueryResult[]> {
     const client = await this.pool.connect();
     try {
       await client.query('BEGIN');

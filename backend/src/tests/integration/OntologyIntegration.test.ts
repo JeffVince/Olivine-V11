@@ -1,11 +1,13 @@
-import { TaxonomyService } from '../../services/TaxonomyService';
-import { ContentOntologyService } from '../../services/ContentOntologyService';
-import { OperationsOntologyService } from '../../services/OperationsOntologyService';
-import { ProvenanceService } from '../../services/provenance/ProvenanceService';
-import { AgentOrchestrator } from '../../services/AgentOrchestrator';
-import { EnhancedFileProcessingService } from '../../services/EnhancedFileProcessingService';
-import { EventProcessingService } from '../../services/EventProcessingService';
-import { QueueService } from '../../services/queues/QueueService';
+import { TaxonomyService } from '../../services/TaxonomyService'
+import { ContentOntologyService } from '../../services/ContentOntologyService'
+import { OperationsOntologyService } from '../../services/OperationsOntologyService'
+import { ProvenanceService } from '../../services/provenance/ProvenanceService'
+import { AgentOrchestrator } from '../../services/AgentOrchestrator'
+import { FileProcessingService } from '../../services/FileProcessingService'
+import { EventProcessingService } from '../../services/EventProcessingService'
+import { QueueService } from '../../services/queues/QueueService'
+import { Neo4jService } from '../../services/Neo4jService'
+import { PostgresService } from '../../services/PostgresService'
 
 describe('Ontology Integration Tests', () => {
   let taxonomyService: TaxonomyService;
@@ -13,7 +15,7 @@ describe('Ontology Integration Tests', () => {
   let operationsService: OperationsOntologyService;
   let provenanceService: ProvenanceService;
   let orchestrator: AgentOrchestrator;
-  let fileProcessingService: EnhancedFileProcessingService;
+  let fileProcessingService: FileProcessingService;
 
   const testOrgId = 'test-org-123';
   const testUserId = 'test-user-456';
@@ -24,10 +26,13 @@ describe('Ontology Integration Tests', () => {
     contentService = new ContentOntologyService();
     operationsService = new OperationsOntologyService();
     provenanceService = new ProvenanceService();
-    orchestrator = new AgentOrchestrator();
+    const queueService = new QueueService();
+    const neo4jService = new Neo4jService();
+    const postgresService = new PostgresService();
+    orchestrator = new AgentOrchestrator(queueService, neo4jService, postgresService);
     // Create services with proper dependencies to break circular dependency
     const eventProcessingService = new EventProcessingService(null as any, new QueueService());
-    fileProcessingService = new EnhancedFileProcessingService(eventProcessingService);
+    fileProcessingService = new FileProcessingService(eventProcessingService);
 
     // Start orchestrator
     await orchestrator.start();
@@ -160,10 +165,10 @@ describe('Ontology Integration Tests', () => {
       const po = await operationsService.createPurchaseOrder({
         org_id: testOrgId,
         project_id: testProjectId,
-        po_number: 'PO-2024-001',
+        order_number: 'PO-2024-001',
         vendor_id: createdVendorId,
         description: 'Camera equipment rental',
-        amount: 2500,
+        total_amount: 2500,
         currency: 'USD',
         status: 'pending',
         order_date: new Date(),
@@ -171,7 +176,7 @@ describe('Ontology Integration Tests', () => {
       }, testUserId);
 
       expect(po).toBeDefined();
-      expect(po.po_number).toBe('PO-2024-001');
+      expect(po.order_number).toBe('PO-2024-001');
       expect(po.vendor_id).toBe(createdVendorId);
     });
   });
@@ -281,9 +286,17 @@ describe('Ontology Integration Tests', () => {
         extractedText: 'FADE IN: EXT. COFFEE SHOP - DAY'
       };
 
+      // Create proper request object for processFileWithAI
+      const aiRequest = {
+        fileId: mockFileRequest.fileId,
+        orgId: mockFileRequest.orgId,
+        content: mockFileRequest.extractedText,
+        mimeType: mockFileRequest.mimeType
+      };
+
       try {
         // This would normally trigger a full workflow
-        const result = await fileProcessingService.processFileWithAI(mockFileRequest);
+        const result = await fileProcessingService.processFileWithAI(aiRequest);
         
         // For now, just check that it doesn't crash
         expect(result).toBeDefined();

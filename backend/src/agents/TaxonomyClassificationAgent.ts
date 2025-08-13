@@ -324,7 +324,7 @@ export class TaxonomyClassificationAgent extends BaseAgent {
     operator: string,
     fieldValue: any,
     conditionValue: any,
-    caseSensitive: boolean = true
+    caseSensitive = true
   ): boolean {
     if (fieldValue == null) {
       return false;

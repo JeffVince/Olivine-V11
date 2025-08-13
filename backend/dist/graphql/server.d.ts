@@ -4,7 +4,6 @@ export declare class GraphQLServer {
     private httpServer;
     private apolloServer?;
     private wsServer?;
-    private enhancedResolvers;
     private securityMiddleware;
     private pubSub;
     private logger;

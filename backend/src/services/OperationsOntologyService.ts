@@ -5,7 +5,7 @@ export interface Vendor {
   id: string;
   org_id: string;
   name: string;
-  category: string;
+  category?: string;
   contact_name?: string;
   contact_email?: string;
   contact_phone?: string;
@@ -15,7 +15,7 @@ export interface Vendor {
   preferred_payment_method?: string;
   status: 'active' | 'inactive' | 'suspended';
   rating?: number;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   created_at?: Date;
   updated_at?: Date;
 }
@@ -23,21 +23,21 @@ export interface Vendor {
 export interface PurchaseOrder {
   id: string;
   org_id: string;
-  project_id: string;
-  po_number: string;
   vendor_id: string;
-  scene_id?: string;
-  crew_role?: string;
-  description: string;
-  amount: number;
-  currency: string;
-  status: 'draft' | 'pending' | 'approved' | 'ordered' | 'received' | 'cancelled';
+  project_id?: string;
+  order_number: string;
+  description?: string;
+  total_amount: number;
+  currency?: string;
   order_date: Date;
   needed_date?: Date;
   delivery_address?: string;
   approved_by?: string;
   created_by: string;
-  metadata?: Record<string, any>;
+  status?: 'draft' | 'pending' | 'approved' | 'rejected' | 'completed';
+  scene_id?: string;
+  crew_role?: string;
+  metadata?: Record<string, unknown>;
   created_at?: Date;
   updated_at?: Date;
 }
@@ -45,21 +45,22 @@ export interface PurchaseOrder {
 export interface Invoice {
   id: string;
   org_id: string;
-  project_id: string;
   vendor_id: string;
-  po_id?: string;
+  project_id?: string;
   invoice_number: string;
-  amount: number;
-  currency: string;
-  tax_amount?: number;
+  description?: string;
   total_amount: number;
+  amount?: number;
+  currency?: string;
+  tax_amount?: number;
+  po_id?: string;
   invoice_date: Date;
   due_date: Date;
   status: 'received' | 'approved' | 'pending_payment' | 'paid' | 'disputed';
   payment_date?: Date;
   payment_method?: string;
   approved_by?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   created_at?: Date;
   updated_at?: Date;
 }
@@ -85,7 +86,7 @@ export interface Timesheet {
   status: 'draft' | 'submitted' | 'approved' | 'processed';
   submitted_by?: string;
   approved_by?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   created_at?: Date;
   updated_at?: Date;
 }
@@ -105,7 +106,7 @@ export interface Budget {
     categories?: Record<string, number>;
     departments?: Record<string, number>;
     contingency_percentage?: number;
-    [key: string]: any;
+    [key: string]: unknown;
   };
   created_at?: Date;
   updated_at?: Date;
@@ -128,7 +129,7 @@ export interface ComplianceRule {
     requirements?: string[];
     documentation_required?: string[];
     penalties?: string;
-    [key: string]: any;
+    [key: string]: unknown;
   };
   created_at?: Date;
   updated_at?: Date;
@@ -137,18 +138,18 @@ export interface ComplianceRule {
 export interface InsuranceDoc {
   id: string;
   org_id: string;
-  project_id: string;
-  doc_type: string;
+  project_id?: string;
   policy_number: string;
-  carrier: string;
+  insurer: string;
+  coverage_type: string;
   coverage_amount: number;
-  currency: string;
-  effective_date: Date;
+  premium_amount: number;
+  start_date: Date;
   expiry_date: Date;
   status: 'active' | 'expired' | 'cancelled';
   certificate_holder?: string;
   additional_insured?: string[];
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   created_at?: Date;
   updated_at?: Date;
 }
@@ -193,6 +194,7 @@ export class OperationsOntologyService {
       
       // Link commit to action
       CREATE (c)-[:INCLUDES]->(a)
+      WITH c,a
       
       // Create vendor
       CREATE (v:Vendor {
@@ -276,6 +278,7 @@ export class OperationsOntologyService {
       
       // Link commit to action
       CREATE (c)-[:INCLUDES]->(a)
+      WITH c,a
       
       // Create purchase order
       CREATE (po:PurchaseOrder {
@@ -340,12 +343,12 @@ export class OperationsOntologyService {
       org_id: po.org_id,
       user_id: userId,
       project_id: po.project_id,
-      po_number: po.po_number,
+      po_number: po.order_number,
       vendor_id: po.vendor_id,
       scene_id: po.scene_id || null,
       crew_role: po.crew_role || null,
       description: po.description,
-      amount: po.amount,
+      amount: po.total_amount,
       currency: po.currency,
       status: po.status,
       order_date: po.order_date,
@@ -354,7 +357,7 @@ export class OperationsOntologyService {
       approved_by: po.approved_by || null,
       created_by: po.created_by,
       metadata: po.metadata || {},
-      inputs: { po_number: po.po_number, vendor_id: po.vendor_id, amount: po.amount },
+      inputs: { po_number: po.order_number, vendor_id: po.vendor_id, amount: po.total_amount },
       outputs: { po_id: poId }
     }, po.org_id);
 
@@ -624,7 +627,7 @@ export class OperationsOntologyService {
 
   // ===== FINANCIAL REPORTING =====
 
-  async getBudgetVsActualAnalysis(projectId: string, orgId: string): Promise<any> {
+  async getBudgetVsActualAnalysis(projectId: string, orgId: string): Promise<unknown> {
     const query = `
       MATCH (p:Project {id: $project_id, org_id: $org_id})
       MATCH (b:Budget {project_id: p.id, status: "approved"})
@@ -660,7 +663,7 @@ export class OperationsOntologyService {
     return result.records[0]?.get('variance_analysis') || [];
   }
 
-  async getVendorPerformanceAnalysis(orgId: string): Promise<any[]> {
+  async getVendorPerformanceAnalysis(orgId: string): Promise<unknown[]> {
     const query = `
       MATCH (v:Vendor {org_id: $org_id})
       OPTIONAL MATCH (v)<-[:FROM_VENDOR]-(po:PurchaseOrder)
@@ -692,7 +695,7 @@ export class OperationsOntologyService {
     `;
 
     const result = await this.neo4j.executeQuery(query, { org_id: orgId }, orgId);
-    return result.records.map((record: any) => ({
+    return result.records.map((record) => ({
       vendor_name: record.get('vendor_name'),
       category: record.get('category'),
       rating: record.get('rating'),

@@ -4,6 +4,14 @@ import { config } from 'dotenv';
 // Load environment variables
 config();
 
+export interface Job {
+  id: string;
+  data: unknown;
+  priority: number;
+  createdAt: string;
+  status: string;
+}
+
 export class QueueService {
   // TODO: Implementation Plan - 06-Agent-System-Implementation.md - Queue service implementation
   // TODO: Implementation Checklist - 07-Testing-QA-Checklist.md - Backend queue service tests
@@ -40,7 +48,7 @@ export class QueueService {
    * // TODO: Implementation Plan - 06-Agent-System-Implementation.md - Job queueing implementation
    * // TODO: Implementation Checklist - 07-Testing-QA-Checklist.md - Backend job queueing tests
    */
-  async addJob(queueName: string, jobData: any, priority?: number): Promise<string> {
+  async addJob(queueName: string, jobData: unknown, priority?: number): Promise<string> {
     const jobId = this.generateJobId();
     const job = {
       id: jobId,
@@ -65,7 +73,7 @@ export class QueueService {
    * @param processor Function to process jobs
    * @param concurrency Number of concurrent workers (optional)
    */
-  async processQueue(queueName: string, processor: (job: any) => Promise<void>, concurrency: number = 1): Promise<void> {
+  async processQueue(queueName: string, processor: (job: unknown) => Promise<void>, concurrency = 1): Promise<void> {
     const workers = [];
     
     for (let i = 0; i < concurrency; i++) {
@@ -81,14 +89,15 @@ export class QueueService {
    * @param queueName Name of the queue
    * @param processor Function to process jobs
    */
-  private async createWorker(queueName: string, processor: (job: any) => Promise<void>): Promise<void> {
+  private async createWorker(queueName: string, processor: (job: unknown) => Promise<void>): Promise<void> {
+    // eslint-disable-next-line no-constant-condition
     while (true) {
       try {
         // Blocking pop from queue
         const result = await this.redis.brpop(`queue:${queueName}`, 5);
         
         if (result) {
-          const [_, jobString] = result;
+          const [, jobString] = result;
           const job = JSON.parse(jobString);
           
           // Update job status to processing
@@ -127,7 +136,7 @@ export class QueueService {
    * @param queueName Name of the queue
    * @param job Updated job object
    */
-  private async updateJob(queueName: string, job: any): Promise<void> {
+  private async updateJob(queueName: string, job: Job): Promise<void> {
     // For simplicity, we're just logging the update
     // In a real implementation, you might want to store job status in a separate hash
     console.log(`Job ${job.id} in queue ${queueName} updated to status: ${job.status}`);
@@ -138,7 +147,7 @@ export class QueueService {
    * @param queueName Name of the queue
    * @returns Queue statistics
    */
-  async getQueueStats(queueName: string): Promise<any> {
+  async getQueueStats(queueName: string): Promise<Record<string, unknown>> {
     try {
       const length = await this.redis.llen(`queue:${queueName}`);
       return {

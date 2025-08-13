@@ -106,11 +106,13 @@ export class MigrationService {
         if (statement.trim().length > 0) {
           try {
             await this.postgresService.executeQuery(statement);
-          } catch (error: any) {
+          } catch (error: unknown) {
             // Skip errors for CREATE POLICY statements if they already exist
             // PostgreSQL error code 42710 indicates duplicate policy
             if (statement.trim().toUpperCase().startsWith('CREATE POLICY') && 
-                (error.message.includes('already exists') || error.message.includes('duplicate key') || error.code === '42710')) {
+                (typeof error === 'object' && error !== null && 'message' in error && (error as Error).message.includes('already exists') || 
+                 typeof error === 'object' && error !== null && 'message' in error && (error as Error).message.includes('duplicate key') || 
+                 typeof error === 'object' && error !== null && 'code' in error && (error as {code: string}).code === '42710')) {
               console.log(`Policy already exists, skipping: ${statement.substring(0, 50)}...`);
             } else {
               throw error;

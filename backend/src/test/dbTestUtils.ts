@@ -2,7 +2,6 @@ import { Neo4jService } from '../services/Neo4jService';
 import { PostgresService } from '../services/PostgresService';
 import { QueueService } from '../services/queues/QueueService';
 import { AuthService } from '../services/AuthService';
-import { ConfigService } from '../services/ConfigService';
 
 /**
  * Database Testing Utilities
@@ -66,7 +65,7 @@ export class DbTestUtils {
   /**
    * Create test organization
    */
-  async createTestOrganization(name: string = 'Test Organization', slug: string = 'test-org'): Promise<any> {
+  async createTestOrganization(name = 'Test Organization', slug = 'test-org'): Promise<unknown> {
     try {
       const result = await this.postgresService.executeQuery(
         `INSERT INTO organizations (name, slug) VALUES ($1, $2) RETURNING id, name, slug`,
@@ -83,7 +82,7 @@ export class DbTestUtils {
   /**
    * Create test user
    */
-  async createTestUser(email: string, password: string, orgId: string, role: string = 'member'): Promise<any> {
+  async createTestUser(email: string, password: string, orgId: string, role = 'member'): Promise<unknown> {
     try {
       // Hash password
       const passwordHash = await this.authService.hashPassword(password);

@@ -176,12 +176,12 @@ class OperationsOntologyService {
             org_id: po.org_id,
             user_id: userId,
             project_id: po.project_id,
-            po_number: po.po_number,
+            po_number: po.order_number,
             vendor_id: po.vendor_id,
             scene_id: po.scene_id || null,
             crew_role: po.crew_role || null,
             description: po.description,
-            amount: po.amount,
+            amount: po.total_amount,
             currency: po.currency,
             status: po.status,
             order_date: po.order_date,
@@ -190,7 +190,7 @@ class OperationsOntologyService {
             approved_by: po.approved_by || null,
             created_by: po.created_by,
             metadata: po.metadata || {},
-            inputs: { po_number: po.po_number, vendor_id: po.vendor_id, amount: po.amount },
+            inputs: { po_number: po.order_number, vendor_id: po.vendor_id, amount: po.total_amount },
             outputs: { po_id: poId }
         }, po.org_id);
         return result.records[0]?.get('po').properties;

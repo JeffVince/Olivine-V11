@@ -34,9 +34,29 @@ class Neo4jService {
         });
         try {
             if (orgId) {
-                params.orgId = orgId;
+                if (!('org_id' in params) && !('orgId' in params)) {
+                    params.org_id = orgId;
+                }
             }
-            const result = await session.run(query, params);
+            const sanitizedParams = {};
+            for (const [k, v] of Object.entries(params)) {
+                if (v === undefined) {
+                    sanitizedParams[k] = null;
+                    continue;
+                }
+                if (v && typeof v === 'object' && !(v instanceof Date) && !Array.isArray(v)) {
+                    if (/(_json|metadata|inputs|outputs|properties|props)$/i.test(k)) {
+                        sanitizedParams[k] = JSON.stringify(v);
+                    }
+                    else {
+                        sanitizedParams[k] = v;
+                    }
+                }
+                else {
+                    sanitizedParams[k] = v;
+                }
+            }
+            const result = await session.run(query, sanitizedParams);
             return result;
         }
         catch (error) {

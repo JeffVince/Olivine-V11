@@ -14,17 +14,24 @@ class QueueService {
         };
         const finalConfig = { ...defaultConfig, ...config };
         console.log('Redis URL being used:', finalConfig.redisUrl);
-        this.connection = new ioredis_1.default(finalConfig.redisUrl, {
+        const isTestMode = process.env.TEST_MODE === 'true' || process.env.NODE_ENV === 'test';
+        this.connection = isTestMode ? null : new ioredis_1.default(finalConfig.redisUrl, {
             maxRetriesPerRequest: null,
             enableReadyCheck: false,
         });
         this.queues = new Map();
         this.queueEvents = new Map();
+        this.inMemoryWorkers = new Map();
+        this.inMemoryQueues = new Map();
         this.prefix = finalConfig.prefix;
         [
             'file-sync',
             'file-classification',
             'content-extraction',
+            'content-promotion',
+            'content-rollback',
+            'ontology-review',
+            'cluster-orchestration',
             'provenance',
             'agent-jobs',
             'create-commit',
@@ -33,7 +40,13 @@ class QueueService {
             'webhook-events',
             'source-sync',
             'delta-sync',
-        ].forEach((name) => this.ensureQueue(name));
+        ].forEach((name) => {
+            if (!isTestMode)
+                this.ensureQueue(name);
+            if (isTestMode) {
+                this.inMemoryQueues.set(name, []);
+            }
+        });
     }
     getQueue(name) {
         return this.ensureQueue(name);
@@ -42,10 +55,39 @@ class QueueService {
         return this.connection.ping?.() ?? 'PONG';
     }
     async addJob(name, jobName, data, options) {
+        const isTestMode = this.connection === null;
+        if (isTestMode) {
+            const jobId = `${name}:${jobName}:${Date.now()}`;
+            const processor = this.inMemoryWorkers.get(name);
+            if (processor) {
+                setImmediate(async () => {
+                    try {
+                        await processor({ id: jobId, name: jobName, data });
+                    }
+                    catch (e) {
+                    }
+                });
+            }
+            else {
+                const q = this.inMemoryQueues.get(name);
+                q?.push({ jobName, data });
+            }
+            return { id: jobId };
+        }
         const queue = this.ensureQueue(name);
         return queue.add(jobName, data, options);
     }
     registerWorker(name, processor, options) {
+        const isTestMode = this.connection === null;
+        if (isTestMode) {
+            this.inMemoryWorkers.set(name, processor);
+            const pending = this.inMemoryQueues.get(name) || [];
+            for (const j of pending) {
+                setImmediate(() => processor({ id: `${name}:${Date.now()}`, name: j.jobName, data: j.data }));
+            }
+            this.inMemoryQueues.set(name, []);
+            return { close: async () => { } };
+        }
         const worker = new bullmq_1.Worker(this.fullQueueName(name), processor, {
             connection: this.connection,
             concurrency: 5,
@@ -54,6 +96,10 @@ class QueueService {
         return worker;
     }
     getQueueEvents(name) {
+        const isTestMode = this.connection === null;
+        if (isTestMode) {
+            return { on: () => { }, off: () => { }, close: async () => { } };
+        }
         let events = this.queueEvents.get(name);
         if (!events) {
             events = new bullmq_1.QueueEvents(this.fullQueueName(name), { connection: this.connection });
@@ -68,12 +114,20 @@ class QueueService {
         return QueueService.instance;
     }
     async connect() {
-        await this.ping();
+        if (this.connection) {
+            await this.ping();
+        }
     }
     async close() {
-        this.queues.forEach(async (q) => await q.close());
-        this.queueEvents.forEach(async (e) => await e.close());
-        await this.connection.quit();
+        for (const q of this.queues.values()) {
+            await q.close();
+        }
+        for (const e of this.queueEvents.values()) {
+            await e.close();
+        }
+        if (this.connection) {
+            await this.connection.quit();
+        }
     }
     async *subscribeToJobUpdates(orgId) {
         const queueEvents = this.queueEvents.get('agent-jobs');

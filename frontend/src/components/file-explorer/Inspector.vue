@@ -1,5 +1,5 @@
 <template>
-  <v-card>
+  <v-card class="glass-card">
     <v-tabs v-model="tab" density="compact">
       <v-tab value="details">Details</v-tab>
       <v-tab value="canonical">Canonical</v-tab>

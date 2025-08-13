@@ -51,7 +51,7 @@ export interface Classification {
     confidence: number;
     method: 'rule_based' | 'ml_based' | 'manual';
     rule_id?: string;
-    metadata?: Record<string, any>;
+    metadata?: Record<string, unknown>;
 }
 export interface FileNode {
     id: string;
@@ -60,7 +60,7 @@ export interface FileNode {
     path: string;
     size: number;
     mime_type: string;
-    metadata?: Record<string, any>;
+    metadata?: Record<string, unknown>;
 }
 export declare class TaxonomyService {
     private neo4j;
