@@ -16,6 +16,10 @@ export class OperationsResolvers {
 
   getResolvers() {
     return {
+      PurchaseOrder: {
+        po_number: (src: any) => src.po_number || src.poNumber || src.po_number,
+        amount: (src: any) => src.amount || src.total_amount,
+      },
       Query: {
         budgetVsActualAnalysis: async (_: any, { projectId, orgId }: { projectId: string; orgId: string }) => {
           return await this.operationsService.getBudgetVsActualAnalysis(projectId, orgId);
@@ -38,7 +42,12 @@ export class OperationsResolvers {
           _: any, 
           { input, userId }: { input: Omit<PurchaseOrder, 'id' | 'created_at' | 'updated_at'>; userId: string }
         ) => {
-          return await this.operationsService.createPurchaseOrder(input, userId);
+          const mapped: any = {
+            ...input,
+            order_number: (input as any).po_number ?? (input as any).order_number,
+            total_amount: (input as any).amount ?? (input as any).total_amount,
+          };
+          return await this.operationsService.createPurchaseOrder(mapped, userId);
         },
 
         createInvoice: async (

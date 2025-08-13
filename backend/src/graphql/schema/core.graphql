@@ -43,6 +43,27 @@ type Query {
   getFile(fileId: ID!, organizationId: ID!): FileMeta
   getFileStats(organizationId: ID!): FileStats!
   getSourceStats(sourceId: ID!, organizationId: ID!): JSON!
+  budgetVsActualAnalysis(projectId: ID!, orgId: String!): [BudgetVsActualRow!]!
+  vendorPerformanceAnalysis(orgId: String!): [VendorPerformanceRow!]!
+}
+
+type BudgetVsActualRow {
+  department: String
+  budgeted: Float
+  actual: Float
+  variance: Float
+}
+
+type VendorPerformanceRow {
+  vendor_name: String
+  category: String
+  rating: Float
+  total_pos: Int
+  total_po_amount: Float
+  total_invoices: Int
+  total_invoice_amount: Float
+  avg_delivery_days: Float
+  delivery_performance: String
 }
 
 type Mutation {
@@ -449,4 +470,10 @@ extend type Mutation {
   # Cross-layer link mutations
   createCrossLayerLink(organizationId: ID!, fromEntityId: ID!, toEntityId: ID!, relationshipType: String!): Boolean!
   validateAndRepairLinks(organizationId: ID!): JSON!
+}
+
+type LinkResult { success: Boolean! }
+
+extend type Mutation {
+  linkSceneToCharacter(sceneId: ID!, characterId: ID!, orgId: String!, userId: String!): LinkResult!
 }

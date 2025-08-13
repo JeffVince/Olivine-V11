@@ -183,9 +183,6 @@ export class TenantService {
     `;
     
     const result = await this.neo4jService.executeQuery(query, { userId, orgId });
-    if (!result || !('records' in result)) {
-      return [];
-    }
     
     if (result.records.length === 0) {
       return [];
@@ -212,9 +209,6 @@ export class TenantService {
     `;
     
     const result = await this.neo4jService.executeQuery(query, { userId, targetOrgId });
-    if (!result || !('records' in result)) {
-      return false;
-    }
     
     if (result.records.length === 0) {
       return false;
@@ -244,9 +238,6 @@ export class TenantService {
     `;
     
     const result = await this.neo4jService.executeQuery(query, { userId, orgId, projectId });
-    if (!result || !('records' in result)) {
-      return false;
-    }
     
     if (result.records.length === 0) {
       return false;
@@ -464,9 +455,6 @@ export class TenantService {
     `;
 
     const result = await this.neo4jService.executeQuery(query, { userId, orgId });
-    if (!result || !('records' in result)) {
-      return null;
-    }
     
     if (result.records.length === 0) {
       return null;
@@ -494,9 +482,6 @@ export class TenantService {
     `;
 
     const result = await this.neo4jService.executeQuery(query, { userId, orgId });
-    if (!result || !('records' in result)) {
-      return false;
-    }
     
     if (result.records.length === 0) {
       return false;

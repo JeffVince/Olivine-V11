@@ -9,7 +9,7 @@ class PostgresService {
         const poolConfig = {
             host: process.env.POSTGRES_HOST || 'localhost',
             port: parseInt(process.env.POSTGRES_PORT || '5432'),
-            database: process.env.POSTGRES_DB || 'olivine',
+            database: process.env.POSTGRES_DATABASE || process.env.POSTGRES_DB || 'olivine',
             user: process.env.POSTGRES_USER || 'postgres',
             password: process.env.POSTGRES_PASSWORD || 'password',
             max: parseInt(process.env.POSTGRES_MAX_CONNECTIONS || '20'),

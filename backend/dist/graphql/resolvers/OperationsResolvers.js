@@ -8,6 +8,10 @@ class OperationsResolvers {
     }
     getResolvers() {
         return {
+            PurchaseOrder: {
+                po_number: (src) => src.po_number || src.poNumber || src.po_number,
+                amount: (src) => src.amount || src.total_amount,
+            },
             Query: {
                 budgetVsActualAnalysis: async (_, { projectId, orgId }) => {
                     return await this.operationsService.getBudgetVsActualAnalysis(projectId, orgId);
@@ -21,7 +25,12 @@ class OperationsResolvers {
                     return await this.operationsService.createVendor(input, userId);
                 },
                 createPurchaseOrder: async (_, { input, userId }) => {
-                    return await this.operationsService.createPurchaseOrder(input, userId);
+                    const mapped = {
+                        ...input,
+                        order_number: input.po_number ?? input.order_number,
+                        total_amount: input.amount ?? input.total_amount,
+                    };
+                    return await this.operationsService.createPurchaseOrder(mapped, userId);
                 },
                 createInvoice: async (_, { input, userId }) => {
                     return await this.operationsService.createInvoice(input, userId);

@@ -269,6 +269,10 @@ export class ContentOntologyService {
         created_at: datetime(),
         updated_at: datetime()
       })
+      // Link scene to project for verification queries
+      WITH a, s
+      MATCH (p:Project {id: $project_id, org_id: $org_id})
+      CREATE (s)-[:BELONGS_TO]->(p)
       
       // Link action to scene for provenance
       CREATE (a)-[:TOUCHED]->(s)

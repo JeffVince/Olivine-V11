@@ -80,9 +80,9 @@ class OperationsOntologyService {
             preferred_payment_method: vendor.preferred_payment_method || null,
             status: vendor.status,
             rating: vendor.rating || null,
-            metadata: vendor.metadata || {},
-            inputs: { name: vendor.name, category: vendor.category },
-            outputs: { vendor_id: vendorId }
+            metadata: JSON.stringify(vendor.metadata || {}),
+            inputs: JSON.stringify({ name: vendor.name, category: vendor.category }),
+            outputs: JSON.stringify({ vendor_id: vendorId })
         }, vendor.org_id);
         return result.records[0]?.get('v').properties;
     }
@@ -189,10 +189,17 @@ class OperationsOntologyService {
             approved_by: po.approved_by || null,
             created_by: po.created_by,
             metadata: JSON.stringify(po.metadata || {}),
-            inputs: { po_number: po.order_number, vendor_id: po.vendor_id, amount: po.total_amount },
-            outputs: { po_id: poId }
+            inputs: JSON.stringify({ po_number: po.order_number, vendor_id: po.vendor_id, amount: po.total_amount }),
+            outputs: JSON.stringify({ po_id: poId })
         }, po.org_id);
-        return result.records[0]?.get('po').properties;
+        const props = result.records[0]?.get('po').properties;
+        if (!props)
+            return props;
+        return {
+            ...props,
+            po_number: props.po_number ?? po.order_number,
+            amount: props.amount ?? po.total_amount,
+        };
     }
     async createInvoice(invoice, userId) {
         const invoiceId = this.generateId();
@@ -288,9 +295,9 @@ class OperationsOntologyService {
             payment_date: invoice.payment_date || null,
             payment_method: invoice.payment_method || null,
             approved_by: invoice.approved_by || null,
-            metadata: invoice.metadata || {},
-            inputs: { invoice_number: invoice.invoice_number, vendor_id: invoice.vendor_id, amount: invoice.amount },
-            outputs: { invoice_id: invoiceId }
+            metadata: JSON.stringify(invoice.metadata || {}),
+            inputs: JSON.stringify({ invoice_number: invoice.invoice_number, vendor_id: invoice.vendor_id, amount: invoice.amount }),
+            outputs: JSON.stringify({ invoice_id: invoiceId })
         }, invoice.org_id);
         return result.records[0]?.get('i').properties;
     }
@@ -359,9 +366,9 @@ class OperationsOntologyService {
             version: budget.version,
             approved_by: budget.approved_by || null,
             approved_date: budget.approved_date || null,
-            metadata: budget.metadata || {},
-            inputs: { project_id: budget.project_id, name: budget.name, total_budget: budget.total_budget },
-            outputs: { budget_id: budgetId }
+            metadata: JSON.stringify(budget.metadata || {}),
+            inputs: JSON.stringify({ project_id: budget.project_id, name: budget.name, total_budget: budget.total_budget }),
+            outputs: JSON.stringify({ budget_id: budgetId })
         }, budget.org_id);
         return result.records[0]?.get('b').properties;
     }
@@ -432,9 +439,9 @@ class OperationsOntologyService {
             effective_date: rule.effective_date,
             expiry_date: rule.expiry_date || null,
             status: rule.status,
-            metadata: rule.metadata || {},
-            inputs: { name: rule.name, category: rule.category, severity: rule.severity },
-            outputs: { rule_id: ruleId }
+            metadata: JSON.stringify(rule.metadata || {}),
+            inputs: JSON.stringify({ name: rule.name, category: rule.category, severity: rule.severity }),
+            outputs: JSON.stringify({ rule_id: ruleId })
         }, rule.org_id);
         return result.records[0]?.get('cr').properties;
     }
@@ -447,7 +454,7 @@ class OperationsOntologyService {
       WITH b, b.metadata.departments as budget_by_dept
       
       // Get actual spending
-      MATCH (po:PurchaseOrder {project_id: p.id, status: "approved"})
+      MATCH (po:PurchaseOrder {project_id: $project_id, status: "approved"})
       OPTIONAL MATCH (po)<-[:FROM]-(ef:EdgeFact {type: "FOR_SCENE"})-[:TO]->(s:Scene)
       
       WITH budget_by_dept, 

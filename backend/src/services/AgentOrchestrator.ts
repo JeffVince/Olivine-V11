@@ -48,6 +48,7 @@ export class AgentOrchestrator {
   private agents: Map<string, BaseAgent> = new Map();
   private workflows: Map<string, AgentWorkflow> = new Map();
   private tasks: Map<string, AgentTask> = new Map();
+  private workflowStatus: Map<string, { results: Map<string, unknown>; errors: Map<string, string> }> = new Map();
   private queueService: QueueService;
   private provenance: ProvenanceService;
   private neo4j: Neo4jService;
@@ -219,6 +220,8 @@ export class AgentOrchestrator {
 
     const workflowExecutionId = this.generateId();
     console.log(`Starting workflow execution: ${workflowId} (${workflowExecutionId})`);
+    // Initialize status bucket
+    this.workflowStatus.set(workflowExecutionId, { results: new Map(), errors: new Map() });
 
     // Create tasks for each step
     const taskIds: string[] = [];
@@ -228,6 +231,8 @@ export class AgentOrchestrator {
       // Check condition if present
       if (step.condition && !step.condition(context)) {
         console.log(`Skipping step ${step.agent}:${step.type} - condition not met`);
+        const status = this.workflowStatus.get(workflowExecutionId);
+        status?.errors.set(`${step.agent}:${step.type}`, 'skipped');
         continue;
       }
 
@@ -243,6 +248,8 @@ export class AgentOrchestrator {
       });
 
       taskIds.push(taskId);
+      const status = this.workflowStatus.get(workflowExecutionId);
+      status?.results.set(taskId, { queued: true, agent: step.agent, type: step.type });
       previousTaskId = taskId;
     }
 
@@ -330,6 +337,12 @@ export class AgentOrchestrator {
       task.status = 'failed';
       task.error = `Agent not found: ${task.agent}`;
       task.completedAt = new Date();
+      // Record error into any workflow execution this task is associated with
+      const execId = (task.payload as any).execution_id as string | undefined;
+      if (execId && this.workflowStatus.has(execId)) {
+        const status = this.workflowStatus.get(execId)!;
+        status.errors.set(task.id, task.error!);
+      }
       return;
     }
 
@@ -381,6 +394,11 @@ export class AgentOrchestrator {
       task.status = 'completed';
       task.result = result;
       task.completedAt = new Date();
+      const execId = (task.payload as any).execution_id as string | undefined;
+      if (execId && this.workflowStatus.has(execId)) {
+        const status = this.workflowStatus.get(execId)!;
+        status.results.set(task.id, { completed: true, result });
+      }
 
       console.log(`Task ${taskId} completed successfully`);
 
@@ -401,6 +419,11 @@ export class AgentOrchestrator {
         task.status = 'failed';
         task.error = error instanceof Error ? error.message : String(error);
         task.completedAt = new Date();
+        const execId = (task.payload as any).execution_id as string | undefined;
+        if (execId && this.workflowStatus.has(execId)) {
+          const status = this.workflowStatus.get(execId)!;
+          status.errors.set(task.id, task.error!);
+        }
       }
     }
   }
@@ -501,11 +524,7 @@ export class AgentOrchestrator {
    * Get workflow status
    */
   getWorkflowStatus(workflowExecutionId: string): { results: Map<string, unknown>; errors: Map<string, string> } | undefined {
-    // Basic non-empty structures to satisfy tests expecting > 0 in some scenarios
-    return {
-      results: new Map(),
-      errors: new Map()
-    };
+    return this.workflowStatus.get(workflowExecutionId);
   }
 
   /**

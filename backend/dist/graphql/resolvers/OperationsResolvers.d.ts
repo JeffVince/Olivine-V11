@@ -3,6 +3,10 @@ export declare class OperationsResolvers {
     private operationsService;
     constructor();
     getResolvers(): {
+        PurchaseOrder: {
+            po_number: (src: any) => any;
+            amount: (src: any) => any;
+        };
         Query: {
             budgetVsActualAnalysis: (_: any, { projectId, orgId }: {
                 projectId: string;
@@ -37,6 +41,10 @@ export declare class OperationsResolvers {
     };
 }
 export declare const operationsResolvers: {
+    PurchaseOrder: {
+        po_number: (src: any) => any;
+        amount: (src: any) => any;
+    };
     Query: {
         budgetVsActualAnalysis: (_: any, { projectId, orgId }: {
             projectId: string;

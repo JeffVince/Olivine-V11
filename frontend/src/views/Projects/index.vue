@@ -144,10 +144,11 @@
     </v-row>
 
     <!-- Empty State -->
-    <v-card
-      v-else
-      class="text-center pa-8 glass-card"
-    >
+    <v-row v-else>
+      <v-col cols="12">
+        <v-card
+          class="text-center pa-8 glass-card"
+        >
       <v-icon
         size="64"
         color="grey-lighten-1"

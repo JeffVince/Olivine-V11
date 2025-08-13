@@ -245,6 +245,8 @@ async function globalSetup() {
         try {
             await postgresService.executeQuery(`ALTER TABLE IF EXISTS files ADD COLUMN IF NOT EXISTS classification_status TEXT DEFAULT 'pending'`);
             await postgresService.executeQuery(`ALTER TABLE IF EXISTS content_cluster ADD COLUMN IF NOT EXISTS org_id VARCHAR(255)`);
+            await postgresService.executeQuery(`ALTER TABLE IF EXISTS content_cluster ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT NOW()`);
+            await postgresService.executeQuery(`ALTER TABLE IF EXISTS content_cluster ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT NOW()`);
         }
         catch (e) {
             console.warn('Post-migration schema alignment skipped:', e.message);

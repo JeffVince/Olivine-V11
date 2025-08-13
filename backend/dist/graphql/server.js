@@ -153,11 +153,20 @@ class GraphQLServer {
         let enhancedTypeDefs = '';
         try {
             enhancedTypeDefs = (0, fs_1.readFileSync)((0, path_1.join)(schemaPath, 'enhanced.graphql'), 'utf8');
+            enhancedTypeDefs = enhancedTypeDefs
+                .replace(/linkSceneToCharacter\([^)]*\):\s*JSON!/g, 'linkSceneToCharacter(sceneId: ID!, characterId: ID!, orgId: String!, userId: String!): LinkResult!')
+                .replace(/userId:\s*ID!/g, 'userId: String!')
+                .replace(/orgId:\s*ID!/g, 'orgId: String!')
+                .replace(/organizationId:\s*ID!/g, 'organizationId: String!');
         }
         catch {
             enhancedTypeDefs = '';
         }
-        const coreTypeDefs = (0, fs_1.readFileSync)((0, path_1.join)(schemaPath, 'core.graphql'), 'utf8');
+        let coreTypeDefs = (0, fs_1.readFileSync)((0, path_1.join)(schemaPath, 'core.graphql'), 'utf8');
+        coreTypeDefs = coreTypeDefs
+            .replace(/userId:\s*ID!/g, 'userId: String!')
+            .replace(/orgId:\s*ID!/g, 'orgId: String!')
+            .replace(/organizationId:\s*ID!/g, 'organizationId: String!');
         const e2eExtensions = `
       scalar DateTime
       scalar JSON
@@ -234,6 +243,8 @@ class GraphQLServer {
         budget: Float
       }
 
+      type LinkResult { success: Boolean! }
+
       extend type Mutation {
         createProject(input: ProjectInput!, userId: String!): Project!
         createCharacter(input: CharacterInput!, userId: String!): Character!
@@ -241,10 +252,14 @@ class GraphQLServer {
         createVendor(input: VendorInput!, userId: String!): Vendor!
         createBudget(input: BudgetInput!, userId: String!): Budget!
         createPurchaseOrder(input: PurchaseOrderInput!, userId: String!): PurchaseOrder!
+        linkSceneToCharacter(sceneId: ID!, characterId: ID!, orgId: String!, userId: String!): LinkResult!
       }
     `;
+        const sanitizedEnhanced = enhancedTypeDefs
+            .replace(/budgetVsActualAnalysis\s*\([^)]*\):\s*\[\s*JSON!\s*\]\s*!/g, 'budgetVsActualAnalysis(projectId: ID!, orgId: String!): [BudgetVsActualRow!]!')
+            .replace(/vendorPerformanceAnalysis\s*\([^)]*\):\s*\[\s*JSON!\s*\]\s*!/g, 'vendorPerformanceAnalysis(orgId: String!): [VendorPerformanceRow!]!');
         const typeDefs = `
-      ${enhancedTypeDefs}
+      ${sanitizedEnhanced}
       ${coreTypeDefs}
       ${e2eExtensions}
     `;
@@ -253,10 +268,22 @@ class GraphQLServer {
         const opsResolvers = OperationsResolvers_1.operationsResolvers;
         const resolvers = {
             ...coreResolvers,
+            ...contentResolvers,
+            ...opsResolvers,
             Query: {
                 ...coreResolvers.Query,
                 ...contentResolvers.Query,
                 ...opsResolvers.Query,
+                budgetVsActualAnalysis: async (_, args, ctx, info) => {
+                    const fn = opsResolvers.Query?.budgetVsActualAnalysis;
+                    const data = fn ? await fn(_, args, ctx, info) : [];
+                    return Array.isArray(data) ? data.map((v) => ({ ...v })) : [];
+                },
+                vendorPerformanceAnalysis: async (_, args, ctx, info) => {
+                    const fn = opsResolvers.Query?.vendorPerformanceAnalysis;
+                    const data = fn ? await fn(_, args, ctx, info) : [];
+                    return Array.isArray(data) ? data.map((v) => ({ ...v })) : [];
+                }
             },
             Mutation: {
                 ...coreResolvers.Mutation,

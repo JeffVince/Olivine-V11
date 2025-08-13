@@ -40,6 +40,7 @@ export declare class AgentOrchestrator {
     private agents;
     private workflows;
     private tasks;
+    private workflowStatus;
     private queueService;
     private provenance;
     private neo4j;

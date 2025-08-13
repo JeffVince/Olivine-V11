@@ -519,12 +519,12 @@ export class FileProcessingService {
     const totalQuery = `
       SELECT COUNT(*)::int AS total
       FROM files
-      WHERE COALESCE(org_id, organization_id) = $1 AND deleted_at IS NULL
+      WHERE (org_id = $1 OR organization_id = $1) AND deleted_at IS NULL
     `;
     const classifiedQuery = `
       SELECT COUNT(*)::int AS classified
       FROM files
-      WHERE COALESCE(org_id, organization_id) = $1 AND deleted_at IS NULL AND classification_status = 'completed'
+      WHERE (org_id = $1 OR organization_id = $1) AND deleted_at IS NULL AND classification_status = 'completed'
     `;
 
     const [totalRes, classifiedRes] = await Promise.all([

@@ -10,10 +10,15 @@ export class PostgresService {
   private pool: Pool;
 
   constructor() {
+    const isTest = process.env.NODE_ENV === 'test' || process.env.TEST_MODE === 'true';
+    const dbName = isTest
+      ? (process.env.POSTGRES_DATABASE || process.env.POSTGRES_TEST_DATABASE || process.env.POSTGRES_DB || 'olivine_test')
+      : (process.env.POSTGRES_DB || process.env.POSTGRES_DATABASE || 'olivine');
+
     const poolConfig: PoolConfig = {
       host: process.env.POSTGRES_HOST || 'localhost',
       port: parseInt(process.env.POSTGRES_PORT || '5432'),
-      database: process.env.POSTGRES_DB || 'olivine',
+      database: dbName,
       user: process.env.POSTGRES_USER || 'postgres',
       password: process.env.POSTGRES_PASSWORD || 'password',
       max: parseInt(process.env.POSTGRES_MAX_CONNECTIONS || '20'),
