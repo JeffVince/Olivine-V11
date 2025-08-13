@@ -84,7 +84,7 @@ export class AuthService {
     try {
       // Find user by email
       const result = await this.postgresService.executeQuery(
-        'SELECT id, organization_id, password_hash, role FROM users WHERE email = $1',
+        'SELECT id, organization_id, password_hash, role, name, avatar_url, notification_prefs FROM users WHERE email = $1',
         [email]
       );
 
@@ -114,6 +114,9 @@ export class AuthService {
         userId: user.id,
         orgId: user.organization_id,
         role: user.role,
+        name: user.name,
+        avatar: user.avatar_url,
+        notificationPrefs: user.notification_prefs,
         token
       };
     } catch (error) {
@@ -149,7 +152,7 @@ export class AuthService {
   async getUserById(userId: string): Promise<any> {
     try {
       const result = await this.postgresService.executeQuery(
-        'SELECT id, organization_id, email, role, created_at, last_login FROM users WHERE id = $1',
+        'SELECT id, organization_id, email, role, name, avatar_url, notification_prefs, created_at, last_login FROM users WHERE id = $1',
         [userId]
       );
 
@@ -163,6 +166,9 @@ export class AuthService {
         orgId: user.organization_id,
         email: user.email,
         role: user.role,
+        name: user.name,
+        avatar: user.avatar_url,
+        notificationPrefs: user.notification_prefs,
         createdAt: user.created_at,
         lastLogin: user.last_login
       };
