@@ -19,7 +19,29 @@
         </v-list>
       </v-window-item>
       <v-window-item value="canonical">
-        <v-card-text>Canonical mapping coming soon</v-card-text>
+        <v-list density="compact">
+          <v-list-item>
+            <v-list-item-title>Classification</v-list-item-title>
+            <v-list-item-subtitle>
+              <v-chip
+                v-if="file?.classificationStatus"
+                :color="classificationColor(file?.classificationStatus)"
+                size="small"
+                label
+                variant="tonal"
+              >
+                {{ file?.classificationStatus }}
+              </v-chip>
+              <span v-if="file?.classificationConfidence" class="ml-2 text-medium-emphasis">
+                {{ (file?.classificationConfidence * 100).toFixed(0) }}%
+              </span>
+            </v-list-item-subtitle>
+          </v-list-item>
+          <v-list-item v-if="file?.canonicalSlot">
+            <v-list-item-title>Canonical Slot</v-list-item-title>
+            <v-list-item-subtitle>{{ file?.canonicalSlot }}</v-list-item-subtitle>
+          </v-list-item>
+        </v-list>
       </v-window-item>
       <v-window-item value="references">
         <v-card-text>References coming soon</v-card-text>
@@ -28,7 +50,19 @@
         <v-card-text>Provenance coming soon</v-card-text>
       </v-window-item>
       <v-window-item value="preview">
-        <v-card-text>Preview coming soon</v-card-text>
+        <v-card-text>
+          <template v-if="file?.metadata?.previewUrl">
+            <iframe :src="file.metadata.previewUrl" style="width:100%;height:300px;" />
+          </template>
+          <template v-else>
+            <div
+              class="text-wrap"
+              style="white-space: pre-wrap; max-height: 300px; overflow:auto;"
+            >
+              {{ file?.metadata?.preview || file?.extractedText }}
+            </div>
+          </template>
+        </v-card-text>
       </v-window-item>
     </v-window>
   </v-card>
@@ -43,6 +77,19 @@ const tab = ref('details')
 
 const { data } = useFile(() => props.fileId)
 const file = computed(() => data.value)
+
+function classificationColor(status?: string) {
+  switch ((status || '').toUpperCase()) {
+    case 'CLASSIFIED':
+      return 'green'
+    case 'MANUAL_REVIEW':
+      return 'orange'
+    case 'FAILED':
+      return 'red'
+    default:
+      return 'grey'
+  }
+}
 </script>
 
 

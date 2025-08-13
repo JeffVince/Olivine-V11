@@ -14,6 +14,10 @@ const FILE_QUERY = gql`
       checksum
       modified
       metadata
+      classificationStatus
+      classificationConfidence
+      canonicalSlot
+      extractedText
       current
       deleted
     }
