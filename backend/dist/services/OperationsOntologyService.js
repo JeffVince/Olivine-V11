@@ -143,12 +143,12 @@ class OperationsOntologyService {
       // Link to vendor
       MATCH (v:Vendor {id: $vendor_id, org_id: $org_id})
       CREATE (po)-[:FROM_VENDOR]->(v)
+      WITH c,a,po
       
-      // Link to scene if specified
-      CALL apoc.do.when(
-        $scene_id IS NOT NULL,
-        "
-        MATCH (s:Scene {id: $scene_id, org_id: $org_id})
+      // Link to scene if specified (without APOC map params to avoid Map types)
+      WITH c,a,po
+      OPTIONAL MATCH (s:Scene {id: $scene_id, org_id: $org_id})
+      FOREACH (_ IN CASE WHEN $scene_id IS NOT NULL AND s IS NOT NULL THEN [1] ELSE [] END |
         CREATE (ef:EdgeFact {
           id: randomUUID(),
           type: 'FOR_SCENE',
@@ -161,11 +161,7 @@ class OperationsOntologyService {
         })
         CREATE (ef)-[:FROM]->(po)
         CREATE (ef)-[:TO]->(s)
-        RETURN ef
-        ",
-        "RETURN null",
-        {po: po, scene_id: $scene_id, org_id: $org_id, commit_id: $commit_id}
-      ) YIELD value
+      )
       
       // Link action to PO for provenance
       CREATE (a)-[:TOUCHED]->(po)
@@ -192,7 +188,7 @@ class OperationsOntologyService {
             delivery_address: po.delivery_address || null,
             approved_by: po.approved_by || null,
             created_by: po.created_by,
-            metadata: po.metadata || {},
+            metadata: JSON.stringify(po.metadata || {}),
             inputs: { po_number: po.order_number, vendor_id: po.vendor_id, amount: po.total_amount },
             outputs: { po_id: poId }
         }, po.org_id);

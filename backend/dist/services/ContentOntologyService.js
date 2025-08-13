@@ -68,7 +68,7 @@ class ContentOntologyService {
             status: project.status,
             start_date: project.start_date || null,
             budget: project.budget || null,
-            metadata: project.metadata || {},
+            metadata: JSON.stringify(project.metadata || {}),
             inputs: { title: project.title, type: project.type },
             outputs: { project_id: projectId }
         }, project.org_id);
@@ -157,7 +157,7 @@ class ContentOntologyService {
             page_count: scene.page_count || null,
             status: scene.status,
             description: scene.description || null,
-            metadata: scene.metadata || {},
+            metadata: JSON.stringify(scene.metadata || {}),
             inputs: { project_id: scene.project_id, number: scene.number, title: scene.title },
             outputs: { scene_id: sceneId }
         }, scene.org_id);

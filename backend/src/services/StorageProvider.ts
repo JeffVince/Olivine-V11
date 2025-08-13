@@ -55,19 +55,21 @@ export class StorageProviderFactory {
   // TODO: Implementation Checklist - 03-Storage-Integration-Checklist.md - Storage provider factory pattern
   // TODO: Implementation Checklist - 07-Testing-QA-Checklist.md - Backend storage provider factory tests
   static async createProvider(type: StorageProviderType): Promise<StorageProvider> {
+    // Use static imports so instanceof works with jest mocks
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { DropboxService } = require('./DropboxService');
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { GoogleDriveService } = require('./GoogleDriveService');
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { SupabaseService } = require('./SupabaseService');
+
     switch (type) {
-      case 'dropbox': {
-        const { DropboxService } = await import('./DropboxService');
+      case 'dropbox':
         return new DropboxService();
-      }
-      case 'gdrive': {
-        const { GoogleDriveService } = await import('./GoogleDriveService');
+      case 'gdrive':
         return new GoogleDriveService();
-      }
-      case 'supabase': {
-        const { SupabaseService } = await import('./SupabaseService');
+      case 'supabase':
         return new SupabaseService();
-      }
       default:
         throw new Error(`Unsupported storage provider type: ${type}`);
     }

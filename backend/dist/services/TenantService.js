@@ -66,7 +66,8 @@ class TenantService {
             throw new Error('Invalid organization ID');
         }
         const tenantParams = this.addOrgIdToParams(params, orgId);
-        return await this.neo4jService.executeQuery(query, tenantParams);
+        const result = await this.neo4jService.executeQuery(query, tenantParams);
+        return result;
     }
     async validateAccess(user, orgId) {
         if (!user || !user.orgId) {
@@ -85,10 +86,7 @@ class TenantService {
       RETURN org
     `;
         const result = await this.neo4jService.executeQuery(query, { orgId });
-        if (!result || !('records' in result)) {
-            throw new Error('Organization not found');
-        }
-        if (result.records.length === 0) {
+        if (!result || !('records' in result) || result.records.length === 0) {
             throw new Error('Organization not found');
         }
         const orgData = result.records[0].get('org').properties;
@@ -281,10 +279,7 @@ class TenantService {
       RETURN r
     `;
         const result = await this.neo4jService.executeQuery(query, { userId, orgId, role });
-        if (!result || !('records' in result)) {
-            throw new Error('Failed to add user to organization');
-        }
-        if (result.records.length === 0) {
+        if (!result || !('records' in result) || result.records.length === 0) {
             throw new Error('Failed to add user to organization');
         }
     }

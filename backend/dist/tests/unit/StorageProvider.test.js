@@ -4,9 +4,18 @@ const StorageProvider_1 = require("../../services/StorageProvider");
 const DropboxService_1 = require("../../services/DropboxService");
 const GoogleDriveService_1 = require("../../services/GoogleDriveService");
 const SupabaseService_1 = require("../../services/SupabaseService");
-jest.mock('../../services/DropboxService');
-jest.mock('../../services/GoogleDriveService');
-jest.mock('../../services/SupabaseService');
+jest.mock('../../services/DropboxService', () => {
+    const Actual = jest.requireActual('../../services/DropboxService');
+    return { ...Actual };
+});
+jest.mock('../../services/GoogleDriveService', () => {
+    const Actual = jest.requireActual('../../services/GoogleDriveService');
+    return { ...Actual };
+});
+jest.mock('../../services/SupabaseService', () => {
+    const Actual = jest.requireActual('../../services/SupabaseService');
+    return { ...Actual };
+});
 describe('StorageProvider', () => {
     describe('StorageProviderFactory', () => {
         it('should create DropboxService instance', async () => {

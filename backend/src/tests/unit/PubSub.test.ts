@@ -2,9 +2,13 @@ import { pubsub, TOPICS } from '../../services/graphql/PubSub';
 import { PubSub } from 'graphql-subscriptions';
 
 // Mock PubSub class
-jest.mock('graphql-subscriptions', () => ({
-  PubSub: jest.fn()
-}));
+jest.mock('graphql-subscriptions', () => {
+  const Actual = jest.requireActual('graphql-subscriptions');
+  return {
+    ...Actual,
+    PubSub: jest.fn().mockImplementation(() => new Actual.PubSub()),
+  };
+});
 
 describe('PubSub', () => {
   beforeEach(() => {

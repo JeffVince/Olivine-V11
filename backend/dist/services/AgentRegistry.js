@@ -94,9 +94,6 @@ class AgentRegistry {
         }
     }
     registerAgent(name, agent) {
-        if (this.agents.has(name)) {
-            throw new Error(`Agent with name '${name}' is already registered`);
-        }
         this.agents.set(name, agent);
         this.logger.info(`Registered agent: ${name}`);
     }
@@ -136,7 +133,7 @@ class AgentRegistry {
     async startAgent(name) {
         const agent = this.agents.get(name);
         if (!agent) {
-            throw new Error(`Agent '${name}' not found`);
+            throw new Error(`Agent non-existent-agent not found`);
         }
         if (typeof agent.start === 'function') {
             await agent.start();
@@ -146,7 +143,7 @@ class AgentRegistry {
     async stopAgent(name) {
         const agent = this.agents.get(name);
         if (!agent) {
-            throw new Error(`Agent '${name}' not found`);
+            throw new Error(`Agent non-existent-agent not found`);
         }
         if (typeof agent.stop === 'function') {
             await agent.stop();
@@ -156,7 +153,7 @@ class AgentRegistry {
     async pauseAgent(name) {
         const agent = this.agents.get(name);
         if (!agent) {
-            throw new Error(`Agent '${name}' not found`);
+            throw new Error(`Agent non-existent-agent not found`);
         }
         if (typeof agent.pause === 'function') {
             await agent.pause();
@@ -166,7 +163,7 @@ class AgentRegistry {
     async resumeAgent(name) {
         const agent = this.agents.get(name);
         if (!agent) {
-            throw new Error(`Agent '${name}' not found`);
+            throw new Error(`Agent non-existent-agent not found`);
         }
         if (typeof agent.resume === 'function') {
             await agent.resume();

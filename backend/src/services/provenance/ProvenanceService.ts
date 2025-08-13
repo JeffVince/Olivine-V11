@@ -427,17 +427,15 @@ export class ProvenanceService {
       OPTIONAL MATCH (main:Branch {name: "main", org_id: $org_id})
       WITH coalesce($from_commit, main.head_commit) as base_commit
       
-      CREATE (new_branch:Branch {
-        name: $name,
-        org_id: $org_id,
-        project_id: $project_id,
-        description: $description,
-        created_from_commit: base_commit,
-        head_commit: base_commit,
-        status: "active",
-        created_by: $user_id,
-        created_at: datetime()
-      })
+      MERGE (new_branch:Branch {name: $name, org_id: $org_id})
+      ON CREATE SET
+        new_branch.project_id = $project_id,
+        new_branch.description = $description,
+        new_branch.created_from_commit = base_commit,
+        new_branch.head_commit = base_commit,
+        new_branch.status = "active",
+        new_branch.created_by = $user_id,
+        new_branch.created_at = datetime()
       RETURN new_branch
     `;
 

@@ -34,8 +34,8 @@ class Neo4jService {
         });
         try {
             if (orgId) {
-                if (!('org_id' in params) && !('orgId' in params)) {
-                    params.org_id = orgId;
+                if (!('orgId' in params)) {
+                    params.orgId = orgId;
                 }
             }
             const sanitizedParams = {};

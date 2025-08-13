@@ -449,10 +449,13 @@ export class CrossLayerEnforcementService {
    * Validate a specific rule
    */
   private async validateRule(orgId: string, rule: CrossLayerRule): Promise<ValidationResult> {
-    const violations = await this.neo4jService.run(
-      rule.validationQuery + ' AND s.org_id = $orgId',
-      { orgId }
-    );
+    const vq = rule.validationQuery.trim();
+    // Determine primary alias by scanning common node letters in MATCH clauses
+    let alias = 'n';
+    const m = vq.match(/MATCH\s*\((\w+)\s*:/i);
+    if (m && m[1]) alias = m[1];
+    const amended = vq.includes('RETURN') ? vq.replace(/RETURN/i, `AND ${alias}.org_id = $orgId RETURN`) : `${vq} AND ${alias}.org_id = $orgId`;
+    const violations = await this.neo4jService.run(amended, { orgId });
 
     const result: ValidationResult = {
       ruleId: rule.id,

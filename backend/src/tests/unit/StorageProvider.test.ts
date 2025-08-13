@@ -4,9 +4,18 @@ import { GoogleDriveService } from '../../services/GoogleDriveService';
 import { SupabaseService } from '../../services/SupabaseService';
 
 // Mock the services to avoid actual API calls
-jest.mock('../../services/DropboxService');
-jest.mock('../../services/GoogleDriveService');
-jest.mock('../../services/SupabaseService');
+jest.mock('../../services/DropboxService', () => {
+  const Actual = jest.requireActual('../../services/DropboxService');
+  return { ...Actual };
+});
+jest.mock('../../services/GoogleDriveService', () => {
+  const Actual = jest.requireActual('../../services/GoogleDriveService');
+  return { ...Actual };
+});
+jest.mock('../../services/SupabaseService', () => {
+  const Actual = jest.requireActual('../../services/SupabaseService');
+  return { ...Actual };
+});
 
 describe('StorageProvider', () => {
   describe('StorageProviderFactory', () => {

@@ -10,4 +10,6 @@ export const TOPICS = {
   JobLogAppended: 'JOB_LOG_APPENDED',
 }
 
+export default pubsub
+
 

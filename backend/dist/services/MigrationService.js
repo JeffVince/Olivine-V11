@@ -71,10 +71,10 @@ class MigrationService {
                     }
                     catch (error) {
                         if (statement.trim().toUpperCase().startsWith('CREATE POLICY') &&
-                            (typeof error === 'object' && error !== null && 'message' in error && error.message.includes('already exists') ||
-                                typeof error === 'object' && error !== null && 'message' in error && error.message.includes('duplicate key') ||
-                                typeof error === 'object' && error !== null && 'code' in error && error.code === '42710')) {
-                            console.log(`Policy already exists, skipping: ${statement.substring(0, 50)}...`);
+                            ((typeof error === 'object' && error !== null && 'message' in error && error.message.toLowerCase().includes('already exists')) ||
+                                (typeof error === 'object' && error !== null && 'message' in error && error.message.toLowerCase().includes('duplicate')) ||
+                                (typeof error === 'object' && error !== null && 'code' in error && String(error.code) === '42710'))) {
+                            console.log('Policy already exists, skipping');
                         }
                         else {
                             throw error;

@@ -9,13 +9,10 @@ export declare class AuthService {
     static JwtPayloadGuard(payload: any): payload is JwtPayload;
     verifyToken(token: string): JwtPayload;
     authenticateUser(email: string, password: string): Promise<{
-        id: string;
+        token: string;
+        userId: string;
         orgId: string;
         role: string;
-        name: string;
-        avatar: string;
-        notificationPrefs: Record<string, unknown>;
-        token: string;
     } | null>;
     healthCheck(): Promise<boolean>;
     getUserById(userId: string): Promise<{

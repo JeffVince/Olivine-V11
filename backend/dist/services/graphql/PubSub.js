@@ -7,4 +7,5 @@ exports.TOPICS = {
     JobUpdated: 'JOB_UPDATED',
     JobLogAppended: 'JOB_LOG_APPENDED',
 };
+exports.default = exports.pubsub;
 //# sourceMappingURL=PubSub.js.map

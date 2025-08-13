@@ -1,4 +1,5 @@
 import { Dropbox } from 'dropbox';
+import type { files } from 'dropbox/types/dropbox_types';
 import { StorageProvider } from './StorageProvider';
 import { EventEmitter } from 'events';
 export interface DropboxMetrics {
@@ -65,6 +66,7 @@ export declare class DropboxService extends EventEmitter implements StorageProvi
     private maxLogEntries;
     constructor();
     private log;
+    private logError;
     private updateMetrics;
     getMetrics(): DropboxMetrics;
     getLogs(limit?: number, level?: 'info' | 'warn' | 'error' | 'debug'): DropboxLogEntry[];
@@ -147,20 +149,12 @@ export declare class DropboxService extends EventEmitter implements StorageProvi
     private pollBatchJobStatus;
     listFolderWithPagination(orgId: string, sourceId: string, path?: string, options?: {
         recursive?: boolean;
-        limit?: number;
-        cursor?: string;
-        include_media_info?: boolean;
-        include_deleted?: boolean;
-    }): Promise<{
-        entries: Array<Record<string, unknown>>;
-        cursor: string;
-        has_more: boolean;
-    }>;
-    getAllFilesInFolder(orgId: string, sourceId: string, path?: string, options?: {
-        recursive?: boolean;
         maxFiles?: number;
-        include_media_info?: boolean;
-    }): Promise<any[]>;
+        cursor?: string;
+    }): Promise<{
+        entries: files.MetadataReference[];
+        cursor?: string;
+    }>;
     subscribeToChanges(orgId: string, sourceId: string, callback: (payload: Record<string, unknown>) => void): Promise<any>;
 }
 //# sourceMappingURL=DropboxService.d.ts.map

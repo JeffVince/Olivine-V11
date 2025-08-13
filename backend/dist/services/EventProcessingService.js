@@ -311,10 +311,15 @@ class EventProcessingService {
     async close() {
         console.log('Closing EventProcessingService...');
         try {
+            const maybeClose = async (q) => {
+                if (q && typeof q.close === 'function') {
+                    await q.close();
+                }
+            };
             await Promise.all([
-                this.fileSyncQueue.close(),
-                this.fileClassificationQueue.close(),
-                this.contentExtractionQueue.close()
+                maybeClose(this.fileSyncQueue),
+                maybeClose(this.fileClassificationQueue),
+                maybeClose(this.contentExtractionQueue)
             ]);
             await Promise.all([
                 this.neo4jService.close(),

@@ -1,5 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+jest.unmock('../../services/DropboxService');
+jest.unmock('../../services/GoogleDriveService');
 const DropboxService_1 = require("../../services/DropboxService");
 const GoogleDriveService_1 = require("../../services/GoogleDriveService");
 const SupabaseService_1 = require("../../services/SupabaseService");

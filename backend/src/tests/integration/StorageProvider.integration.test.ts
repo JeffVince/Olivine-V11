@@ -1,4 +1,6 @@
 import { StorageProviderFactory, StorageProviderType } from '../../services/StorageProvider';
+jest.unmock('../../services/DropboxService');
+jest.unmock('../../services/GoogleDriveService');
 import { DropboxService } from '../../services/DropboxService';
 import { GoogleDriveService } from '../../services/GoogleDriveService';
 import { SupabaseService } from '../../services/SupabaseService';

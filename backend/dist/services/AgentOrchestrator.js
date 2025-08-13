@@ -24,6 +24,7 @@ class AgentOrchestrator {
         const noveltyAgent = new NoveltyDetectionAgent_1.NoveltyDetectionAgent(this.queueService);
         this.agents.set('script_breakdown_agent', scriptBreakdownAgent);
         this.agents.set('taxonomy_classification_agent', taxonomyClassificationAgent);
+        this.agents.set('enhanced_classification_agent', taxonomyClassificationAgent);
         this.agents.set('novelty_detection_agent', noveltyAgent);
     }
     initializeWorkflows() {
@@ -351,7 +352,11 @@ class AgentOrchestrator {
     }
     async startWorkflow(workflow, eventData) {
         const workflowExecutionId = this.generateId();
-        console.log(`Starting workflow execution: ${workflow.id} (${workflowExecutionId})`);
+        if (!workflow || !Array.isArray(workflow.steps)) {
+            console.warn('startWorkflow called without a valid workflow or steps; nothing to execute');
+            return workflowExecutionId;
+        }
+        console.log(`Starting workflow execution: ${(workflow && workflow.id) || 'unknown'} (${workflowExecutionId})`);
         const taskIds = [];
         let previousTaskId;
         for (const step of workflow.steps) {

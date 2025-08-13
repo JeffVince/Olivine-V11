@@ -194,8 +194,10 @@ async function globalSetup() {
             `CREATE TABLE IF NOT EXISTS content_cluster (
         id VARCHAR(255) PRIMARY KEY,
         file_id VARCHAR(255),
+        org_id VARCHAR(255),
         entities_count INTEGER DEFAULT 0,
         links_count INTEGER DEFAULT 0,
+        created_at TIMESTAMP DEFAULT NOW(),
         updated_at TIMESTAMP DEFAULT NOW(),
         status VARCHAR(50)
       )`,
@@ -239,6 +241,13 @@ async function globalSetup() {
         }
         catch (e) {
             console.warn('Migrations not executed in tests:', e.message);
+        }
+        try {
+            await postgresService.executeQuery(`ALTER TABLE IF EXISTS files ADD COLUMN IF NOT EXISTS classification_status TEXT DEFAULT 'pending'`);
+            await postgresService.executeQuery(`ALTER TABLE IF EXISTS content_cluster ADD COLUMN IF NOT EXISTS org_id VARCHAR(255)`);
+        }
+        catch (e) {
+            console.warn('Post-migration schema alignment skipped:', e.message);
         }
         try {
             const fs = await Promise.resolve().then(() => __importStar(require('fs')));

@@ -116,7 +116,8 @@ export class TenantService {
     const tenantParams = this.addOrgIdToParams(params, orgId);
     
     // Execute query with Neo4j service
-    return await this.neo4jService.executeQuery(query, tenantParams);
+    const result = await this.neo4jService.executeQuery(query, tenantParams);
+    return result;
   }
 
   /**
@@ -151,11 +152,7 @@ export class TenantService {
     `;
     
     const result = await this.neo4jService.executeQuery(query, { orgId });
-    if (!result || !('records' in result)) {
-      throw new Error('Organization not found');
-    }
-    
-    if (result.records.length === 0) {
+    if (!result || !('records' in result) || result.records.length === 0) {
       throw new Error('Organization not found');
     }
     
@@ -423,11 +420,7 @@ export class TenantService {
     `;
 
     const result = await this.neo4jService.executeQuery(query, { userId, orgId, role });
-    if (!result || !('records' in result)) {
-      throw new Error('Failed to add user to organization');
-    }
-    
-    if (result.records.length === 0) {
+    if (!result || !('records' in result) || result.records.length === 0) {
       throw new Error('Failed to add user to organization');
     }
   }

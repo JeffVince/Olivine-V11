@@ -2,9 +2,13 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const PubSub_1 = require("../../services/graphql/PubSub");
 const graphql_subscriptions_1 = require("graphql-subscriptions");
-jest.mock('graphql-subscriptions', () => ({
-    PubSub: jest.fn()
-}));
+jest.mock('graphql-subscriptions', () => {
+    const Actual = jest.requireActual('graphql-subscriptions');
+    return {
+        ...Actual,
+        PubSub: jest.fn().mockImplementation(() => new Actual.PubSub()),
+    };
+});
 describe('PubSub', () => {
     beforeEach(() => {
         jest.clearAllMocks();

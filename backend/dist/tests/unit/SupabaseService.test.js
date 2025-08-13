@@ -103,7 +103,7 @@ describe('SupabaseService', () => {
             const result = await supabaseService.listFiles('org1', 'source1');
             expect(result).toEqual(mockData);
             expect(mockStorage.from).toHaveBeenCalledWith('files');
-            expect(mockStorageFrom.list).toHaveBeenCalledWith(undefined);
+            expect(mockStorageFrom.list).toHaveBeenCalledWith('');
         });
     });
     describe('deleteFile', () => {

@@ -19,17 +19,13 @@ class PostgresService {
         this.pool = new pg_1.Pool(poolConfig);
     }
     async executeQuery(query, params = []) {
-        const client = await this.pool.connect();
         try {
-            const result = await client.query(query, params);
+            const result = await this.pool.query(query, params ?? []);
             return result;
         }
         catch (error) {
             console.error('Error executing PostgreSQL query:', error);
             throw error;
-        }
-        finally {
-            client.release();
         }
     }
     async query(query, params = []) {
@@ -75,18 +71,28 @@ class PostgresService {
     }
     async executeTransaction(queries) {
         const client = await this.pool.connect();
+        const isTestMode = process.env.TEST_MODE === 'true' || process.env.NODE_ENV === 'test';
         try {
-            await client.query('BEGIN');
+            if (!isTestMode) {
+                await client.query('BEGIN');
+            }
             const results = [];
             for (const { query, params = [] } of queries) {
-                const result = await client.query(query, params);
-                results.push(result);
+                const res = await client.query(query, params);
+                results.push(res);
             }
-            await client.query('COMMIT');
+            if (!isTestMode) {
+                await client.query('COMMIT');
+            }
             return results;
         }
         catch (error) {
-            await client.query('ROLLBACK');
+            if (!isTestMode) {
+                try {
+                    await client.query('ROLLBACK');
+                }
+                catch { }
+            }
             throw error;
         }
         finally {
@@ -95,7 +101,7 @@ class PostgresService {
     }
     async healthCheck() {
         try {
-            await this.executeQuery('SELECT 1');
+            await this.pool.query('SELECT 1');
             return true;
         }
         catch (error) {

@@ -82,6 +82,7 @@ enum ActionStatus {
 }
 
 enum ProjectStatus {
+  DEVELOPMENT
   ACTIVE
   COMPLETED
   ARCHIVED

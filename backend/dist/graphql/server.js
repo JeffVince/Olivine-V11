@@ -52,6 +52,8 @@ const path_1 = require("path");
 const graphql_1 = require("graphql");
 const SecurityMiddleware_1 = require("./middleware/SecurityMiddleware");
 const core_1 = require("./resolvers/core");
+const ContentOntologyResolvers_1 = require("./resolvers/ContentOntologyResolvers");
+const OperationsResolvers_1 = require("./resolvers/OperationsResolvers");
 const Neo4jService_1 = require("../services/Neo4jService");
 const PostgresService_1 = require("../services/PostgresService");
 const QueueService_1 = require("../services/queues/QueueService");
@@ -148,16 +150,120 @@ class GraphQLServer {
         const schemaPath = __dirname.includes('/dist/')
             ? (0, path_1.join)(__dirname, 'schema')
             : (0, path_1.join)(process.cwd(), 'dist', 'graphql', 'schema');
-        const enhancedTypeDefs = (0, fs_1.readFileSync)((0, path_1.join)(schemaPath, 'enhanced.graphql'), 'utf8');
+        let enhancedTypeDefs = '';
+        try {
+            enhancedTypeDefs = (0, fs_1.readFileSync)((0, path_1.join)(schemaPath, 'enhanced.graphql'), 'utf8');
+        }
+        catch {
+            enhancedTypeDefs = '';
+        }
         const coreTypeDefs = (0, fs_1.readFileSync)((0, path_1.join)(schemaPath, 'core.graphql'), 'utf8');
+        const e2eExtensions = `
+      scalar DateTime
+      scalar JSON
+
+      input ProjectInput {
+        org_id: String!
+        title: String!
+        type: String!
+        status: String!
+        start_date: DateTime
+        budget: Float
+        metadata: JSON
+      }
+
+      input CharacterInput {
+        org_id: String!
+        project_id: String!
+        name: String!
+        role_type: String!
+        description: String
+      }
+
+      input SceneInput {
+        org_id: String!
+        project_id: String!
+        number: String!
+        title: String!
+        location: String
+        time_of_day: String
+        status: String!
+        page_count: Float
+        description: String
+      }
+
+      input VendorInput {
+        org_id: String!
+        name: String!
+        category: String
+        contact_email: String
+        status: String!
+        rating: Float
+      }
+
+      input BudgetInput {
+        org_id: String!
+        project_id: String!
+        name: String!
+        total_budget: Float!
+        currency: String!
+        status: String!
+        version: String!
+        metadata: JSON
+      }
+
+      input PurchaseOrderInput {
+        org_id: String!
+        project_id: String!
+        po_number: String!
+        vendor_id: String!
+        scene_id: String
+        description: String
+        amount: Float!
+        currency: String!
+        status: String!
+        order_date: DateTime
+        needed_date: DateTime
+        delivery_address: String
+        approved_by: String
+        created_by: String!
+      }
+      extend type Project {
+        title: String
+        type: String
+        budget: Float
+      }
+
+      extend type Mutation {
+        createProject(input: ProjectInput!, userId: String!): Project!
+        createCharacter(input: CharacterInput!, userId: String!): Character!
+        createScene(input: SceneInput!, userId: String!): Scene!
+        createVendor(input: VendorInput!, userId: String!): Vendor!
+        createBudget(input: BudgetInput!, userId: String!): Budget!
+        createPurchaseOrder(input: PurchaseOrderInput!, userId: String!): PurchaseOrder!
+      }
+    `;
         const typeDefs = `
       ${enhancedTypeDefs}
-      
-      # Core types for backward compatibility
       ${coreTypeDefs}
+      ${e2eExtensions}
     `;
         const coreResolvers = (0, core_1.buildCoreResolvers)();
-        const resolvers = coreResolvers;
+        const contentResolvers = ContentOntologyResolvers_1.contentOntologyResolvers;
+        const opsResolvers = OperationsResolvers_1.operationsResolvers;
+        const resolvers = {
+            ...coreResolvers,
+            Query: {
+                ...coreResolvers.Query,
+                ...contentResolvers.Query,
+                ...opsResolvers.Query,
+            },
+            Mutation: {
+                ...coreResolvers.Mutation,
+                ...contentResolvers.Mutation,
+                ...opsResolvers.Mutation,
+            },
+        };
         return (0, schema_1.makeExecutableSchema)({
             typeDefs,
             resolvers

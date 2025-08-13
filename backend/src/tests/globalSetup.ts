@@ -187,8 +187,10 @@ export default async function globalSetup() {
       `CREATE TABLE IF NOT EXISTS content_cluster (
         id VARCHAR(255) PRIMARY KEY,
         file_id VARCHAR(255),
+        org_id VARCHAR(255),
         entities_count INTEGER DEFAULT 0,
         links_count INTEGER DEFAULT 0,
+        created_at TIMESTAMP DEFAULT NOW(),
         updated_at TIMESTAMP DEFAULT NOW(),
         status VARCHAR(50)
       )`,
@@ -233,6 +235,14 @@ export default async function globalSetup() {
       await ms.close();
     } catch (e) {
       console.warn('Migrations not executed in tests:', (e as Error).message);
+    }
+
+    // Ensure schema has columns used by tests, even if migrations differ
+    try {
+      await postgresService.executeQuery(`ALTER TABLE IF EXISTS files ADD COLUMN IF NOT EXISTS classification_status TEXT DEFAULT 'pending'`);
+      await postgresService.executeQuery(`ALTER TABLE IF EXISTS content_cluster ADD COLUMN IF NOT EXISTS org_id VARCHAR(255)`);
+    } catch (e) {
+      console.warn('Post-migration schema alignment skipped:', (e as Error).message);
     }
 
     // Copy compiled GraphQL schema for tests expecting dist path

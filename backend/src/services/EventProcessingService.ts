@@ -498,10 +498,15 @@ export class EventProcessingService {
     
     try {
       // Close BullMQ queues
+      const maybeClose = async (q: any) => {
+        if (q && typeof q.close === 'function') {
+          await q.close();
+        }
+      };
       await Promise.all([
-        this.fileSyncQueue.close(),
-        this.fileClassificationQueue.close(),
-        this.contentExtractionQueue.close()
+        maybeClose(this.fileSyncQueue),
+        maybeClose(this.fileClassificationQueue),
+        maybeClose(this.contentExtractionQueue)
       ]);
       
       // Close service connections

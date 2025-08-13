@@ -74,13 +74,10 @@ class AuthService {
             const token = this.generateToken(user.id, user.organization_id, user.role);
             await this.postgresService.executeQuery('UPDATE users SET last_login = NOW() WHERE id = $1', [user.id]);
             return {
-                id: user.id,
+                token,
+                userId: user.id,
                 orgId: user.organization_id,
-                role: user.role,
-                name: user.name,
-                avatar: user.avatar_url,
-                notificationPrefs: user.notification_prefs,
-                token
+                role: user.role
             };
         }
         catch (error) {

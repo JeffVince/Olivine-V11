@@ -97,7 +97,7 @@ export class AuthService {
   /**
    * Authenticate a user with email and password
    */
-  async authenticateUser(email: string, password: string): Promise<{ id: string; orgId: string; role: string; name: string; avatar: string; notificationPrefs: Record<string, unknown>; token: string } | null> {
+  async authenticateUser(email: string, password: string): Promise<{ token: string; userId: string; orgId: string; role: string } | null> {
     try {
       // Find user by email
       const result = await this.postgresService.executeQuery(
@@ -128,13 +128,10 @@ export class AuthService {
       );
 
       return {
-        id: user.id,
+        token,
+        userId: user.id,
         orgId: user.organization_id,
-        role: user.role,
-        name: user.name,
-        avatar: user.avatar_url,
-        notificationPrefs: user.notification_prefs,
-        token
+        role: user.role
       };
     } catch (error) {
       console.error('Error authenticating user:', error);

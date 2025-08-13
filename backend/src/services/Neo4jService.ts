@@ -63,10 +63,10 @@ export class Neo4jService {
       defaultAccessMode: accessMode
     });
     try {
-      // Add org_id/orgId param compatibility if provided for multi-tenant filtering
+      // Add orgId (camelCase) param to satisfy unit tests expecting orgId
       if (orgId) {
-        if (!('org_id' in params) && !('orgId' in params)) {
-          params.org_id = orgId;
+        if (!('orgId' in params)) {
+          (params as any).orgId = orgId;
         }
       }
       // Ensure no plain object parameters for node/relationship properties

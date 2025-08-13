@@ -17,6 +17,8 @@ import { GraphQLError } from 'graphql';
 
 import { SecurityMiddleware, GraphQLContext } from './middleware/SecurityMiddleware';
 import { buildCoreResolvers } from './resolvers/core';
+import { contentOntologyResolvers } from './resolvers/ContentOntologyResolvers';
+import { operationsResolvers } from './resolvers/OperationsResolvers';
 import { Neo4jService } from '../services/Neo4jService';
 import { PostgresService } from '../services/PostgresService';
 import { QueueService } from '../services/queues/QueueService';
@@ -181,29 +183,134 @@ export class GraphQLServer {
       ? join(__dirname, 'schema')
       : join(process.cwd(), 'dist', 'graphql', 'schema');
       
-    const enhancedTypeDefs = readFileSync(
-      join(schemaPath, 'enhanced.graphql'),
-      'utf8'
-    );
+    let enhancedTypeDefs = '';
+    try {
+      enhancedTypeDefs = readFileSync(
+        join(schemaPath, 'enhanced.graphql'),
+        'utf8'
+      );
+    } catch {
+      enhancedTypeDefs = '';
+    }
     
     const coreTypeDefs = readFileSync(
       join(schemaPath, 'core.graphql'),
       'utf8'
     );
 
+    // Minimal extensions required by E2E tests
+    const e2eExtensions = `
+      scalar DateTime
+      scalar JSON
+
+      input ProjectInput {
+        org_id: String!
+        title: String!
+        type: String!
+        status: String!
+        start_date: DateTime
+        budget: Float
+        metadata: JSON
+      }
+
+      input CharacterInput {
+        org_id: String!
+        project_id: String!
+        name: String!
+        role_type: String!
+        description: String
+      }
+
+      input SceneInput {
+        org_id: String!
+        project_id: String!
+        number: String!
+        title: String!
+        location: String
+        time_of_day: String
+        status: String!
+        page_count: Float
+        description: String
+      }
+
+      input VendorInput {
+        org_id: String!
+        name: String!
+        category: String
+        contact_email: String
+        status: String!
+        rating: Float
+      }
+
+      input BudgetInput {
+        org_id: String!
+        project_id: String!
+        name: String!
+        total_budget: Float!
+        currency: String!
+        status: String!
+        version: String!
+        metadata: JSON
+      }
+
+      input PurchaseOrderInput {
+        org_id: String!
+        project_id: String!
+        po_number: String!
+        vendor_id: String!
+        scene_id: String
+        description: String
+        amount: Float!
+        currency: String!
+        status: String!
+        order_date: DateTime
+        needed_date: DateTime
+        delivery_address: String
+        approved_by: String
+        created_by: String!
+      }
+      extend type Project {
+        title: String
+        type: String
+        budget: Float
+      }
+
+      extend type Mutation {
+        createProject(input: ProjectInput!, userId: String!): Project!
+        createCharacter(input: CharacterInput!, userId: String!): Character!
+        createScene(input: SceneInput!, userId: String!): Scene!
+        createVendor(input: VendorInput!, userId: String!): Vendor!
+        createBudget(input: BudgetInput!, userId: String!): Budget!
+        createPurchaseOrder(input: PurchaseOrderInput!, userId: String!): PurchaseOrder!
+      }
+    `;
+
     // Combine type definitions
     const typeDefs = `
       ${enhancedTypeDefs}
-      
-      # Core types for backward compatibility
       ${coreTypeDefs}
+      ${e2eExtensions}
     `;
 
     // Get resolvers
     const coreResolvers = buildCoreResolvers();
+    const contentResolvers = contentOntologyResolvers;
+    const opsResolvers = operationsResolvers;
 
-    // Use only core resolvers since enhanced resolvers are missing
-    const resolvers = coreResolvers;
+    // Merge resolvers
+    const resolvers = {
+      ...coreResolvers,
+      Query: {
+        ...(coreResolvers as any).Query,
+        ...(contentResolvers as any).Query,
+        ...(opsResolvers as any).Query,
+      },
+      Mutation: {
+        ...(coreResolvers as any).Mutation,
+        ...(contentResolvers as any).Mutation,
+        ...(opsResolvers as any).Mutation,
+      },
+    } as any;
 
     return makeExecutableSchema({
       typeDefs,
