@@ -126,8 +126,17 @@
             <!-- Source View -->
             <template v-if="viewMode === 'source'">
               <div class="px-4 pb-2">
+                <v-text-field
+                  v-model="searchQuery"
+                  placeholder="Search files..."
+                  prepend-inner-icon="mdi-magnify"
+                  variant="outlined"
+                  density="compact"
+                  hide-details
+                  class="mb-2"
+                />
                 <v-chip-group v-model="selectedFilters" multiple>
-                  <v-chip 
+                  <v-chip
                     v-for="filter in fileFilters"
                     :key="filter.key"
                     :value="filter.key"
@@ -174,6 +183,26 @@
                     >
                       {{ item.classificationStatus }}
                     </v-chip>
+                    <v-chip
+                      v-if="item.metadata?.policyViolations?.length"
+                      class="ml-1"
+                      color="red"
+                      size="x-small"
+                      label
+                      variant="tonal"
+                    >
+                      {{ item.metadata.policyViolations.length }} PV
+                    </v-chip>
+                    <v-chip
+                      v-if="item.metadata?.suggestions?.length"
+                      class="ml-1"
+                      color="blue"
+                      size="x-small"
+                      label
+                      variant="tonal"
+                    >
+                      {{ item.metadata.suggestions.length }} SG
+                    </v-chip>
                   </div>
                 </template>
                 <template v-slot:item.size="{ item }">
@@ -187,6 +216,27 @@
                     <v-icon class="mr-1" size="x-small">{{ mimeIcon(item.mimeType) }}</v-icon>
                     <span>{{ item.mimeType }}</span>
                   </div>
+                </template>
+                <template v-slot:item.actions="{ item }">
+                  <v-menu>
+                    <template #activator="{ props }">
+                      <v-btn icon="mdi-dots-vertical" v-bind="props" variant="text" />
+                    </template>
+                    <v-list>
+                      <v-list-item @click.stop="promptRename(item)">
+                        <v-list-item-title>Rename</v-list-item-title>
+                      </v-list-item>
+                      <v-list-item @click.stop="promptMove(item)">
+                        <v-list-item-title>Move</v-list-item-title>
+                      </v-list-item>
+                      <v-list-item @click.stop="downloadFile(item)">
+                        <v-list-item-title>Download</v-list-item-title>
+                      </v-list-item>
+                      <v-list-item @click.stop="openInProvider(item)">
+                        <v-list-item-title>Open in Provider</v-list-item-title>
+                      </v-list-item>
+                    </v-list>
+                  </v-menu>
                 </template>
               </v-data-table>
             </template>
@@ -437,7 +487,7 @@ const currentProvider = ref('Unknown')
 const folderTree = ref<FolderItem[]>([])
 
 // Real data
-const { items, loading, variables, refetch } = useFiles()
+const { items, loading, variables, refetch, renameFile, moveFile, downloadFile, openInProvider } = useFiles()
 
 // Search wiring -> backend filters
 watch(searchQuery, (q) => {
@@ -512,7 +562,8 @@ const fileHeaders = [
   { title: 'Name', key: 'name', sortable: true },
   { title: 'MIME', key: 'mimeType', sortable: true },
   { title: 'Size', key: 'size', sortable: true },
-  { title: 'Updated', key: 'updatedAt', sortable: true }
+  { title: 'Updated', key: 'updatedAt', sortable: true },
+  { title: '', key: 'actions', sortable: false }
 ]
 
 // File filters
@@ -612,6 +663,30 @@ function onFileSelect(event: any, { item }: { item: FileItem }) {
 function openMappingStudio() {
   const projectId = route.params.id as string
   router.push({ name: 'MappingStudio', params: { id: projectId } })
+}
+
+async function promptRename(file: FileItem) {
+  const name = window.prompt('Rename file', file.name)
+  if (name && name !== file.name) {
+    try {
+      await renameFile(file.id, name)
+      notificationStore.add('success', 'File renamed')
+    } catch (e: any) {
+      notificationStore.add('error', e.message || 'Rename failed')
+    }
+  }
+}
+
+async function promptMove(file: FileItem) {
+  const path = window.prompt('Move file to path', file.path)
+  if (path && path !== file.path) {
+    try {
+      await moveFile(file.id, path)
+      notificationStore.add('success', 'File moved')
+    } catch (e: any) {
+      notificationStore.add('error', e.message || 'Move failed')
+    }
+  }
 }
 
 // Actions

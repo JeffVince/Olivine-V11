@@ -1,5 +1,5 @@
 import { ref, watchEffect } from 'vue'
-import { useQuery, useSubscription } from '@vue/apollo-composable'
+import { useQuery, useSubscription, useMutation } from '@vue/apollo-composable'
 import gql from 'graphql-tag'
 import { useOrganizationStore } from '@/stores/organizationStore'
 import { useProjectStore } from '@/stores/projectStore'
@@ -50,6 +50,26 @@ const FILE_UPDATED_SUB = gql`
   }
 `
 
+const RENAME_FILE = gql`
+  mutation RenameFile($orgId: ID!, $id: ID!, $name: String!) {
+    renameFile(orgId: $orgId, id: $id, name: $name) {
+      id
+      name
+      path
+    }
+  }
+`
+
+const MOVE_FILE = gql`
+  mutation MoveFile($orgId: ID!, $id: ID!, $path: String!) {
+    moveFile(orgId: $orgId, id: $id, path: $path) {
+      id
+      name
+      path
+    }
+  }
+`
+
 // Placeholder: backend subscriptions not yet implemented for files
 
 export function useFiles() {
@@ -71,6 +91,9 @@ export function useFiles() {
 
   const { result, loading, refetch, onError } = useQuery(FILES_QUERY, variables)
   const items = ref<any[]>([])
+
+  const { mutate: renameFileMutate } = useMutation(RENAME_FILE)
+  const { mutate: moveFileMutate } = useMutation(MOVE_FILE)
 
   watchEffect(() => {
     variables.value.filter.orgId = orgStore.currentOrg?.id || ''
@@ -94,7 +117,27 @@ export function useFiles() {
     },
   })
 
-  return { items, loading, refetch, onError, variables }
+  async function renameFile(id: string, name: string) {
+    await renameFileMutate({ orgId: variables.value.filter.orgId, id, name })
+    await refetch()
+  }
+
+  async function moveFile(id: string, path: string) {
+    await moveFileMutate({ orgId: variables.value.filter.orgId, id, path })
+    await refetch()
+  }
+
+  function downloadFile(file: any) {
+    const url = file?.metadata?.downloadUrl
+    if (url) window.open(url, '_blank')
+  }
+
+  function openInProvider(file: any) {
+    const url = file?.metadata?.providerUrl || file?.metadata?.previewUrl
+    if (url) window.open(url, '_blank')
+  }
+
+  return { items, loading, refetch, onError, variables, renameFile, moveFile, downloadFile, openInProvider }
 }
 
 
