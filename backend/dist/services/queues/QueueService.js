@@ -15,7 +15,8 @@ class QueueService {
         const finalConfig = { ...defaultConfig, ...config };
         console.log('Redis URL being used:', finalConfig.redisUrl);
         const isTestMode = process.env.TEST_MODE === 'true' || process.env.NODE_ENV === 'test';
-        this.connection = isTestMode ? null : new ioredis_1.default(finalConfig.redisUrl, {
+        this.connection = new ioredis_1.default(finalConfig.redisUrl, {
+            lazyConnect: true,
             maxRetriesPerRequest: null,
             enableReadyCheck: false,
         });
@@ -41,10 +42,13 @@ class QueueService {
             'source-sync',
             'delta-sync',
         ].forEach((name) => {
-            if (!isTestMode)
-                this.ensureQueue(name);
-            if (isTestMode) {
+            const useInMemory = process.env.USE_IN_MEMORY_QUEUES === 'true';
+            const isQueueMock = bullmq_1.Queue?._isMockFunction === true;
+            if (useInMemory && !isQueueMock) {
                 this.inMemoryQueues.set(name, []);
+            }
+            else {
+                this.ensureQueue(name);
             }
         });
     }
@@ -52,11 +56,12 @@ class QueueService {
         return this.ensureQueue(name);
     }
     async ping() {
-        return this.connection.ping?.() ?? 'PONG';
+        return this.connection?.ping?.() ?? 'PONG';
     }
     async addJob(name, jobName, data, options) {
-        const isTestMode = this.connection === null;
-        if (isTestMode) {
+        const useInMemory = process.env.USE_IN_MEMORY_QUEUES === 'true';
+        const isQueueMock = bullmq_1.Queue?._isMockFunction === true;
+        if (useInMemory && !isQueueMock) {
             const jobId = `${name}:${jobName}:${Date.now()}`;
             const processor = this.inMemoryWorkers.get(name);
             if (processor) {
@@ -64,7 +69,7 @@ class QueueService {
                     try {
                         await processor({ id: jobId, name: jobName, data });
                     }
-                    catch (e) {
+                    catch {
                     }
                 });
             }
@@ -78,8 +83,9 @@ class QueueService {
         return queue.add(jobName, data, options);
     }
     registerWorker(name, processor, options) {
-        const isTestMode = this.connection === null;
-        if (isTestMode) {
+        const useInMemory = process.env.USE_IN_MEMORY_QUEUES === 'true';
+        const isWorkerMock = bullmq_1.Worker?._isMockFunction === true;
+        if (useInMemory && !isWorkerMock) {
             this.inMemoryWorkers.set(name, processor);
             const pending = this.inMemoryQueues.get(name) || [];
             for (const j of pending) {
@@ -96,9 +102,10 @@ class QueueService {
         return worker;
     }
     getQueueEvents(name) {
-        const isTestMode = this.connection === null;
-        if (isTestMode) {
-            return { on: () => { }, off: () => { }, close: async () => { } };
+        const useInMemory = process.env.USE_IN_MEMORY_QUEUES === 'true';
+        const isQueueEventsMock = bullmq_1.QueueEvents?._isMockFunction === true;
+        if (useInMemory && !isQueueEventsMock) {
+            return { on: () => { }, close: async () => { } };
         }
         let events = this.queueEvents.get(name);
         if (!events) {
@@ -125,9 +132,10 @@ class QueueService {
         for (const e of this.queueEvents.values()) {
             await e.close();
         }
-        if (this.connection) {
-            await this.connection.quit();
+        try {
+            await this.connection?.quit?.();
         }
+        catch { }
     }
     async *subscribeToJobUpdates(orgId) {
         const queueEvents = this.queueEvents.get('agent-jobs');
@@ -137,8 +145,21 @@ class QueueService {
         return;
     }
     ensureQueue(name) {
+        const useInMemory = process.env.USE_IN_MEMORY_QUEUES === 'true';
+        const isQueueMock = bullmq_1.Queue?._isMockFunction === true;
         let queue = this.queues.get(name);
         if (!queue) {
+            if (useInMemory && !isQueueMock) {
+                const stub = {
+                    add: async () => ({}),
+                    close: async () => { },
+                    getJob: async () => null,
+                    getJobs: async () => [],
+                };
+                queue = stub;
+                this.queues.set(name, queue);
+                return queue;
+            }
             const opts = {
                 connection: this.connection,
                 prefix: this.prefix,

@@ -86,7 +86,7 @@ describe('QueueService', () => {
   describe('registerWorker', () => {
     it('should create and return a worker instance', () => {
       const processor = jest.fn();
-      
+      process.env.USE_IN_MEMORY_QUEUES = 'false'
       queueService.registerWorker('agent-jobs', processor);
       
       expect(Worker).toHaveBeenCalledWith(
@@ -102,7 +102,7 @@ describe('QueueService', () => {
     it('should create worker with custom options', () => {
       const processor = jest.fn();
       const customOptions = { connection: mockConnection, concurrency: 10, autorun: false };
-      
+      process.env.USE_IN_MEMORY_QUEUES = 'false'
       queueService.registerWorker('agent-jobs', processor, customOptions);
       
       expect(Worker).toHaveBeenCalledWith(

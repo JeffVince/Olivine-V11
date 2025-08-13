@@ -23,9 +23,9 @@ export interface DropboxLogEntry {
   orgId?: string;
   sourceId?: string;
   message: string;
-  metadata?: any;
+  metadata?: Record<string, unknown>;
   duration?: number;
-  error?: any;
+  error?: Error | string | Record<string, unknown>;
 }
 
 export interface DropboxTokenData extends Record<string, unknown> {
@@ -43,7 +43,7 @@ export interface DropboxApiError {
   error_summary: string;
   error: {
     '.tag': string;
-    [key: string]: any;
+    [key: string]: unknown;
   };
 }
 
@@ -51,7 +51,7 @@ export interface RetryOptions {
   maxRetries: number;
   baseDelay: number;
   maxDelay: number;
-  retryCondition?: (error: any) => boolean;
+  retryCondition?: (error: unknown) => boolean;
 }
 
 export class DropboxService extends EventEmitter implements StorageProvider {
@@ -121,11 +121,11 @@ export class DropboxService extends EventEmitter implements StorageProvider {
     level: 'info' | 'warn' | 'error' | 'debug',
     operation: string,
     message: string,
-    metadata?: any,
+    metadata?: Record<string, unknown>,
     orgId?: string,
     sourceId?: string,
     duration?: number,
-    error?: any
+    error?: Error | string | Record<string, unknown>
   ): void {
     const logEntry: DropboxLogEntry = {
       timestamp: new Date(),
@@ -176,6 +176,13 @@ export class DropboxService extends EventEmitter implements StorageProvider {
     this.emit('log', logEntry);
   }
 
+  private logError(operation: string, error: unknown, orgId?: string, sourceId?: string): void {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorObject = error instanceof Error ? error : new Error(errorMessage);
+    this.log('error', operation, errorMessage, undefined, orgId, sourceId, undefined, errorObject);
+    this.emit('error', { operation, error: errorObject, orgId, sourceId });
+  }
+
   /**
    * Update metrics for an operation
    */
@@ -184,7 +191,7 @@ export class DropboxService extends EventEmitter implements StorageProvider {
     success: boolean,
     duration: number,
     bytesTransferred = 0,
-    error?: any
+    error?: Error | string | Record<string, unknown>
   ): void {
     this.metrics.totalRequests++;
     
@@ -194,7 +201,11 @@ export class DropboxService extends EventEmitter implements StorageProvider {
       this.metrics.failedRequests++;
       
       // Track error types
-      const errorType = error?.error?.['tag'] || error?.status?.toString() || 'unknown';
+      let errorType = 'unknown'
+      if (typeof error === 'object' && error !== null) {
+        const anyErr: any = error
+        errorType = anyErr?.error?.['tag'] || anyErr?.status?.toString() || 'unknown'
+      }
       this.metrics.errorCounts[errorType] = (this.metrics.errorCounts[errorType] || 0) + 1;
     }
 
@@ -304,7 +315,7 @@ export class DropboxService extends EventEmitter implements StorageProvider {
     timestamp: Date;
     metrics: DropboxMetrics;
     logs: DropboxLogEntry[];
-    healthStatus: any;
+    healthStatus: { status: string; details?: Record<string, unknown> };
     configuration: {
       maxRetries: number;
       baseDelay: number;
@@ -329,28 +340,29 @@ export class DropboxService extends EventEmitter implements StorageProvider {
   /**
    * Check if an error is retryable
    */
-  private isRetryableError(error: any): boolean {
+  private isRetryableError(error: unknown): boolean {
     if (!error) return false;
     
-    // Rate limiting errors
-    if (error.status === 429 || error.error?.['tag'] === 'too_many_requests') {
-      return true;
-    }
+    const errorObj = error as Record<string, any>;
     
-    // Temporary server errors
-    if (error.status >= 500 && error.status < 600) {
-      return true;
-    }
+    // Rate limiting errors
+    if (errorObj.status === 429) return true;
     
     // Network errors
-    if (error.code === 'ECONNRESET' || error.code === 'ETIMEDOUT' || error.code === 'ENOTFOUND') {
+    if (errorObj.code === 'ENOTFOUND' || errorObj.code === 'ECONNRESET' || errorObj.code === 'ETIMEDOUT') {
       return true;
     }
     
-    // Dropbox specific transient errors
-    if (error.error_summary?.includes('internal_error') || 
-        error.error_summary?.includes('too_many_requests')) {
-      return true;
+    // Dropbox API errors that are retryable
+    if (errorObj.error_summary) {
+      const retryableErrors = [
+        'too_many_requests',
+        'too_many_write_operations',
+        'internal_server_error',
+        'service_unavailable'
+      ];
+      
+      return retryableErrors.some(e => String(errorObj.error_summary).includes(e));
     }
     
     return false;
@@ -377,7 +389,7 @@ export class DropboxService extends EventEmitter implements StorageProvider {
   ): Promise<T> {
     const retryOptions = { ...this.defaultRetryOptions, ...options };
     const startTime = Date.now();
-    let lastError: any;
+    let lastError: unknown;
     let bytesTransferred = 0;
 
     this.log('debug', operationName, `Starting operation`, { retryOptions }, orgId, sourceId);
@@ -423,7 +435,7 @@ export class DropboxService extends EventEmitter implements StorageProvider {
         });
         
         return result;
-      } catch (error: any) {
+      } catch (error: unknown) {
         lastError = error;
         const attemptDuration = Date.now() - attemptStartTime;
         
@@ -458,22 +470,7 @@ export class DropboxService extends EventEmitter implements StorageProvider {
           this.updateMetrics(operationName, false, totalDuration, 0, error);
           
           // Log final failure
-          this.log('error', operationName, 
-            `Operation failed after ${attempt} attempts`,
-            { attempts: attempt, finalError: this.sanitizeError(error) },
-            orgId, sourceId, totalDuration, error
-          );
-          
-          // Emit error event
-          this.emit('api_error', { 
-            operation: operationName, 
-            error: this.sanitizeError(error), 
-            finalAttempt: true,
-            attempts: attempt,
-            duration: totalDuration,
-            orgId,
-            sourceId
-          });
+          this.logError(operationName, error, orgId, sourceId);
           break;
         }
 
@@ -527,7 +524,7 @@ export class DropboxService extends EventEmitter implements StorageProvider {
   /**
    * Extract retry-after header value
    */
-  private extractRetryAfter(error: any): number {
+  private extractRetryAfter(error: unknown): number {
     const retryAfter = error.headers?.['retry-after'] || 
                       error.response?.headers?.['retry-after'];
     return retryAfter ? parseInt(retryAfter, 10) : 60; // Default to 60 seconds
@@ -543,33 +540,37 @@ export class DropboxService extends EventEmitter implements StorageProvider {
   /**
    * Sanitize error for logging (remove sensitive information)
    */
-  private sanitizeError(error: any): any {
-    const sanitized = {
-      message: error.message,
-      status: error.status,
-      error_summary: error.error_summary,
-      tag: error.error?.['tag']
+  private sanitizeError(error: unknown): Record<string, unknown> {
+    const errorObj = error as Record<string, unknown>;
+    const sanitized: Record<string, unknown> = {
+      message: errorObj.message,
+      status: errorObj.status,
+      code: errorObj.code,
+      error_summary: errorObj.error_summary,
+      stack: errorObj.stack
     };
     
-    // Remove any potential sensitive data
-    return sanitized;
+    return JSON.parse(JSON.stringify(sanitized)); // Deep clone to prevent reference issues
   }
 
   /**
    * Enhance error with additional context
    */
-  private enhanceError(error: any, operationName: string): Error {
+  private enhanceError(error: unknown, operationName: string): Error {
+    const errorObj = error as Record<string, unknown>;
+    const errorMessage = errorObj.message || errorObj.error_summary || 'Unknown error';
     const enhancedError = new Error(
-      `Dropbox API operation '${operationName}' failed: ${error.message || error.error_summary || 'Unknown error'}`
+      `Dropbox API operation '${operationName}' failed: ${errorMessage}`
     );
     
     // Preserve original error properties
-    Object.assign(enhancedError, {
-      originalError: error,
-      operationName,
-      status: error.status,
-      isDropboxError: true
-    });
+    if (error && typeof error === 'object') {
+      Object.entries(error).forEach(([key, value]) => {
+        if (key !== 'message' && key !== 'stack') {
+          (enhancedError as any)[key] = value;
+        }
+      });
+    }
     
     return enhancedError;
   }
@@ -753,7 +754,7 @@ export class DropboxService extends EventEmitter implements StorageProvider {
    * Initialize Dropbox client with access token
    */
   private initializeClient(accessToken: string, selectUser?: string, pathRoot?: string): Dropbox {
-    const options: any = {
+    const options: Record<string, unknown> = {
       accessToken: accessToken,
       clientId: this.appKey,
       clientSecret: this.appSecret
@@ -1066,7 +1067,7 @@ export class DropboxService extends EventEmitter implements StorageProvider {
     orgId: string, 
     sourceId: string, 
     path: string, 
-    settings?: any
+    settings?: Record<string, unknown>
   ): Promise<any> {
     return this.executeWithRetry(async () => {
       const client = await this.getClient(orgId, sourceId);
@@ -1074,10 +1075,10 @@ export class DropboxService extends EventEmitter implements StorageProvider {
         throw new Error('Could not initialize Dropbox client');
       }
 
-      const requestSettings = {
+      const requestSettings: any = {
         requested_visibility: 'public',
-        audience: 'public',
-        access: 'viewer',
+        audience: { '.tag': 'public' },
+        access: { '.tag': 'viewer' },
         allow_download: true,
         ...settings
       };
@@ -1274,7 +1275,7 @@ export class DropboxService extends EventEmitter implements StorageProvider {
     filePaths: string[]
   ): Promise<any[]> {
     const BATCH_SIZE = 10; // Process in batches to avoid overwhelming the API
-    const results: any[] = [];
+    const results: Array<Record<string, unknown>> = [];
 
     for (let i = 0; i < filePaths.length; i += BATCH_SIZE) {
       const batch = filePaths.slice(i, i + BATCH_SIZE);
@@ -1304,7 +1305,7 @@ export class DropboxService extends EventEmitter implements StorageProvider {
     files: Array<{ path: string; buffer: Buffer; contentType: string }>
   ): Promise<any[]> {
     const BATCH_SIZE = 5; // Smaller batch size for uploads
-    const results: any[] = [];
+    const results: Array<Record<string, unknown>> = [];
 
     for (let i = 0; i < files.length; i += BATCH_SIZE) {
       const batch = files.slice(i, i + BATCH_SIZE);
@@ -1347,7 +1348,7 @@ export class DropboxService extends EventEmitter implements StorageProvider {
       });
 
       // If the operation is async, poll for completion
-      const deleteLaunch: any = response.result as any;
+      const deleteLaunch = response.result as { '.tag': string; async_job_id: string };
       if (deleteLaunch['.tag'] === 'async_job_id') {
         return this.pollBatchJobStatus(client, deleteLaunch.async_job_id, 'delete_batch');
       }
@@ -1384,7 +1385,7 @@ export class DropboxService extends EventEmitter implements StorageProvider {
       });
 
       // If the operation is async, poll for completion
-      const copyLaunch: any = response.result as any;
+      const copyLaunch = response.result as { async_job_id: string };
       if (copyLaunch['.tag'] === 'async_job_id') {
         return this.pollBatchJobStatus(client, copyLaunch.async_job_id, 'copy_batch');
       }
@@ -1488,7 +1489,7 @@ export class DropboxService extends EventEmitter implements StorageProvider {
       include_media_info?: boolean;
       include_deleted?: boolean;
     } = {}
-  ): Promise<{ entries: any[]; cursor: string; has_more: boolean }> {
+  ): Promise<{ entries: Array<DropboxTypes.files.MetadataReference>; cursor: string; has_more: boolean }> {
     return this.executeWithRetry(async () => {
       const client = await this.getClient(orgId, sourceId);
       if (!client) {
@@ -1535,7 +1536,7 @@ export class DropboxService extends EventEmitter implements StorageProvider {
       include_media_info?: boolean;
     } = {}
   ): Promise<any[]> {
-    const allEntries: any[] = [];
+    const allEntries: Array<DropboxTypes.files.MetadataReference> = [];
     let cursor: string | undefined;
     let hasMore = true;
     const maxFiles = options.maxFiles || 10000;
@@ -1573,7 +1574,7 @@ export class DropboxService extends EventEmitter implements StorageProvider {
   async subscribeToChanges(
     orgId: string, 
     sourceId: string, 
-    callback: (payload: any) => void
+    callback: (payload: Record<string, unknown>) => void
   ): Promise<any> {
     // This method integrates with the existing webhook handler
     // The actual webhook setup is handled by DropboxWebhookHandler

@@ -26,10 +26,10 @@ describe('StorageProvider', () => {
     });
 
     it('should throw error for unsupported provider type', async () => {
-      expect(() => {
-        // @ts-ignore - Testing invalid type
-        await StorageProviderFactory.createProvider('unsupported');
-      }).toThrow('Unsupported storage provider type: unsupported');
+      // @ts-ignore - Testing invalid type
+      await expect(StorageProviderFactory.createProvider('unsupported')).rejects.toThrow(
+        'Unsupported storage provider type: unsupported'
+      );
     });
   });
 });

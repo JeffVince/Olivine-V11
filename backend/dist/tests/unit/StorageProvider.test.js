@@ -22,9 +22,7 @@ describe('StorageProvider', () => {
             expect(provider).toBeInstanceOf(SupabaseService_1.SupabaseService);
         });
         it('should throw error for unsupported provider type', async () => {
-            expect(() => {
-                await StorageProvider_1.StorageProviderFactory.createProvider('unsupported');
-            }).toThrow('Unsupported storage provider type: unsupported');
+            await expect(StorageProvider_1.StorageProviderFactory.createProvider('unsupported')).rejects.toThrow('Unsupported storage provider type: unsupported');
         });
     });
 });

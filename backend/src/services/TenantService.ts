@@ -47,8 +47,8 @@ export interface MigrationHistory {
 export class TenantService {
   private neo4jService: Neo4jService;
 
-  constructor() {
-    this.neo4jService = new Neo4jService();
+  constructor(neo4jService?: Neo4jService) {
+    this.neo4jService = neo4jService ?? new Neo4jService();
   }
 
   /**
@@ -151,6 +151,9 @@ export class TenantService {
     `;
     
     const result = await this.neo4jService.executeQuery(query, { orgId });
+    if (!result || !('records' in result)) {
+      throw new Error('Organization not found');
+    }
     
     if (result.records.length === 0) {
       throw new Error('Organization not found');
@@ -183,6 +186,9 @@ export class TenantService {
     `;
     
     const result = await this.neo4jService.executeQuery(query, { userId, orgId });
+    if (!result || !('records' in result)) {
+      return [];
+    }
     
     if (result.records.length === 0) {
       return [];
@@ -209,6 +215,9 @@ export class TenantService {
     `;
     
     const result = await this.neo4jService.executeQuery(query, { userId, targetOrgId });
+    if (!result || !('records' in result)) {
+      return false;
+    }
     
     if (result.records.length === 0) {
       return false;
@@ -238,6 +247,9 @@ export class TenantService {
     `;
     
     const result = await this.neo4jService.executeQuery(query, { userId, orgId, projectId });
+    if (!result || !('records' in result)) {
+      return false;
+    }
     
     if (result.records.length === 0) {
       return false;
@@ -280,6 +292,9 @@ export class TenantService {
     };
 
     const result = await this.neo4jService.executeQuery(query, params);
+    if (!result || !('records' in result)) {
+      throw new Error('Failed to create organization');
+    }
     
     if (result.records.length === 0) {
       throw new Error('Failed to create organization');
@@ -338,6 +353,9 @@ export class TenantService {
     `;
 
     const result = await this.neo4jService.executeQuery(query, params);
+    if (!result || !('records' in result)) {
+      throw new Error('Organization not found');
+    }
     
     if (result.records.length === 0) {
       throw new Error('Organization not found');
@@ -368,6 +386,9 @@ export class TenantService {
     `;
 
     const result = await this.neo4jService.executeQuery(query, { userId });
+    if (!result || !('records' in result)) {
+      return [];
+    }
     
     return result.records.map((record) => {
       const orgProperties = record.get('org').properties;
@@ -402,6 +423,9 @@ export class TenantService {
     `;
 
     const result = await this.neo4jService.executeQuery(query, { userId, orgId, role });
+    if (!result || !('records' in result)) {
+      throw new Error('Failed to add user to organization');
+    }
     
     if (result.records.length === 0) {
       throw new Error('Failed to add user to organization');
@@ -425,6 +449,9 @@ export class TenantService {
     `;
 
     const result = await this.neo4jService.executeQuery(query, { userId, orgId });
+    if (!result || !('records' in result)) {
+      throw new Error('User not found in organization or removal failed');
+    }
     
     if (result.records.length === 0 || result.records[0].get('deleted') === 0) {
       throw new Error('User not found in organization or removal failed');
@@ -444,6 +471,9 @@ export class TenantService {
     `;
 
     const result = await this.neo4jService.executeQuery(query, { userId, orgId });
+    if (!result || !('records' in result)) {
+      return null;
+    }
     
     if (result.records.length === 0) {
       return null;
@@ -471,6 +501,9 @@ export class TenantService {
     `;
 
     const result = await this.neo4jService.executeQuery(query, { userId, orgId });
+    if (!result || !('records' in result)) {
+      return false;
+    }
     
     if (result.records.length === 0) {
       return false;
@@ -697,6 +730,9 @@ export class TenantService {
     `;
 
     const orphanResult = await this.neo4jService.executeQuery(orphanQuery);
+    if (!orphanResult || !('records' in orphanResult)) {
+      return { valid: true, errors: [] };
+    }
     
     for (const record of orphanResult.records) {
       const labels = record.get('labels');
@@ -715,6 +751,9 @@ export class TenantService {
     `;
 
     const crossTenantResult = await this.neo4jService.executeQuery(crossTenantQuery);
+    if (!crossTenantResult || !('records' in crossTenantResult)) {
+      return { valid: errors.length === 0, errors };
+    }
     
     for (const record of crossTenantResult.records) {
       const relType = record.get('relType');
@@ -747,6 +786,9 @@ export class TenantService {
     `;
 
     const result = await this.neo4jService.executeQuery(query, { orgId });
+    if (!result || !('records' in result)) {
+      return [];
+    }
     
     return result.records.map((record) => ({
       version: record.get('version'),

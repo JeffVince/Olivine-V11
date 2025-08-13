@@ -36,6 +36,7 @@ class ContentOntologyService {
       
       // Link commit to action
       CREATE (c)-[:INCLUDES]->(a)
+      WITH c,a
       
       // Create project
       CREATE (p:Project {
@@ -118,6 +119,7 @@ class ContentOntologyService {
       
       // Link commit to action
       CREATE (c)-[:INCLUDES]->(a)
+      WITH c,a
       
       // Create scene
       CREATE (s:Scene {
@@ -189,6 +191,7 @@ class ContentOntologyService {
       
       // Link commit to action
       CREATE (c)-[:INCLUDES]->(a)
+      WITH c,a
       
       // Create EdgeFact for temporal relationship
       MATCH (s:Scene {id: $scene_id, org_id: $org_id})

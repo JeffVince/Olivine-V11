@@ -9,6 +9,9 @@ module.exports = {
   transform: {
     '^.+\\.(ts|tsx)$': 'ts-jest'
   },
+  transformIgnorePatterns: [
+    '/node_modules/(?!(@google-cloud|googleapis)/)'
+  ],
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',
     '!src/**/*.d.ts',

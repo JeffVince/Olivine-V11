@@ -46,6 +46,9 @@ export class GraphQLServer {
     this.pubSub = new PubSub();
     this.neo4jService = new Neo4jService();
     this.postgresService = new PostgresService();
+    if (process.env.TEST_MODE === 'true' || process.env.NODE_ENV === 'test') {
+      process.env.USE_IN_MEMORY_QUEUES = 'true'
+    }
     this.queueService = new QueueService();
     
     this.logger = winston.createLogger({

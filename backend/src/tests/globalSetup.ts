@@ -8,6 +8,7 @@ export default async function globalSetup() {
   // Set test environment
   process.env.NODE_ENV = 'test';
   process.env.TEST_MODE = 'true';
+  process.env.USE_IN_MEMORY_QUEUES = 'true';
   
   // Override database configurations for testing
   process.env.NEO4J_URI = process.env.NEO4J_TEST_URI || 'bolt://localhost:7687';
@@ -68,6 +69,11 @@ export default async function globalSetup() {
         // Constraint might already exist
       }
     }
+
+    // Ensure UUID extension for tests (if needed by migrations)
+    try {
+      await postgresService.executeQuery('CREATE EXTENSION IF NOT EXISTS "uuid-ossp"');
+    } catch {}
 
     // Create test PostgreSQL tables if they don't exist
     const createTablesQueries = [
@@ -201,7 +207,12 @@ export default async function globalSetup() {
         name VARCHAR(255),
         mime_type VARCHAR(100),
         size INTEGER,
-        checksum VARCHAR(255)
+        checksum VARCHAR(255),
+        organization_id VARCHAR(255),
+        deleted_at TIMESTAMP,
+        classification_status TEXT DEFAULT 'pending',
+        extracted_text TEXT,
+        content_metadata JSONB DEFAULT '{}'::jsonb
       )`
     ];
 
@@ -211,6 +222,17 @@ export default async function globalSetup() {
       } catch (error) {
         console.warn('Error creating test table:', (error as Error).message);
       }
+    }
+
+    // Run project migrations instead of synthetic schema when available
+    try {
+      const { MigrationService } = await import('../services/MigrationService');
+      const ms = new MigrationService();
+      await ms.createMigrationDirectories();
+      await ms.applyAllMigrations();
+      await ms.close();
+    } catch (e) {
+      console.warn('Migrations not executed in tests:', (e as Error).message);
     }
 
     // Copy compiled GraphQL schema for tests expecting dist path

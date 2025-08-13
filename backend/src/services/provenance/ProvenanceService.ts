@@ -461,6 +461,11 @@ export class ProvenanceService {
   }
 
   async createCommit(input: CommitInput): Promise<string> {
+    const params = {
+      ...input,
+      parentCommitId: input.parentCommitId ?? null,
+      branchName: input.branchName ?? 'main',
+    }
     const commitId = (await this.neo4j.executeQuery(
       `
       WITH randomUUID() as id
@@ -476,7 +481,7 @@ export class ProvenanceService {
       })
       RETURN c.id as id, c.org_id as orgId, c.message as message, c.author as author, c.author_type as authorType, c.created_at as createdAt, c.parent_commit_id as parentCommitId, c.branch_name as branchName
       `,
-      input,
+      params,
       input.orgId,
     )).records[0].get('id')
 

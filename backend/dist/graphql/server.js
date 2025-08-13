@@ -67,6 +67,9 @@ class GraphQLServer {
         this.pubSub = new graphql_subscriptions_1.PubSub();
         this.neo4jService = new Neo4jService_1.Neo4jService();
         this.postgresService = new PostgresService_1.PostgresService();
+        if (process.env.TEST_MODE === 'true' || process.env.NODE_ENV === 'test') {
+            process.env.USE_IN_MEMORY_QUEUES = 'true';
+        }
         this.queueService = new QueueService_1.QueueService();
         this.logger = winston_1.default.createLogger({
             level: process.env.LOG_LEVEL || 'info',

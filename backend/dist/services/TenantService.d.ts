@@ -1,3 +1,4 @@
+import { Neo4jService } from './Neo4jService';
 export interface Organization {
     id: string;
     name: string;
@@ -35,7 +36,7 @@ export interface MigrationHistory {
 }
 export declare class TenantService {
     private neo4jService;
-    constructor();
+    constructor(neo4jService?: Neo4jService);
     validateOrgId(orgId: string): boolean;
     addOrgIdToParams(params: Record<string, unknown>, orgId: string): Record<string, unknown>;
     createTenantQueryTemplate(query: string): string;

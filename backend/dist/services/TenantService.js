@@ -38,8 +38,8 @@ const Neo4jService_1 = require("./Neo4jService");
 const fs = __importStar(require("fs"));
 const path = __importStar(require("path"));
 class TenantService {
-    constructor() {
-        this.neo4jService = new Neo4jService_1.Neo4jService();
+    constructor(neo4jService) {
+        this.neo4jService = neo4jService ?? new Neo4jService_1.Neo4jService();
     }
     validateOrgId(orgId) {
         if (!orgId || orgId.trim() === '') {
@@ -85,6 +85,9 @@ class TenantService {
       RETURN org
     `;
         const result = await this.neo4jService.executeQuery(query, { orgId });
+        if (!result || !('records' in result)) {
+            throw new Error('Organization not found');
+        }
         if (result.records.length === 0) {
             throw new Error('Organization not found');
         }
@@ -107,6 +110,9 @@ class TenantService {
       RETURN collect(perm.name) as permissions
     `;
         const result = await this.neo4jService.executeQuery(query, { userId, orgId });
+        if (!result || !('records' in result)) {
+            return [];
+        }
         if (result.records.length === 0) {
             return [];
         }
@@ -123,6 +129,9 @@ class TenantService {
         COUNT(targetOrg) > 0 as hasCrossAccess
     `;
         const result = await this.neo4jService.executeQuery(query, { userId, targetOrgId });
+        if (!result || !('records' in result)) {
+            return false;
+        }
         if (result.records.length === 0) {
             return false;
         }
@@ -140,6 +149,9 @@ class TenantService {
         COUNT(*) > 0 as hasDirectAccess
     `;
         const result = await this.neo4jService.executeQuery(query, { userId, orgId, projectId });
+        if (!result || !('records' in result)) {
+            return false;
+        }
         if (result.records.length === 0) {
             return false;
         }
@@ -171,6 +183,9 @@ class TenantService {
             metadata: orgData.metadata || {}
         };
         const result = await this.neo4jService.executeQuery(query, params);
+        if (!result || !('records' in result)) {
+            throw new Error('Failed to create organization');
+        }
         if (result.records.length === 0) {
             throw new Error('Failed to create organization');
         }
@@ -215,6 +230,9 @@ class TenantService {
       RETURN org
     `;
         const result = await this.neo4jService.executeQuery(query, params);
+        if (!result || !('records' in result)) {
+            throw new Error('Organization not found');
+        }
         if (result.records.length === 0) {
             throw new Error('Organization not found');
         }
@@ -236,6 +254,9 @@ class TenantService {
       ORDER BY org.name
     `;
         const result = await this.neo4jService.executeQuery(query, { userId });
+        if (!result || !('records' in result)) {
+            return [];
+        }
         return result.records.map((record) => {
             const orgProperties = record.get('org').properties;
             return {
@@ -260,6 +281,9 @@ class TenantService {
       RETURN r
     `;
         const result = await this.neo4jService.executeQuery(query, { userId, orgId, role });
+        if (!result || !('records' in result)) {
+            throw new Error('Failed to add user to organization');
+        }
         if (result.records.length === 0) {
             throw new Error('Failed to add user to organization');
         }
@@ -274,6 +298,9 @@ class TenantService {
       RETURN count(r) as deleted
     `;
         const result = await this.neo4jService.executeQuery(query, { userId, orgId });
+        if (!result || !('records' in result)) {
+            throw new Error('User not found in organization or removal failed');
+        }
         if (result.records.length === 0 || result.records[0].get('deleted') === 0) {
             throw new Error('User not found in organization or removal failed');
         }
@@ -284,6 +311,9 @@ class TenantService {
       RETURN r.role as role
     `;
         const result = await this.neo4jService.executeQuery(query, { userId, orgId });
+        if (!result || !('records' in result)) {
+            return null;
+        }
         if (result.records.length === 0) {
             return null;
         }
@@ -299,6 +329,9 @@ class TenantService {
       RETURN r.role as role, org.status as orgStatus
     `;
         const result = await this.neo4jService.executeQuery(query, { userId, orgId });
+        if (!result || !('records' in result)) {
+            return false;
+        }
         if (result.records.length === 0) {
             return false;
         }
@@ -429,6 +462,9 @@ class TenantService {
       RETURN labels(n) as labels, count(n) as count
     `;
         const orphanResult = await this.neo4jService.executeQuery(orphanQuery);
+        if (!orphanResult || !('records' in orphanResult)) {
+            return { valid: true, errors: [] };
+        }
         for (const record of orphanResult.records) {
             const labels = record.get('labels');
             const count = record.get('count');
@@ -443,6 +479,9 @@ class TenantService {
       LIMIT 10
     `;
         const crossTenantResult = await this.neo4jService.executeQuery(crossTenantQuery);
+        if (!crossTenantResult || !('records' in crossTenantResult)) {
+            return { valid: errors.length === 0, errors };
+        }
         for (const record of crossTenantResult.records) {
             const relType = record.get('relType');
             const orgA = record.get('orgA');
@@ -465,6 +504,9 @@ class TenantService {
       ORDER BY s.applied_at DESC
     `;
         const result = await this.neo4jService.executeQuery(query, { orgId });
+        if (!result || !('records' in result)) {
+            return [];
+        }
         return result.records.map((record) => ({
             version: record.get('version'),
             description: record.get('description'),

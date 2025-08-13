@@ -217,12 +217,12 @@ const uuid_1 = require("uuid");
       CREATE (o)-[:HAS_SOURCE]->(s)
     `, { orgId: testOrgId, sourceId: testSourceId });
         await postgresService.query(`
-      INSERT INTO parser_registry (org_id, slot, mime_type, parser_name, parser_version, min_confidence, feature_flag, enabled)
+      INSERT INTO parser_registry (id, org_id, slot, mime_type, parser_name, parser_version, min_confidence, feature_flag, enabled)
       VALUES 
-        ($1, 'SCRIPT_PRIMARY', 'application/vnd.final-draft.fdx', 'fdx-parser', '1.0.0', 0.8, true, true),
-        ($1, 'SCRIPT_PRIMARY', 'application/pdf', 'pdf-script-parser', '1.0.0', 0.7, true, true),
-        ($1, 'BUDGET_MASTER', 'application/pdf', 'pdf-budget-parser', '1.0.0', 0.7, true, true)
-    `, [testOrgId]);
+        ($2, $1, 'SCRIPT_PRIMARY', 'application/vnd.final-draft.fdx', 'fdx-parser', '1.0.0', 0.8, true, true),
+        ($3, $1, 'SCRIPT_PRIMARY', 'application/pdf', 'pdf-script-parser', '1.0.0', 0.7, true, true),
+        ($4, $1, 'BUDGET_MASTER', 'application/pdf', 'pdf-budget-parser', '1.0.0', 0.7, true, true)
+    `, [testOrgId, 'test-parser-int-1', 'test-parser-int-2', 'test-parser-int-3']);
     }
     async function cleanupTestEnvironment() {
         await neo4jService.run(`

@@ -302,6 +302,7 @@ export class OperationsOntologyService {
         created_at: datetime(),
         updated_at: datetime()
       })
+      WITH c,a,po
       
       // Link to vendor
       MATCH (v:Vendor {id: $vendor_id, org_id: $org_id})
@@ -395,6 +396,7 @@ export class OperationsOntologyService {
       
       // Link commit to action
       CREATE (c)-[:INCLUDES]->(a)
+      WITH c,a
       
       // Create invoice
       CREATE (i:Invoice {

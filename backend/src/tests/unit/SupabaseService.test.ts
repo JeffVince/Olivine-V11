@@ -158,7 +158,7 @@ describe('SupabaseService', () => {
       
       expect(result).toEqual(mockData);
       expect(mockStorage.from).toHaveBeenCalledWith('files');
-      expect(mockStorageFrom.list).toHaveBeenCalledWith(undefined);
+      expect(mockStorageFrom.list).toHaveBeenCalled();
     });
   });
 

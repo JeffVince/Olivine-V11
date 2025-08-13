@@ -23,9 +23,9 @@ export interface DropboxLogEntry {
     orgId?: string;
     sourceId?: string;
     message: string;
-    metadata?: any;
+    metadata?: Record<string, unknown>;
     duration?: number;
-    error?: any;
+    error?: Error | string | Record<string, unknown>;
 }
 export interface DropboxTokenData extends Record<string, unknown> {
     access_token: string;
@@ -41,14 +41,14 @@ export interface DropboxApiError {
     error_summary: string;
     error: {
         '.tag': string;
-        [key: string]: any;
+        [key: string]: unknown;
     };
 }
 export interface RetryOptions {
     maxRetries: number;
     baseDelay: number;
     maxDelay: number;
-    retryCondition?: (error: any) => boolean;
+    retryCondition?: (error: unknown) => boolean;
 }
 export declare class DropboxService extends EventEmitter implements StorageProvider {
     private dropboxClient;
@@ -82,7 +82,10 @@ export declare class DropboxService extends EventEmitter implements StorageProvi
         timestamp: Date;
         metrics: DropboxMetrics;
         logs: DropboxLogEntry[];
-        healthStatus: any;
+        healthStatus: {
+            status: string;
+            details?: Record<string, unknown>;
+        };
         configuration: {
             maxRetries: number;
             baseDelay: number;
@@ -115,7 +118,7 @@ export declare class DropboxService extends EventEmitter implements StorageProvi
     moveFile(orgId: string, sourceId: string, fromPath: string, toPath: string): Promise<any>;
     copyFile(orgId: string, sourceId: string, fromPath: string, toPath: string): Promise<any>;
     createFolder(orgId: string, sourceId: string, path: string): Promise<any>;
-    createSharedLink(orgId: string, sourceId: string, path: string, settings?: any): Promise<any>;
+    createSharedLink(orgId: string, sourceId: string, path: string, settings?: Record<string, unknown>): Promise<any>;
     getSharedLinks(orgId: string, sourceId: string, path: string): Promise<any>;
     revokeSharedLink(orgId: string, sourceId: string, url: string): Promise<any>;
     shareFolder(orgId: string, sourceId: string, path: string, members: Array<{
@@ -149,7 +152,7 @@ export declare class DropboxService extends EventEmitter implements StorageProvi
         include_media_info?: boolean;
         include_deleted?: boolean;
     }): Promise<{
-        entries: any[];
+        entries: Array<Record<string, unknown>>;
         cursor: string;
         has_more: boolean;
     }>;
@@ -158,6 +161,6 @@ export declare class DropboxService extends EventEmitter implements StorageProvi
         maxFiles?: number;
         include_media_info?: boolean;
     }): Promise<any[]>;
-    subscribeToChanges(orgId: string, sourceId: string, callback: (payload: any) => void): Promise<any>;
+    subscribeToChanges(orgId: string, sourceId: string, callback: (payload: Record<string, unknown>) => void): Promise<any>;
 }
 //# sourceMappingURL=DropboxService.d.ts.map

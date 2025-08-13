@@ -448,11 +448,13 @@ const route = useRoute()
 const notificationStore = useNotificationStore()
 const orgStore = useOrganizationStore()
 
-// State
+// State - Single source of truth for all reactive variables
 const showAddDialog = ref(false)
 const showConfigDialog = ref(false)
 const showLogsDialog = ref(false)
 const selectedIntegrationType = ref('')
+const selectedIntegration = ref<Integration | null>(null)
+const selectedAvailable = ref<AvailableIntegration | null>(null)
 const configIntegration = ref<Integration | null>(null)
 const logsIntegration = ref<Integration | null>(null)
 const connecting = ref<string | null>(null)
@@ -462,8 +464,6 @@ const loading = ref(false)
 const loadingLogs = ref(false)
 const error = ref<string | null>(null)
 const configValid = ref(false)
-const selectedIntegration = ref<Integration | null>(null)
-const selectedAvailable = ref<AvailableIntegration | null>(null)
 
 // Configuration data
 const configData = ref({
@@ -481,10 +481,11 @@ const logs = ref<LogEntry[]>([])
 const logHeaders = [
   { title: 'Timestamp', key: 'timestamp' },
   { title: 'Level', key: 'level' },
-  { title: 'Message', key: 'message' }
+  { title: 'Message', key: 'message' },
+  { title: 'Details', key: 'details' }
 ]
 
-// Available integrations with their configurations
+// Available integrations with their configurations - defined once at the top level
 const availableIntegrations = ref<AvailableIntegration[]>([
   {
     id: 'dropbox',
@@ -570,31 +571,39 @@ const formatDateTime = (dateString: string): string => {
 // Integration methods
 const connectIntegration = async (integration: Integration) => {
   try {
-    console.log('connectIntegration called with:', integration);
     connecting.value = integration.id;
     
-    const orgId = orgStore.currentOrg?.id;
+    // Get the organization ID from the store
+    const orgId = orgStore.currentOrgId;
     if (!orgId) {
       throw new Error('No organization selected');
     }
-    
-    let sourceId = integration.id;
-    console.log('Starting with sourceId:', sourceId);
-    
-    if (!integration.__existing) {
-      console.log('Creating new source for integration:', integration.type);
-      // Implementation for creating a new source would go here
-    }
-    
+
     // Build the OAuth URL with state
     const state = {
       organizationId: orgId,
-      sourceId: sourceId,
-      projectId: route.params.projectId
+      sourceId: integration.id,
+      projectId: route.params.projectId,
+      timestamp: Date.now()
     };
+
+    // Encode the state to pass through OAuth flow
+    const encodedState = encodeURIComponent(JSON.stringify(state));
     
+    // Redirect to the backend OAuth endpoint
+    const oauthUrl = `${API_BASE}/api/integrations/oauth/${integration.type}?state=${encodedState}`;
+    
+    console.log('Initiating OAuth flow for', integration.type, 'at URL:', oauthUrl);
+    
+    // Open the OAuth URL in a new tab or redirect
+    window.open(oauthUrl, '_blank');
+    
+    notificationStore.showInfo(`Please complete the ${integration.name} authentication in the new window.`);
+  } catch (error) {
+    console.error('Error initiating OAuth flow:', error);
+    notificationStore.showError(`Failed to connect to ${integration.name}: ${error.message}`);
   } finally {
-    connecting.value = null
+    connecting.value = null;
   }
 }
 
@@ -682,12 +691,74 @@ const closeLogsDialog = () => {
   logsIntegration.value = null
 }
 
+// All state is already defined above - removing duplicate declarations
+
+// GraphQL
+const GET_SOURCES = gql`
+  query GetSources($organizationId: ID!) {
+    getSources(organizationId: $organizationId) {
+      id
+      organizationId
+      name
+      type
+      active
+      updatedAt
+      config
+    }
+    icon: 'mdi-dropbox',
+    color: '#0061ff'
+  },
+  {
+    id: 'google-drive',
+    name: 'Google Drive',
+    type: 'google',
+    description: 'Connect your Google Drive to access files and folders',
+    icon: 'mdi-google-drive',
+    color: '#4285F4'
+  },
+  {
+    id: 'onedrive',
+    name: 'OneDrive',
+    type: 'onedrive',
+    description: 'Connect your OneDrive to access files and folders',
+    icon: 'mdi-microsoft-onedrive',
+    color: '#0078D4'
+  },
+  {
+    id: 'slack',
+    name: 'Slack',
+    type: 'slack',
+    description: 'Connect your Slack workspace to manage notifications',
+    icon: 'mdi-slack',
+    color: '#4A154B'
+  },
+  {
+    id: 'github',
+    name: 'GitHub',
+    type: 'github',
+    description: 'Connect your GitHub repositories',
+    icon: 'mdi-github',
+    color: '#181717'
+  }
+])
+
+// Sync frequencies
+const syncFrequencies = [
+  { text: '5 minutes', value: 5 * 60 },
+  { text: '15 minutes', value: 15 * 60 },
+  { text: '1 hour', value: 60 * 60 },
+  { text: '6 hours', value: 6 * 60 * 60 },
+  { text: '12 hours', value: 12 * 60 * 60 },
+  { text: '1 day', value: 24 * 60 * 60 }
+]
+
 // Expose necessary variables and methods to the template
 defineExpose({
   // UI State
   showAddDialog,
   showConfigDialog,
   showLogsDialog,
+  selectedIntegrationType,
   
   // Data
   selectedIntegration,
@@ -767,92 +838,17 @@ const TRIGGER_RESYNC = gql`
   }
 `
 
-const { result, loading, refetch } = useQuery(GET_SOURCES, () => ({ organizationId: orgStore.currentOrg?.id || '' }))
+const { result, loading: loadingSources, refetch } = useQuery(GET_SOURCES, () => ({ organizationId: orgStore.currentOrg?.id || '' }))
 const { mutate: createSource } = useMutation(CREATE_SOURCE)
 const { mutate: triggerResync } = useMutation(TRIGGER_RESYNC)
 
-// Available integrations
-const availableIntegrations: AvailableIntegration[] = [
-  {
-    type: 'dropbox',
-    name: 'Dropbox',
-    description: 'Connect to Dropbox for file storage and sync'
-  },
-  {
-    type: 'googledrive',
-    name: 'Google Drive',
-    description: 'Connect to Google Drive for file storage and sync'
-  },
-  {
-    type: 'frameio',
-    name: 'Frame.io',
-    description: 'Share artifacts and collaborate on Frame.io'
-  },
-  {
-    type: 'slack',
-    name: 'Slack',
-    description: 'Send notifications and updates to Slack channels'
-  },
-  {
-    type: 'gmail',
-    name: 'Gmail',
-    description: 'Send email notifications and distribute call sheets'
-  }
-]
+// Available integrations - already defined above
 
-const syncFrequencies = [
-  { title: 'Every 15 minutes', value: '15min' },
-  { title: 'Every 30 minutes', value: '30min' },
-  { title: 'Hourly', value: 'hourly' },
-  { title: 'Every 6 hours', value: '6hours' },
-  { title: 'Daily', value: 'daily' }
-]
+// Sync frequencies - already defined above
 
-const logHeaders = [
-  { title: 'Level', key: 'level', sortable: true },
-  { title: 'Message', key: 'message', sortable: false },
-  { title: 'Timestamp', key: 'timestamp', sortable: true }
-]
+// Log headers - already defined above
 
-// Methods
-function getIntegrationColor(type: string) {
-  switch (type) {
-    case 'dropbox': return 'blue'
-    case 'googledrive': return 'green'
-    case 'frameio': return 'purple'
-    case 'slack': return 'deep-purple'
-    case 'gmail': return 'red'
-    default: return 'grey'
-  }
-}
-
-function getIntegrationIcon(type: string) {
-  switch (type) {
-    case 'dropbox': return 'mdi-dropbox'
-    case 'googledrive': return 'mdi-google-drive'
-    case 'frameio': return 'mdi-play-box'
-    case 'slack': return 'mdi-slack'
-    case 'gmail': return 'mdi-gmail'
-    default: return 'mdi-puzzle'
-  }
-}
-
-function getLogLevelColor(level: string) {
-  switch (level) {
-    case 'info': return 'primary'
-    case 'warning': return 'warning'
-    case 'error': return 'error'
-    default: return 'grey'
-  }
-}
-
-function formatDate(dateString: string): string {
-  return new Date(dateString).toLocaleDateString()
-}
-
-function formatDateTime(dateString: string): string {
-  return new Date(dateString).toLocaleString()
-}
+// Utility functions - already defined above
 
 // Connect to an integration (starts OAuth flow)
 async function connectIntegration(integration: Integration) {
@@ -952,7 +948,8 @@ async function connectIntegration(integration: Integration) {
     
   } catch (error) {
     console.error('Error in connectIntegration:', error);
-    notificationStore.add('error', `Failed to connect ${integration.name}: ${error.message || 'Unknown error'}`);
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    notificationStore.add('error', `Failed to connect ${integration.name}: ${message}`);
   } finally {
     connecting.value = null;
   }

@@ -41,6 +41,7 @@ async function globalSetup() {
     console.log('🧪 Setting up global test environment...');
     process.env.NODE_ENV = 'test';
     process.env.TEST_MODE = 'true';
+    process.env.USE_IN_MEMORY_QUEUES = 'true';
     process.env.NEO4J_URI = process.env.NEO4J_TEST_URI || 'bolt://localhost:7687';
     process.env.NEO4J_DATABASE = 'test';
     process.env.POSTGRES_DATABASE = process.env.POSTGRES_TEST_DATABASE || 'olivine_test';
@@ -80,6 +81,10 @@ async function globalSetup() {
             catch (error) {
             }
         }
+        try {
+            await postgresService.executeQuery('CREATE EXTENSION IF NOT EXISTS "uuid-ossp"');
+        }
+        catch { }
         const createTablesQueries = [
             `CREATE TABLE IF NOT EXISTS organizations (
         id VARCHAR(255) PRIMARY KEY,
@@ -94,6 +99,14 @@ async function globalSetup() {
         type VARCHAR(100) NOT NULL,
         status VARCHAR(100) NOT NULL,
         created_at TIMESTAMP DEFAULT NOW()
+      )`,
+            `CREATE TABLE IF NOT EXISTS sources (
+        id VARCHAR(255) PRIMARY KEY,
+        organization_id VARCHAR(255) NOT NULL,
+        type VARCHAR(50),
+        metadata JSONB DEFAULT '{}'::jsonb,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
       )`,
             `CREATE TABLE IF NOT EXISTS taxonomy_profiles (
         id VARCHAR(255) PRIMARY KEY,
@@ -186,13 +199,27 @@ async function globalSetup() {
         updated_at TIMESTAMP DEFAULT NOW(),
         status VARCHAR(50)
       )`,
+            `CREATE TABLE IF NOT EXISTS sync_errors (
+        id SERIAL PRIMARY KEY,
+        file_id VARCHAR(255),
+        org_id VARCHAR(255),
+        error_message TEXT,
+        error_stack TEXT,
+        job_data JSONB,
+        created_at TIMESTAMP DEFAULT NOW()
+      )`,
             `CREATE TABLE IF NOT EXISTS files (
         id VARCHAR(255) PRIMARY KEY,
         org_id VARCHAR(255) NOT NULL,
         name VARCHAR(255),
         mime_type VARCHAR(100),
         size INTEGER,
-        checksum VARCHAR(255)
+        checksum VARCHAR(255),
+        organization_id VARCHAR(255),
+        deleted_at TIMESTAMP,
+        classification_status TEXT DEFAULT 'pending',
+        extracted_text TEXT,
+        content_metadata JSONB DEFAULT '{}'::jsonb
       )`
         ];
         for (const query of createTablesQueries) {
@@ -202,6 +229,16 @@ async function globalSetup() {
             catch (error) {
                 console.warn('Error creating test table:', error.message);
             }
+        }
+        try {
+            const { MigrationService } = await Promise.resolve().then(() => __importStar(require('../services/MigrationService')));
+            const ms = new MigrationService();
+            await ms.createMigrationDirectories();
+            await ms.applyAllMigrations();
+            await ms.close();
+        }
+        catch (e) {
+            console.warn('Migrations not executed in tests:', e.message);
         }
         try {
             const fs = await Promise.resolve().then(() => __importStar(require('fs')));
