@@ -48,4 +48,45 @@ describe('projectStore actions', () => {
     expect(store.error).toBe('fail')
     expect(store.projects.length).toBe(1)
   })
+
+  it('fetches project members', async () => {
+    const store = useProjectStore()
+    ;(apolloClient.query as any).mockResolvedValue({
+      data: { projectMembers: [{ id: 'm1', email: 'a@test.com', role: 'VIEWER' }] },
+    })
+    await store.fetchMembers('p1')
+    expect(store.members.length).toBe(1)
+    expect(store.members[0].email).toBe('a@test.com')
+  })
+
+  it('invites a new member', async () => {
+    const store = useProjectStore()
+    ;(apolloClient.mutate as any).mockResolvedValue({
+      data: { inviteProjectMember: { id: 'm2', email: 'b@test.com', role: 'EDITOR' } },
+    })
+    await store.inviteMember('p1', 'b@test.com', 'EDITOR')
+    expect(store.members[0].email).toBe('b@test.com')
+  })
+
+  it('updates member role', async () => {
+    const store = useProjectStore()
+    store.members = [{ id: 'm1', email: 'a@test.com', role: 'VIEWER' }]
+    ;(apolloClient.mutate as any).mockResolvedValue({
+      data: { updateProjectMemberRole: { id: 'm1', email: 'a@test.com', role: 'ADMIN' } },
+    })
+    await store.updateMemberRole('p1', 'm1', 'ADMIN')
+    expect(store.members[0].role).toBe('ADMIN')
+  })
+
+  it('removes a member', async () => {
+    const store = useProjectStore()
+    store.members = [
+      { id: 'm1', email: 'a@test.com', role: 'ADMIN' },
+      { id: 'm2', email: 'b@test.com', role: 'VIEWER' },
+    ]
+    ;(apolloClient.mutate as any).mockResolvedValue({ data: { removeProjectMember: true } })
+    await store.removeMember('p1', 'm1')
+    expect(store.members.length).toBe(1)
+    expect(store.members[0].id).toBe('m2')
+  })
 })

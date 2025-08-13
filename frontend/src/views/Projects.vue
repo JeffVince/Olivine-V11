@@ -79,15 +79,22 @@
             <v-spacer />
             <v-menu>
               <template v-slot:activator="{ props }">
-                <v-btn 
-                  icon="mdi-dots-vertical" 
-                  variant="text" 
+                <v-btn
+                  icon="mdi-dots-vertical"
+                  variant="text"
                   size="small"
                   v-bind="props"
                   @click.stop
                 />
               </template>
               <v-list>
+                <v-list-item @click="manageTeam(project)">
+                  <v-list-item-title>
+                    <v-icon start>mdi-account-multiple</v-icon>
+                    Manage Team
+                  </v-list-item-title>
+                </v-list-item>
+                <v-divider />
                 <v-list-item @click="editProject(project)">
                   <v-list-item-title>
                     <v-icon start>mdi-pencil</v-icon>
@@ -255,6 +262,8 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <TeamManager v-model="showTeamDialog" :project="selectedProject" />
   </div>
 </template>
 
@@ -263,6 +272,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useProjectStore } from '@/stores/projectStore'
 import { useNotificationStore } from '@/stores/notificationStore'
+import TeamManager from '@/components/projects/TeamManager.vue'
 
 interface Project {
   id: string
@@ -292,6 +302,8 @@ const notificationStore = useNotificationStore()
 const projects = computed(() => projectStore.projects)
 const showCreateDialog = ref(false)
 const showDeleteDialog = ref(false)
+const showTeamDialog = ref(false)
+const selectedProject = ref<Project | null>(null)
 const formValid = ref(false)
 const creating = ref(false)
 const deleting = ref(false)
@@ -375,6 +387,12 @@ function deleteProject(project: Project) {
   projectToDelete.value = project
   deleteConfirmation.value = ''
   showDeleteDialog.value = true
+}
+
+function manageTeam(project: Project) {
+  selectedProject.value = project
+  projectStore.fetchMembers(project.id)
+  showTeamDialog.value = true
 }
 
 async function confirmDelete() {
