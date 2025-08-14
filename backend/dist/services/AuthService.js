@@ -85,6 +85,23 @@ class AuthService {
             return null;
         }
     }
+    async register(orgName, email, password) {
+        try {
+            const slug = orgName.toLowerCase().replace(/\s+/g, '-');
+            const orgResult = await this.postgresService.executeQuery('INSERT INTO organizations (name, slug) VALUES ($1, $2) RETURNING id', [orgName, slug]);
+            const orgId = orgResult.rows[0].id;
+            const passwordHash = await this.hashPassword(password);
+            const userResult = await this.postgresService.executeQuery('INSERT INTO users (email, password_hash, organization_id, role) VALUES ($1, $2, $3, $4) RETURNING id, role', [email, passwordHash, orgId, 'admin']);
+            const userId = userResult.rows[0].id;
+            const role = userResult.rows[0].role;
+            const token = this.generateToken(userId, orgId, role);
+            return { token, userId, orgId, role };
+        }
+        catch (error) {
+            console.error('Error registering user:', error);
+            throw error;
+        }
+    }
     async healthCheck() {
         try {
             const dbHealthy = await this.postgresService.healthCheck();

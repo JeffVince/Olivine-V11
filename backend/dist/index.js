@@ -21,6 +21,7 @@ const TaxonomyClassificationAgent_1 = require("./agents/TaxonomyClassificationAg
 const ProvenanceTrackingAgent_1 = require("./agents/ProvenanceTrackingAgent");
 const SyncAgent_1 = require("./agents/SyncAgent");
 const oauthRoutes_1 = __importDefault(require("./routes/oauthRoutes"));
+const authRoutes_1 = __importDefault(require("./routes/authRoutes"));
 const server_1 = require("./graphql/server");
 (0, dotenv_1.config)();
 const app = (0, express_1.default)();
@@ -32,6 +33,7 @@ app.use((0, cors_1.default)({
 app.use((0, helmet_1.default)());
 app.use(express_1.default.json());
 app.use('/api/oauth', oauthRoutes_1.default);
+app.use('/api/auth', authRoutes_1.default);
 app.get('/api/webhooks/dropbox', (req, res) => dropboxWebhookHandler.handleWebhook(req, res));
 app.post('/api/webhooks/dropbox', (req, res) => dropboxWebhookHandler.handleWebhook(req, res));
 app.post('/api/webhooks/gdrive', (req, res) => gdriveWebhookHandler.handleWebhook(req, res));
@@ -64,6 +66,7 @@ async function startServer() {
         app.use((0, helmet_1.default)());
         app.use(express_1.default.json());
         app.use('/api/oauth', oauthRoutes_1.default);
+        app.use('/api/auth', authRoutes_1.default);
         const dropboxWebhookHandler = new DropboxWebhookHandler_1.DropboxWebhookHandler(queueService);
         const gdriveWebhookHandler = new GoogleDriveWebhookHandler_1.GoogleDriveWebhookHandler(queueService);
         app.get('/api/webhooks/dropbox', (req, res) => dropboxWebhookHandler.handleWebhook(req, res));

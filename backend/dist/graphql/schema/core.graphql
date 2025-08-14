@@ -459,10 +459,13 @@ extend type Query {
   # Cross-layer validation queries
   validateCrossLayerLinks(organizationId: ID!): JSON!
   getCrossLayerStatistics(organizationId: ID!): JSON!
-  
-  # Minimal provenance queries used by UI
+
+  # Provenance & Versioning
+  commit(id: ID!, orgId: ID!): Commit
   commits(filter: CommitFilter, limit: Int = 50, offset: Int = 0): [Commit!]!
   commitHistory(orgId: ID!, branchName: String!, limit: Int = 50): [Commit!]!
+  entityVersions(orgId: ID!, entityId: ID!, entityType: String!): [Version!]!
+  branches(orgId: ID!): [Branch!]!
 }
 
 extend type Mutation {
@@ -474,10 +477,82 @@ extend type Mutation {
   # Cross-layer link mutations
   createCrossLayerLink(organizationId: ID!, fromEntityId: ID!, toEntityId: ID!, relationshipType: String!): Boolean!
   validateAndRepairLinks(organizationId: ID!): JSON!
+
+  # Provenance operations
+  createBranch(name: String!, orgId: ID!, projectId: ID, description: String!, userId: ID!, fromCommit: String): Branch!
+  createEdgeFact(type: String!, fromId: ID!, toId: ID!, orgId: ID!, userId: ID!, props: JSON, fromType: String, toType: String): JSON!
+  endEdgeFact(edgeFactId: ID!, orgId: ID!, userId: ID!): JSON!
 }
 
 type LinkResult { success: Boolean! }
 
 extend type Mutation {
   linkSceneToCharacter(sceneId: ID!, characterId: ID!, orgId: ID!, userId: String!): LinkResult!
+}
+
+# ===== VERSIONING & PROVENANCE TYPES =====
+
+type Commit {
+  id: ID!
+  orgId: ID!
+  message: String!
+  author: String!
+  authorType: String!
+  parentCommitId: ID
+  branchName: String!
+  signature: String
+  status: CommitStatus
+  createdAt: DateTime!
+  metadata: JSON
+}
+
+type Action {
+  id: ID!
+  commitId: ID!
+  actionType: String!
+  tool: String!
+  entityType: String!
+  entityId: String!
+  inputs: JSON
+  outputs: JSON
+  status: ActionStatus!
+  errorMessage: String
+  createdAt: DateTime!
+}
+
+type Version {
+  id: ID!
+  orgId: ID!
+  entityId: String!
+  entityType: String!
+  properties: JSON!
+  commitId: ID!
+  createdAt: DateTime!
+  contentHash: String
+  metadata: JSON
+}
+
+type Branch {
+  name: String!
+  org_id: String!
+  project_id: String
+  description: String!
+  created_from_commit: String
+  head_commit: String
+  status: String!
+  created_by: String!
+  created_at: DateTime!
+  merged_at: DateTime
+  merged_by: String
+  metadata: JSON
+}
+
+input CommitFilter {
+  orgId: ID
+  projectId: ID
+  branchName: String
+  author: String
+  authorType: String
+  createdAfter: DateTime
+  createdBefore: DateTime
 }

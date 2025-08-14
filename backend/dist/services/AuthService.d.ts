@@ -14,6 +14,12 @@ export declare class AuthService {
         orgId: string;
         role: string;
     } | null>;
+    register(orgName: string, email: string, password: string): Promise<{
+        token: string;
+        userId: string;
+        orgId: string;
+        role: string;
+    }>;
     healthCheck(): Promise<boolean>;
     getUserById(userId: string): Promise<{
         id: string;

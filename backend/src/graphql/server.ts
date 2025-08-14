@@ -179,22 +179,10 @@ export class GraphQLServer {
   private async createSchema() {
     this.logger.info('Creating GraphQL schema...');
 
-    // Load schema files - adjust path for compiled code in dist directory
+    // Load schema files - prefer source in dev, dist in production
     const schemaPath = __dirname.includes('/dist/') 
       ? join(__dirname, 'schema')
-      : join(process.cwd(), 'dist', 'graphql', 'schema');
-      
-    let enhancedTypeDefs = '';
-    try {
-      enhancedTypeDefs = readFileSync(
-        join(schemaPath, 'enhanced.graphql'),
-        'utf8'
-      );
-      // Schema types are now consistent, no need for runtime modifications
-      // Remove conflicting signature normalization that was forcing String! types
-    } catch {
-      enhancedTypeDefs = '';
-    }
+      : join(process.cwd(), 'src', 'graphql', 'schema');
     
     let coreTypeDefs = readFileSync(
       join(schemaPath, 'core.graphql'),
@@ -299,13 +287,7 @@ export class GraphQLServer {
     `;
 
     // Combine type definitions
-    // Force enhanced schema to not define analysis fields as JSON to avoid merge conflicts
-    const sanitizedEnhanced = enhancedTypeDefs
-      .replace(/budgetVsActualAnalysis\s*\([^)]*\):\s*\[\s*JSON!\s*\]\s*!/g, 'budgetVsActualAnalysis(projectId: ID!, orgId: String!): [BudgetVsActualRow!]!')
-      .replace(/vendorPerformanceAnalysis\s*\([^)]*\):\s*\[\s*JSON!\s*\]\s*!/g, 'vendorPerformanceAnalysis(orgId: String!): [VendorPerformanceRow!]!');
-
     const typeDefs = `
-      ${sanitizedEnhanced}
       ${coreTypeDefs}
       ${e2eExtensions}
     `;

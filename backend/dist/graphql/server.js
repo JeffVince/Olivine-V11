@@ -150,14 +150,7 @@ class GraphQLServer {
         this.logger.info('Creating GraphQL schema...');
         const schemaPath = __dirname.includes('/dist/')
             ? (0, path_1.join)(__dirname, 'schema')
-            : (0, path_1.join)(process.cwd(), 'dist', 'graphql', 'schema');
-        let enhancedTypeDefs = '';
-        try {
-            enhancedTypeDefs = (0, fs_1.readFileSync)((0, path_1.join)(schemaPath, 'enhanced.graphql'), 'utf8');
-        }
-        catch {
-            enhancedTypeDefs = '';
-        }
+            : (0, path_1.join)(process.cwd(), 'src', 'graphql', 'schema');
         let coreTypeDefs = (0, fs_1.readFileSync)((0, path_1.join)(schemaPath, 'core.graphql'), 'utf8');
         const e2eExtensions = `
       scalar DateTime
@@ -252,11 +245,7 @@ class GraphQLServer {
         branches(orgId: ID!): [Branch!]!
       }
     `;
-        const sanitizedEnhanced = enhancedTypeDefs
-            .replace(/budgetVsActualAnalysis\s*\([^)]*\):\s*\[\s*JSON!\s*\]\s*!/g, 'budgetVsActualAnalysis(projectId: ID!, orgId: String!): [BudgetVsActualRow!]!')
-            .replace(/vendorPerformanceAnalysis\s*\([^)]*\):\s*\[\s*JSON!\s*\]\s*!/g, 'vendorPerformanceAnalysis(orgId: String!): [VendorPerformanceRow!]!');
         const typeDefs = `
-      ${sanitizedEnhanced}
       ${coreTypeDefs}
       ${e2eExtensions}
     `;
