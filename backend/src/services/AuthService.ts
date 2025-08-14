@@ -140,6 +140,34 @@ export class AuthService {
   }
 
   /**
+   * Register a new organization and user
+   */
+  async register(orgName: string, email: string, password: string): Promise<{ token: string; userId: string; orgId: string; role: string }> {
+    try {
+      const slug = orgName.toLowerCase().replace(/\s+/g, '-');
+      const orgResult = await this.postgresService.executeQuery(
+        'INSERT INTO organizations (name, slug) VALUES ($1, $2) RETURNING id',
+        [orgName, slug]
+      );
+      const orgId = orgResult.rows[0].id as string;
+
+      const passwordHash = await this.hashPassword(password);
+      const userResult = await this.postgresService.executeQuery(
+        'INSERT INTO users (email, password_hash, organization_id, role) VALUES ($1, $2, $3, $4) RETURNING id, role',
+        [email, passwordHash, orgId, 'admin']
+      );
+      const userId = userResult.rows[0].id as string;
+      const role = userResult.rows[0].role as string;
+
+      const token = this.generateToken(userId, orgId, role);
+      return { token, userId, orgId, role };
+    } catch (error) {
+      console.error('Error registering user:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Health check for auth service
    * @returns Boolean indicating if service is healthy
    */

@@ -19,6 +19,7 @@ import { TaxonomyClassificationAgent } from './agents/TaxonomyClassificationAgen
 import { ProvenanceTrackingAgent } from './agents/ProvenanceTrackingAgent';
 import { SyncAgent } from './agents/SyncAgent';
 import oauthRoutes from './routes/oauthRoutes';
+import authRoutes from './routes/authRoutes';
 import { GraphQLServer } from './graphql/server';
 
 // Load environment variables
@@ -39,6 +40,7 @@ app.use(cors({
 app.use(helmet());
 app.use(express.json());
 app.use('/api/oauth', oauthRoutes);
+app.use('/api/auth', authRoutes);
 
 // Initialize webhook handlers (will be created after queueService is instantiated)
 
@@ -110,6 +112,7 @@ async function startServer() {
     app.use(helmet());
     app.use(express.json());
     app.use('/api/oauth', oauthRoutes);
+    app.use('/api/auth', authRoutes);
     
     // Initialize webhook handlers (will be created after queueService is instantiated)
     const dropboxWebhookHandler = new DropboxWebhookHandler(queueService);
