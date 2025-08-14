@@ -5,7 +5,7 @@ enum JobType { reindexProject reclassifyLowConfidence generateCallSheet extractC
 
 type AgentJob {
   id: ID!
-  orgId: ID!
+  organizationId: ID!
   type: JobType!
   target: String
   status: JobStatus!
@@ -21,7 +21,7 @@ type AgentJob {
 
 type Runbook {
   id: ID!
-  orgId: ID!
+  organizationId: ID!
   name: String!
   description: String
   spec: JSON!
@@ -44,34 +44,41 @@ type AgentHealth {
 }
 
 input EnqueueAgentJobInput {
-  orgId: ID!
+  organizationId: ID!
   type: JobType!
   target: String
   priority: Int
   params: JSON
 }
 
+input RunbookInput {
+  organizationId: ID!
+  name: String!
+  description: String
+  spec: JSON!
+}
+
 input SaveRunbookInput {
   id: ID
-  orgId: ID!
+  organizationId: ID!
   name: String!
   description: String
   spec: JSON!
 }
 
 type Query {
-  agentJobs(orgId: ID!, status: JobStatus, type: JobType, limit: Int, offset: Int): [AgentJob!]!
-  agentJob(orgId: ID!, id: ID!): AgentJob
-  runbooks(orgId: ID!): [Runbook!]!
-  agentHealth(orgId: ID!): AgentHealth!
-  queues(orgId: ID!): [QueueStats!]!
+  agentJobs(organizationId: ID!, status: JobStatus, type: JobType, limit: Int, offset: Int): [AgentJob!]!
+  agentJob(organizationId: ID!, id: ID!): AgentJob
+  runbooks(organizationId: ID!): [Runbook!]!
+  agentHealth(organizationId: ID!): AgentHealth!
+  queues(organizationId: ID!): [QueueStats!]!
 }
 
 type Mutation {
   enqueueAgentJob(input: EnqueueAgentJobInput!): AgentJob!
-  cancelAgentJob(orgId: ID!, id: ID!): Boolean!
-  executeRunbook(orgId: ID!, id: ID!, params: JSON): AgentJob!
-  saveRunbook(orgId: ID!, input: SaveRunbookInput!): Runbook!
+  cancelAgentJob(organizationId: ID!, id: ID!): Boolean!
+  executeRunbook(organizationId: ID!, id: ID!, params: JSON): AgentJob!
+  saveRunbook(organizationId: ID!, input: SaveRunbookInput!): Runbook!
 }
 
 type LogEntry {
@@ -82,7 +89,7 @@ type LogEntry {
 }
 
 type Subscription {
-  jobUpdated(orgId: ID!): AgentJob!
+  jobUpdated(organizationId: ID!): AgentJob!
   jobLogAppended(jobId: ID!): LogEntry!
 }
 

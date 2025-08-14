@@ -10514,3 +10514,1272 @@
 {"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T02:39:26.484Z"}
 {"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T02:39:26.484Z"}
 {"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T02:39:26.484Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T02:50:21.952Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T02:50:21.952Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T02:50:21.951Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T02:50:21.952Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T02:50:21.953Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T02:50:21.995Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T02:50:21.995Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T02:50:21.995Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T02:50:21.995Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T02:50:21.998Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T02:50:22.009Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T02:50:22.009Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T02:50:22.009Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T02:50:22.009Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T02:50:22.009Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T02:50:22.010Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T02:50:22.010Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T02:50:22.010Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T02:50:22.010Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T02:50:22.010Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T02:50:22.010Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T02:50:22.010Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T02:50:22.010Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T02:50:22.010Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T02:50:22.010Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T02:50:22.035Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T02:50:22.036Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T02:50:22.036Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T02:50:22.036Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T02:50:22.038Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T02:51:50.633Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T02:51:50.632Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T02:51:50.638Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T02:51:50.637Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T02:51:50.640Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T02:51:50.683Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T02:51:50.683Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T02:51:50.684Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T02:51:50.684Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T02:51:50.685Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T02:51:50.713Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T02:51:50.713Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T02:51:50.713Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T02:51:50.713Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T02:51:50.713Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T02:51:50.714Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T02:51:50.714Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T02:51:50.714Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T02:51:50.714Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T02:51:50.714Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T02:51:50.714Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T02:51:50.714Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T02:51:50.714Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T02:51:50.714Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T02:51:50.714Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T02:51:50.746Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T02:51:50.746Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T02:51:50.746Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T02:51:50.747Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T02:51:50.753Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T02:52:32.110Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T02:52:32.113Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T02:52:32.117Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T02:52:32.118Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T02:52:32.120Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T02:52:32.173Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T02:52:32.173Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T02:52:32.174Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T02:52:32.174Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T02:52:32.174Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T02:52:32.211Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T02:52:32.211Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T02:52:32.211Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T02:52:32.211Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T02:52:32.211Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T02:52:32.212Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T02:52:32.212Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T02:52:32.212Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T02:52:32.212Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T02:52:32.212Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T02:52:32.212Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T02:52:32.212Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T02:52:32.212Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T02:52:32.212Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T02:52:32.212Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T02:52:32.238Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T02:52:32.238Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T02:52:32.239Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T02:52:32.239Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T02:52:32.252Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T02:52:56.550Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T02:52:56.550Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T02:52:56.551Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T02:52:56.552Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T02:52:56.631Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T02:52:56.631Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T02:52:56.632Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T02:52:56.635Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T02:52:56.674Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T02:52:56.674Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T02:52:56.675Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T02:52:56.675Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T02:52:56.675Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T02:52:56.676Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T02:52:56.676Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T02:52:56.676Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T02:52:56.675Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T02:52:56.677Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T02:52:56.676Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T02:52:56.676Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T02:52:56.677Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T02:52:56.720Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T02:52:56.722Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T02:52:56.723Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T02:52:56.723Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T02:52:56.724Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T02:52:56.743Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T02:52:56.744Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T02:52:56.744Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T02:52:56.843Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T02:53:02.516Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T02:53:02.540Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T02:53:02.549Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T02:53:02.549Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T02:53:02.549Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T02:53:02.568Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T02:54:23.907Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T02:54:23.903Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T02:54:23.961Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T02:54:23.976Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T02:54:23.979Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T02:54:23.957Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T02:54:24.001Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T02:54:23.978Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T02:54:23.998Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T02:54:24.022Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T02:54:24.029Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T02:54:24.030Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T02:54:24.031Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T02:54:24.032Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T02:54:24.035Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T02:54:24.031Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T02:54:24.032Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T02:54:24.042Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T02:54:24.044Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T02:54:24.045Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T02:54:24.050Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T02:54:24.050Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T02:54:24.045Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T02:54:24.052Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T02:54:24.052Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T02:54:24.051Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T02:54:24.053Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T02:54:24.060Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T02:54:24.060Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T02:54:24.061Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T02:54:24.072Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T02:54:24.080Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T02:54:24.091Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T02:54:24.093Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T02:54:24.096Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T02:54:24.130Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T02:55:03.294Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T02:55:03.292Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T02:55:03.305Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T02:55:03.303Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T02:55:03.315Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T02:55:03.365Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T02:55:03.365Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T02:55:03.366Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T02:55:03.367Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T02:55:03.369Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T02:55:03.354Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T02:55:03.394Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T02:55:03.419Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T02:55:03.419Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T02:55:03.419Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T02:55:03.419Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T02:55:03.419Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T02:55:03.419Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T02:55:03.420Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T02:55:03.420Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T02:55:03.420Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T02:55:03.420Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T02:55:03.420Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T02:55:03.420Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T02:55:03.420Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T02:55:03.420Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T02:55:03.420Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T02:55:03.420Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T02:55:03.420Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T02:55:03.420Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T02:55:03.465Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T02:55:03.465Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T02:55:03.465Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T02:55:03.473Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T02:55:03.474Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T02:55:03.484Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T02:55:54.164Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T02:55:54.157Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T02:55:54.168Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T02:55:54.169Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T02:55:54.167Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T02:55:54.158Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T02:55:54.218Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T02:55:54.218Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T02:55:54.218Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T02:55:54.219Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T02:55:54.219Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T02:55:54.246Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T02:55:54.255Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T02:55:54.255Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T02:55:54.255Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T02:55:54.257Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T02:55:54.257Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T02:55:54.257Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T02:55:54.257Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T02:55:54.258Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T02:55:54.258Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T02:55:54.259Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T02:55:54.257Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T02:55:54.257Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T02:55:54.257Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T02:55:54.264Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T02:55:54.259Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T02:55:54.264Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T02:55:54.258Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T02:55:54.264Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T02:55:54.287Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T02:55:54.287Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T02:55:54.287Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T02:55:54.287Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T02:55:54.288Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T02:55:54.289Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T02:56:51.530Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T02:56:51.567Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T02:56:51.580Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T02:56:51.581Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T02:56:51.581Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T02:56:51.600Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T02:58:37.788Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T02:58:37.787Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T02:58:37.788Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T02:58:37.787Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T02:58:37.786Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T02:58:37.788Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T02:58:37.787Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T02:58:37.861Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T02:58:37.861Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T02:58:37.861Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T02:58:37.861Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T02:58:37.871Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T02:58:37.887Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T02:58:37.903Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T02:58:37.908Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T02:58:37.908Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T02:58:37.908Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T02:58:37.908Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T02:58:37.908Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T02:58:37.908Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T02:58:37.908Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T02:58:37.908Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T02:58:37.908Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T02:58:37.908Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T02:58:37.908Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T02:58:37.908Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T02:58:37.909Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T02:58:37.909Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T02:58:37.909Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T02:58:37.909Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T02:58:37.909Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T02:58:37.914Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T02:58:37.915Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T02:58:37.909Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T02:58:37.915Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T02:58:37.947Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T02:58:37.948Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T02:58:37.948Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T02:58:37.949Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T02:58:37.949Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T02:58:37.963Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T02:58:37.963Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T02:59:17.453Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T02:59:17.486Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T02:59:17.493Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T02:59:17.494Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T02:59:17.494Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T02:59:17.511Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:00:57.580Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:00:57.583Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:00:57.614Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:00:57.613Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:00:57.612Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:00:57.653Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:00:57.653Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:00:57.645Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:00:57.665Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:00:57.662Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:00:57.677Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:00:57.678Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:00:57.678Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:00:57.680Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:00:57.678Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:00:57.678Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:00:57.679Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:00:57.690Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:00:57.693Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:00:57.698Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:00:57.693Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:00:57.654Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:00:57.706Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:00:57.707Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:00:57.709Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:00:57.710Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:00:57.710Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:00:57.720Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:00:57.721Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:00:57.723Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:00:57.723Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:00:57.727Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:00:57.721Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:00:57.728Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:00:57.729Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:00:57.729Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:00:57.729Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:00:57.727Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:00:57.736Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:00:57.741Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:00:57.742Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:00:57.743Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:00:57.753Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:00:57.757Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:00:57.762Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:00:57.768Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:00:57.773Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:00:57.774Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:01:03.951Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:01:03.976Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:01:03.984Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:01:03.985Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:01:03.985Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:01:04.002Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:03:40.613Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:03:40.648Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:03:40.656Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:03:40.657Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:03:40.657Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:03:40.678Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:04:59.990Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:05:00.144Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:05:00.182Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:05:00.235Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:05:00.282Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:05:00.284Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:05:00.292Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:05:00.284Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:05:00.294Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:05:00.295Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:05:00.359Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:05:00.358Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:05:00.477Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:05:00.534Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:05:00.565Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:05:00.585Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:05:00.598Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:05:00.599Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:05:00.599Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:05:00.665Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:05:00.666Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:05:00.666Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:05:00.683Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:05:00.648Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:05:00.680Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:05:00.722Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:05:00.852Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:05:00.762Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:05:00.709Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:05:00.970Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:05:00.975Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:05:00.975Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:05:00.999Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:05:01.060Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:05:01.114Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:05:01.136Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:05:01.145Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:05:01.146Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:05:01.146Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:05:01.152Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:05:01.152Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:05:01.153Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:05:01.158Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:05:01.154Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:05:01.161Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:05:01.242Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:05:01.251Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:05:01.252Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:05:01.252Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:05:01.300Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:05:01.391Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:05:01.393Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:05:01.406Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:05:01.411Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:05:01.412Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:05:01.407Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:05:01.408Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:05:01.412Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:05:01.469Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:05:01.476Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:05:02.286Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:05:02.357Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:05:02.379Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:05:02.381Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:05:02.381Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:05:02.487Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:06:01.812Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:06:01.804Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:06:01.851Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:06:01.847Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:06:01.913Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:06:01.913Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:06:01.896Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:06:01.919Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:06:01.956Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:06:01.930Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:06:01.959Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:06:01.933Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:06:01.974Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:06:01.987Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:06:02.001Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:06:01.991Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:06:02.011Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:06:02.017Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:06:02.018Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:06:02.019Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:06:02.026Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:06:02.027Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:06:02.030Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:06:02.032Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:06:02.033Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:06:02.027Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:06:02.027Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:06:02.038Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:06:02.033Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:06:02.038Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:06:02.047Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:06:02.048Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:06:02.048Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:06:02.049Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:06:02.050Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:06:02.050Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:06:02.050Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:06:02.050Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:06:02.051Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:06:02.062Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:06:02.046Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:06:02.068Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:06:02.069Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:06:02.074Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:06:02.069Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:06:02.077Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:06:02.078Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:06:02.079Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:06:02.079Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:06:02.081Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:06:02.083Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:06:02.078Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:06:02.054Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:06:02.095Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:06:02.098Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:06:02.081Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:06:02.116Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:06:02.139Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:06:02.140Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:06:02.158Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:06:02.158Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:06:02.166Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:06:02.169Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:06:02.169Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:06:02.187Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:06:02.255Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:06:15.262Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:06:15.295Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:06:15.302Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:06:15.303Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:06:15.303Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:06:15.327Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:07:51.450Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:07:51.484Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:07:51.491Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:07:51.492Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:07:51.492Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:07:51.516Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:14:29.324Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:14:29.509Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:14:29.660Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:14:30.145Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:14:30.377Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:14:30.414Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:14:30.500Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:14:30.632Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:14:31.135Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:14:52.621Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:14:52.709Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:14:52.781Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:14:52.783Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:14:52.783Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:14:53.038Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:14:53.201Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:14:53.198Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:14:53.239Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:14:53.264Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:14:53.275Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:14:53.281Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:14:53.284Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:14:53.285Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:14:53.287Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:14:53.299Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:14:53.300Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:14:53.289Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:14:53.300Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:14:53.262Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:14:53.327Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:14:53.348Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:14:53.348Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:14:53.330Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:14:53.330Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:14:53.359Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:14:53.392Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:14:53.410Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:14:53.416Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:14:53.412Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:14:53.412Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:14:53.420Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:14:53.420Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:14:53.432Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:14:53.459Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:14:53.532Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:14:53.536Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:14:53.573Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:14:53.591Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:14:53.592Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:14:53.593Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:14:53.643Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:14:53.644Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:14:53.659Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:14:53.647Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:14:53.689Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:14:53.707Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:14:53.709Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:14:53.706Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:14:53.708Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:14:53.708Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:14:53.722Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:14:53.732Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:14:53.733Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:14:53.733Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:14:53.741Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:14:53.742Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:14:53.742Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:14:53.759Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:14:53.752Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:14:53.767Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:14:53.773Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:14:53.782Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:14:53.783Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:14:53.783Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:14:53.784Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:14:53.783Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:14:53.796Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:14:53.797Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:14:53.797Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:14:53.814Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:14:53.828Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:15:10.055Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:15:10.080Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:15:10.095Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:15:10.095Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:15:10.096Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:15:10.121Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:16:17.554Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:16:17.583Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:16:17.591Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:16:17.591Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:16:17.591Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:16:17.618Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:17:15.776Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:17:15.795Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:17:15.803Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:17:15.812Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:17:15.852Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:17:15.911Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:17:15.884Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:17:15.925Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:17:15.955Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:17:15.956Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:17:15.912Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:17:15.938Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:17:15.944Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:17:16.004Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:17:15.791Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:17:16.030Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:17:16.035Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:17:16.036Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:17:16.047Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:17:16.051Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:17:16.049Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:17:16.052Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:17:16.053Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:17:16.054Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:17:15.997Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:17:16.058Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:17:16.060Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:17:16.051Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:17:16.051Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:17:16.054Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:17:16.070Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:17:16.083Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:17:16.085Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:17:16.072Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:17:16.072Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:17:16.085Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:17:16.085Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:17:16.096Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:17:16.087Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:17:16.087Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:17:16.109Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:17:16.118Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:17:16.122Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:17:16.099Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:17:16.099Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:17:16.127Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:17:16.123Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:17:16.129Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:17:16.130Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:17:16.131Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:17:16.132Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:17:16.123Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:17:16.136Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:17:16.130Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:17:16.139Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:17:16.133Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:17:16.142Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:17:16.139Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:17:16.147Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:17:16.147Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:17:16.162Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:17:16.170Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:17:16.168Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:17:16.172Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:17:16.177Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:17:16.178Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:17:16.177Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:17:16.192Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:17:16.194Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:17:16.195Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:17:16.195Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:17:16.145Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:17:16.212Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:17:16.217Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:17:16.205Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:17:16.240Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:17:16.240Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:17:16.234Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:17:16.235Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:17:16.295Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:17:16.305Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:17:16.309Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:17:16.319Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:17:16.347Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:17:41.512Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:17:41.532Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:17:41.574Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:17:41.591Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:17:41.619Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:17:41.640Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:17:41.668Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:17:41.661Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:17:41.668Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:17:41.701Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:17:41.703Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:17:41.704Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:17:41.704Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:17:41.716Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:17:41.668Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:17:41.720Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:17:41.746Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:17:41.749Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:17:41.751Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:17:41.757Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:17:41.758Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:17:41.771Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:17:41.773Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:17:41.773Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:17:41.791Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:17:41.795Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:17:41.796Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:17:41.769Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:17:41.800Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:17:41.801Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:17:41.801Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:17:41.792Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:17:41.792Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:17:41.785Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:17:41.812Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:17:41.801Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:17:41.802Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:17:41.812Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:17:41.742Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:17:41.843Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:17:41.832Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:17:41.843Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:17:41.855Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:17:41.843Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:17:41.868Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:17:41.869Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:17:41.868Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:17:41.876Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:17:41.876Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:17:41.879Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:17:41.877Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:17:41.877Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:17:41.891Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:17:41.891Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:17:41.905Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:17:41.934Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:17:41.938Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:17:41.938Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:17:41.957Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:17:41.958Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:17:41.965Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:17:41.965Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:17:41.959Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:17:41.968Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:17:41.968Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:17:41.967Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:17:41.967Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:17:41.979Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:17:41.980Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:17:41.982Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:17:41.986Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:17:41.981Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:17:41.991Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:17:41.991Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:17:42.007Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:17:42.012Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:17:42.036Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:17:42.087Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:17:42.107Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:17:42.115Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:17:42.128Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:17:42.143Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:17:42.181Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:17:42.193Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:17:46.130Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:17:46.156Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:17:46.169Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:17:46.169Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:17:46.170Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:17:46.216Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:18:56.298Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:18:56.240Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:18:56.384Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:18:56.359Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:18:56.484Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:18:56.485Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:18:56.488Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:18:56.521Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:18:56.367Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:18:56.534Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:18:56.534Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:18:56.535Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:18:56.535Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:18:56.547Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:18:56.536Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:18:56.536Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:18:56.557Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:18:56.558Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:18:56.549Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:18:56.550Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:18:56.558Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:18:56.580Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:18:56.612Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:18:56.612Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:18:56.613Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:18:56.614Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:18:56.617Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:18:56.620Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:18:56.615Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:18:56.987Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:18:56.883Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:18:57.069Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:18:57.087Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:18:57.088Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:18:57.088Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:18:57.292Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:18:57.298Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:18:57.384Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:18:57.491Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:18:57.464Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:18:57.564Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:18:57.588Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:18:57.608Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:18:57.608Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:18:57.609Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:18:57.570Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:18:57.571Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:18:57.651Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:18:57.704Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:18:57.720Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:18:57.720Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:18:57.721Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:18:57.722Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:18:57.814Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:18:57.814Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:18:57.879Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:18:57.923Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:18:57.924Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:18:57.925Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:18:57.920Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:18:57.970Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:18:57.957Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:18:58.000Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:18:58.034Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:18:58.052Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:18:58.053Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:18:58.053Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:18:58.063Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:18:58.066Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:18:58.067Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:18:58.078Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:18:58.095Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:18:58.097Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:18:58.098Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:18:58.109Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:18:58.113Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:18:58.149Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:18:58.174Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:18:58.207Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:18:58.252Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:18:58.352Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:18:58.354Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:18:58.354Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:18:58.474Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:18:58.714Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:18:58.791Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:18:58.812Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:18:58.813Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:18:58.814Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:18:58.892Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:20:16.756Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:20:16.947Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:20:17.011Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:20:17.012Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:20:17.012Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:20:17.258Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:20:22.350Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:20:22.435Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:20:22.499Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:20:22.501Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:20:22.502Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:20:22.624Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:20:23.916Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:20:24.194Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:20:24.216Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:20:24.218Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:20:24.218Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:20:24.376Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:20:24.871Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:20:24.930Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:20:24.948Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:20:24.949Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:20:24.950Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:20:25.027Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:20:25.091Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:20:25.234Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:20:25.256Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:20:25.258Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:20:25.258Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:20:25.255Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:20:25.287Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:20:25.303Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:20:25.318Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:20:25.319Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:20:25.319Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:20:25.350Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:20:25.349Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:20:25.377Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:20:25.404Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:20:25.344Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:20:25.424Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:20:25.430Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:20:25.431Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:20:25.377Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:20:25.430Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:20:25.452Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:20:25.421Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:20:25.453Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:20:25.454Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:20:25.471Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:20:25.486Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:20:25.489Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:20:25.491Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:20:25.491Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:20:25.503Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:20:25.509Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:20:25.539Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:20:25.540Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:20:25.541Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:20:25.546Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:20:25.544Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:20:25.560Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:20:25.581Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:20:25.584Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:20:25.585Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:20:25.613Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:20:25.620Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:20:25.648Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:20:25.659Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:20:25.663Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:20:25.676Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:20:25.656Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:20:25.683Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:20:25.683Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:20:25.690Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:20:25.693Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:20:25.694Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:20:25.730Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:20:25.749Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:20:25.750Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:20:25.752Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:20:25.758Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:20:25.750Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:20:25.718Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:20:25.793Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:20:25.809Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:20:25.811Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:20:25.816Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:20:25.811Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:20:25.851Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:21:07.170Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:21:07.397Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:21:07.232Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:21:07.579Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:21:07.582Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:21:07.571Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:21:07.579Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:21:07.636Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:21:07.702Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:21:07.705Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:21:07.707Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:21:07.718Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:21:07.718Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:21:07.722Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:21:07.718Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:21:07.704Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:21:07.706Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:21:07.719Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:21:07.796Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:21:07.824Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:21:07.812Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:21:07.826Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:21:07.826Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:21:07.875Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:21:07.892Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:21:07.717Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:21:07.930Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:21:07.932Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:21:07.932Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:21:07.965Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:21:07.971Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:21:07.998Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:21:08.007Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:21:08.000Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:21:08.001Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:21:08.054Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:21:08.117Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:21:08.462Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:21:08.736Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:21:08.742Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:21:08.752Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:21:09.485Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:21:17.255Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:21:17.287Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:21:17.359Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:21:17.388Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:21:17.389Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:21:17.389Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:21:17.428Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:21:17.497Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:21:17.502Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:21:17.503Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:21:17.593Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:21:17.656Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:21:18.210Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:21:18.302Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:21:18.342Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:21:18.314Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:21:18.343Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:21:18.343Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:21:18.382Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:21:18.403Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:21:18.408Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:21:18.408Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:21:18.443Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:21:18.455Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:22:08.677Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:22:08.685Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:22:08.746Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:22:08.690Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:22:08.780Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:22:08.813Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:22:08.799Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:22:08.830Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:22:08.809Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:22:08.831Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:22:08.838Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:22:08.839Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:22:08.837Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:22:08.881Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:22:08.882Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:22:08.892Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:22:08.893Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:22:08.900Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:22:08.900Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:22:08.901Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:22:08.901Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:22:08.901Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:22:08.902Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:22:08.904Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:22:08.905Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:22:08.906Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:22:08.901Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:22:08.908Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:22:08.901Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:22:08.902Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:22:08.906Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:22:08.809Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:22:08.908Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:22:08.927Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:22:08.927Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:22:08.941Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:22:08.949Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:22:08.941Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:22:08.955Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:22:08.971Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:22:08.977Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:22:08.962Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:22:08.980Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:22:08.980Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:22:08.992Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:22:08.994Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:22:08.999Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:22:08.998Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:22:08.984Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:22:09.000Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:22:08.998Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:22:08.998Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:22:09.006Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:22:09.007Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:22:09.021Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:22:09.012Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:22:09.013Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:22:09.024Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:22:09.024Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:22:09.031Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:22:09.034Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:22:09.037Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:22:09.027Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:22:09.037Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:22:09.030Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:22:09.092Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:22:09.093Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:22:09.029Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:22:09.106Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:22:09.136Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:22:09.137Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:22:09.142Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:22:09.142Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:22:09.144Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:22:09.144Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:22:09.145Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:22:09.145Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:22:09.137Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:22:09.144Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:22:09.145Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:22:09.170Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:22:09.178Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:22:09.181Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:22:09.182Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:22:09.184Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:22:09.183Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:22:09.195Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:22:09.235Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:22:09.243Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:22:09.248Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:22:09.253Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:22:09.257Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:22:09.333Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:22:09.339Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:22:09.365Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:22:09.379Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:23:10.522Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:23:10.555Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:23:10.562Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:23:10.563Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:23:10.563Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:23:10.588Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:23:57.527Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:23:57.519Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:23:57.678Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:23:57.684Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:23:57.767Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:23:57.808Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:23:57.906Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:23:57.926Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:23:57.936Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:23:58.003Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:23:58.023Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:23:58.044Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:23:58.096Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:23:58.107Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:23:58.126Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:23:58.128Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:23:58.130Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:23:58.134Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:23:58.098Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:23:58.099Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:23:57.946Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:23:57.945Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:23:58.111Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:23:58.120Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:23:58.129Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:23:58.134Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:23:58.037Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:23:58.232Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:23:58.234Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:23:58.171Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:23:58.235Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:23:58.170Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:23:58.363Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:23:58.368Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:23:58.393Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:23:58.410Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:23:58.410Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:23:58.422Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:23:58.400Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:23:58.398Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:23:58.297Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:23:58.446Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:23:58.453Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:23:58.494Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:23:58.501Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:23:58.409Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:23:58.516Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:23:58.517Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:23:58.522Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:23:58.531Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:23:58.502Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:23:58.529Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:23:58.604Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:23:58.533Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:23:58.536Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:23:58.622Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:23:58.635Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:23:58.667Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:23:58.687Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:23:58.689Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:23:58.699Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:23:58.688Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:23:58.727Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:23:58.728Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:23:58.720Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:23:58.729Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:23:58.733Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:23:58.753Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:23:58.734Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:23:58.734Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:23:58.739Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:23:58.740Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:23:58.769Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:23:58.732Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:23:58.739Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:23:58.769Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:23:58.803Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:23:58.809Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:23:58.737Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:23:58.811Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:23:58.826Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:23:58.914Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:23:58.943Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:23:58.985Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:23:59.061Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:23:58.832Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:23:58.832Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:23:59.123Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:23:59.125Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:23:59.126Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:23:59.158Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:23:59.158Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:23:59.165Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:23:59.230Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:23:59.231Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:23:59.369Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:23:59.403Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:23:59.465Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:23:59.467Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:23:59.483Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:23:59.469Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:23:59.582Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:24:08.735Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:24:08.768Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:24:08.776Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:24:08.776Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:24:08.776Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:24:08.803Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:25:10.442Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:25:10.476Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:25:10.484Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:25:10.485Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:25:10.485Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:25:10.515Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:25:33.616Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:25:33.649Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:25:33.657Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:25:33.657Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:25:33.658Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:25:33.682Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:26:34.212Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:26:34.239Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:26:34.246Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:26:34.247Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:26:34.247Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:26:34.274Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:29:42.680Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:29:42.734Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:29:42.743Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:29:42.744Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:29:42.744Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:29:42.772Z"}
+{"label":"graphql-server","level":"info","message":"Creating GraphQL schema...","timestamp":"2025-08-14T03:29:42.772Z"}
+{"label":"graphql-server","level":"info","message":"Setting up WebSocket server...","timestamp":"2025-08-14T03:29:42.785Z"}
+{"label":"graphql-server","level":"info","message":"Creating Apollo Server...","timestamp":"2025-08-14T03:29:42.786Z"}
+{"label":"graphql-server","level":"info","message":"Setting up Express middleware...","timestamp":"2025-08-14T03:29:42.801Z"}
+{"label":"graphql-server","level":"info","message":"🚀 GraphQL Server ready at http://localhost:8080/graphql","timestamp":"2025-08-14T03:29:42.802Z"}
+{"label":"graphql-server","level":"info","message":"🚀 GraphQL Subscriptions ready at ws://localhost:8080/graphql","timestamp":"2025-08-14T03:29:42.802Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:32:22.064Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:32:22.089Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:32:22.097Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:32:22.098Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:32:22.098Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:32:22.133Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:33:15.764Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:33:15.824Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:33:15.836Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:33:15.837Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:33:15.837Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:33:15.890Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:33:38.277Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:33:38.315Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:33:38.325Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:33:38.325Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:33:38.325Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:33:38.364Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T03:33:45.228Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T03:33:45.262Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T03:33:45.271Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T03:33:45.272Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T03:33:45.273Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T03:33:45.311Z"}

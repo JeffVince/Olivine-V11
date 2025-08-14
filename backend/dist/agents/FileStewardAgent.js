@@ -15,6 +15,17 @@ const ClassificationService_1 = require("../services/classification/Classificati
 const TaxonomyService_1 = require("../services/TaxonomyService");
 const path_1 = __importDefault(require("path"));
 const uuid_1 = require("uuid");
+const FileRepository_1 = require("./FileStewardAgent/graph/FileRepository");
+const FolderRepository_1 = require("./FileStewardAgent/graph/FolderRepository");
+const ClassificationRepository_1 = require("./FileStewardAgent/graph/ClassificationRepository");
+const ContentRepository_1 = require("./FileStewardAgent/graph/ContentRepository");
+const Classifier_1 = require("./FileStewardAgent/classification/Classifier");
+const Extractor_1 = require("./FileStewardAgent/extraction/Extractor");
+const ExtractionJobService_1 = require("./FileStewardAgent/extraction/ExtractionJobService");
+const ClusterService_1 = require("./FileStewardAgent/cluster/ClusterService");
+const CrossLayerLinkService_1 = require("./FileStewardAgent/cluster/CrossLayerLinkService");
+const EventHandlers_1 = require("./FileStewardAgent/handlers/EventHandlers");
+const mime_1 = require("./FileStewardAgent/utils/mime");
 class FileStewardAgent extends BaseAgent_1.BaseAgent {
     constructor(queueService, config) {
         super('file-steward-agent', queueService, {
@@ -37,6 +48,27 @@ class FileStewardAgent extends BaseAgent_1.BaseAgent {
         this.taxonomyService = new TaxonomyService_1.TaxonomyService();
         this.eventBus = new (require('events').EventEmitter)();
         this.clusterMode = process.env.CLUSTER_MODE === 'true';
+        this.filesRepo = new FileRepository_1.FileRepository(this.neo4jService);
+        this.foldersRepo = new FolderRepository_1.FolderRepository(this.neo4jService);
+        this.classificationRepo = new ClassificationRepository_1.ClassificationRepository(this.neo4jService);
+        this.contentRepo = new ContentRepository_1.ContentRepository(this.neo4jService);
+        this.classifier = new Classifier_1.Classifier(this.postgresService, this.neo4jService);
+        this.extractor = new Extractor_1.Extractor(this.fileProcessingService);
+        this.extractionJobs = new ExtractionJobService_1.ExtractionJobService(this.postgresService, this.queueService);
+        this.clusterService = new ClusterService_1.ClusterService(this.neo4jService, this.postgresService, this.classifier);
+        this.crossLayerLinkService = new CrossLayerLinkService_1.CrossLayerLinkService(this.neo4jService);
+        this.handlers = new EventHandlers_1.EventHandlers({
+            files: this.filesRepo,
+            folders: this.foldersRepo,
+            classification: this.classificationRepo,
+            content: this.contentRepo,
+            queues: this.queueService,
+            postgres: this.postgresService,
+            classifier: this.classifier,
+            extractor: this.extractor,
+            clusterMode: this.clusterMode,
+            eventBus: this.eventBus
+        });
     }
     async onStart() {
         this.logger.info('Starting FileStewardAgent queue workers...');
@@ -106,18 +138,32 @@ class FileStewardAgent extends BaseAgent_1.BaseAgent {
         }
     }
     async handleFileCreated(orgId, sourceId, resourcePath, eventData, commitId) {
-        const fileMetadata = this.extractFileMetadata(eventData);
-        const fileId = await this.upsertFileNode(orgId, sourceId, resourcePath, fileMetadata, commitId);
-        await this.ensureFolderHierarchy(orgId, sourceId, resourcePath, commitId);
+        const fileMetadata = this.handlers.extractFileMetadata(eventData);
+        const fileId = await this.filesRepo.upsertFileNode({
+            orgId,
+            sourceId,
+            resourcePath,
+            dbId: fileMetadata.dbId,
+            name: fileMetadata.name,
+            size: fileMetadata.size,
+            mimeType: fileMetadata.mimeType,
+            checksum: fileMetadata.checksum || null,
+            modified: fileMetadata.modified,
+            metadataJson: JSON.stringify(fileMetadata.extra || {})
+        });
+        await this.handlers.ensureFolderHierarchy(orgId, sourceId, resourcePath);
         if (this.clusterMode) {
-            const clusterResult = await this.processFileWithCluster(orgId, sourceId, fileId, resourcePath, fileMetadata, commitId);
+            const clusterId = await this.clusterService.createContentCluster(orgId, fileId);
+            const slots = await this.classifier.performMultiSlotClassification(orgId, fileId, resourcePath, fileMetadata);
+            const extractionTriggered = await this.extractionJobs.queueExtractionJobs(orgId, fileId, slots, fileMetadata);
+            const crossLayerLinksCreated = await this.crossLayerLinkService.createInitialCrossLayerLinks(orgId, fileId, slots);
             this.eventBus.emit('file.processed', {
                 type: 'file.processed',
                 orgId,
                 fileId,
-                clusterId: clusterResult.clusterId,
-                slots: clusterResult.slots,
-                extractionTriggered: clusterResult.extractionTriggered,
+                clusterId,
+                slots,
+                extractionTriggered,
                 eventType: 'created',
                 timestamp: new Date().toISOString(),
                 agent: 'file-steward-agent'
@@ -125,36 +171,29 @@ class FileStewardAgent extends BaseAgent_1.BaseAgent {
         }
         else {
             if (this.shouldClassifyFile(fileMetadata.mimeType)) {
-                await this.queueService.addJob('file-classification', 'classify-file', {
-                    orgId,
-                    fileId,
-                    filePath: resourcePath,
-                    sourceId,
-                    commitId,
-                    metadata: fileMetadata
-                });
+                await this.queueService.addJob('file-classification', 'classify-file', { orgId, fileId, filePath: resourcePath, sourceId, commitId, metadata: fileMetadata });
             }
             if (this.shouldExtractContent(fileMetadata.mimeType)) {
-                await this.queueService.addJob('content-extraction', 'extract-content', {
-                    orgId,
-                    fileId,
-                    filePath: resourcePath,
-                    sourceId,
-                    commitId,
-                    metadata: fileMetadata
-                });
+                await this.queueService.addJob('content-extraction', 'extract-content', { orgId, fileId, filePath: resourcePath, sourceId, commitId, metadata: fileMetadata });
             }
         }
     }
     async handleFileUpdated(orgId, sourceId, resourcePath, eventData, commitId) {
-        const fileMetadata = this.extractFileMetadata(eventData);
-        const existingFile = await this.getFileNode(orgId, sourceId, resourcePath);
+        const fileMetadata = this.handlers.extractFileMetadata(eventData);
+        const existingFile = await this.filesRepo.getFileNode(orgId, sourceId, resourcePath);
         if (!existingFile) {
             await this.handleFileCreated(orgId, sourceId, resourcePath, eventData, commitId);
             return;
         }
         await this.createEntityVersion(existingFile.id, 'File', existingFile.properties, commitId);
-        await this.updateFileNode(existingFile.id, fileMetadata, commitId);
+        await this.filesRepo.updateFileNode(existingFile.id, {
+            name: fileMetadata.name,
+            size: fileMetadata.size,
+            mimeType: fileMetadata.mimeType,
+            checksum: fileMetadata.checksum || null,
+            modified: fileMetadata.modified,
+            metadataJson: JSON.stringify(fileMetadata.extra || {})
+        });
         if (this.hasSignificantChanges(existingFile.properties, fileMetadata)) {
             await this.queueService.addJob('file-classification', 'classify-file', {
                 orgId,
@@ -167,13 +206,13 @@ class FileStewardAgent extends BaseAgent_1.BaseAgent {
         }
     }
     async handleFileDeleted(orgId, sourceId, resourcePath, eventData, commitId) {
-        const existingFile = await this.getFileNode(orgId, sourceId, resourcePath);
+        const existingFile = await this.filesRepo.getFileNode(orgId, sourceId, resourcePath);
         if (!existingFile) {
             this.logger.warn(`File not found for deletion: ${resourcePath}`);
             return;
         }
         await this.createEntityVersion(existingFile.id, 'File', existingFile.properties, commitId);
-        await this.softDeleteFileNode(existingFile.id, commitId);
+        await this.filesRepo.softDeleteFileNode(existingFile.id);
         await this.cleanupOrphanedFolders(orgId, sourceId, resourcePath, commitId);
     }
     async handleFolderCreated(orgId, sourceId, resourcePath, eventData, commitId) {
@@ -185,75 +224,12 @@ class FileStewardAgent extends BaseAgent_1.BaseAgent {
     async handleFolderDeleted(orgId, sourceId, resourcePath, eventData, commitId) {
         await this.cleanupOrphanedFolders(orgId, sourceId, resourcePath, commitId);
     }
-    extractFileMetadata(eventData) {
-        if (eventData.entry) {
-            return {
-                name: eventData.entry.name,
-                size: eventData.entry.size || 0,
-                mimeType: this.inferMimeType(eventData.entry.name),
-                checksum: eventData.entry.content_hash,
-                modified: eventData.entry.server_modified,
-                dbId: eventData.entry.id,
-                provider: 'dropbox',
-                extra: {
-                    rev: eventData.entry.rev,
-                    pathDisplay: eventData.entry.path_display
-                }
-            };
-        }
-        else if (eventData.file) {
-            return {
-                name: eventData.file.name,
-                size: parseInt(eventData.file.size) || 0,
-                mimeType: eventData.file.mimeType,
-                checksum: eventData.file.md5Checksum,
-                modified: eventData.file.modifiedTime,
-                dbId: eventData.file.id,
-                provider: 'gdrive',
-                extra: {
-                    version: eventData.file.version,
-                    webViewLink: eventData.file.webViewLink
-                }
-            };
-        }
-        else {
-            return {
-                name: eventData.name,
-                size: eventData.size || 0,
-                mimeType: eventData.mime_type || this.inferMimeType(eventData.name),
-                checksum: eventData.checksum,
-                modified: eventData.modified,
-                dbId: eventData.id,
-                provider: 'supabase',
-                extra: {
-                    bucket: eventData.bucket_id
-                }
-            };
-        }
-    }
-    async upsertFileNode(orgId, sourceId, resourcePath, metadata, commitId) {
-        const query = `
-      MERGE (f:File {org_id: $orgId, source_id: $sourceId, path: $path})
-      ON CREATE SET 
-        f.id = randomUUID(),
-        f.created_at = datetime(),
-        f.db_id = $dbId
-      SET 
-        f.name = $name,
-        f.size = $size,
-        f.mime_type = $mimeType,
-        f.checksum = $checksum,
-        f.updated_at = datetime(),
-        f.modified = datetime($modified),
-        f.metadata = $metadataJson,
-        f.current = true,
-        f.deleted = false
-      RETURN f.id as fileId
-    `;
-        const result = await this.neo4jService.run(query, {
+    extractFileMetadata(eventData) { return this.handlers.extractFileMetadata(eventData); }
+    async upsertFileNode(orgId, sourceId, resourcePath, metadata, _commitId) {
+        return this.filesRepo.upsertFileNode({
             orgId,
             sourceId,
-            path: resourcePath,
+            resourcePath,
             dbId: metadata.dbId,
             name: metadata.name,
             size: metadata.size,
@@ -262,73 +238,19 @@ class FileStewardAgent extends BaseAgent_1.BaseAgent {
             modified: metadata.modified,
             metadataJson: JSON.stringify(metadata.extra || {})
         });
-        return result.records[0].get('fileId');
     }
-    async ensureFolderHierarchy(orgId, sourceId, filePath, commitId) {
-        const pathParts = filePath.split('/').filter(part => part.length > 0);
-        pathParts.pop();
-        let currentPath = '';
-        let parentId = null;
-        for (const folderName of pathParts) {
-            currentPath += `/${folderName}`;
-            const folderId = await this.upsertFolderNode(orgId, sourceId, currentPath, folderName, parentId, commitId);
-            parentId = folderId;
-        }
+    async ensureFolderHierarchy(orgId, sourceId, filePath, _commitId) {
+        await this.handlers.ensureFolderHierarchy(orgId, sourceId, filePath);
     }
-    async upsertFolderNode(orgId, sourceId, path, name, parentId, commitId) {
-        const query = `
-      MERGE (f:Folder {org_id: $orgId, source_id: $sourceId, path: $path})
-      ON CREATE SET 
-        f.id = randomUUID(),
-        f.created_at = datetime()
-      SET 
-        f.name = $name,
-        f.updated_at = datetime(),
-        f.current = true,
-        f.deleted = false
-      RETURN f.id as folderId
-    `;
-        const result = await this.neo4jService.run(query, {
-            orgId,
-            sourceId,
-            path,
-            name
-        });
-        return result.records[0].get('folderId');
+    async upsertFolderNode(orgId, sourceId, path, name, _parentId, _commitId) {
+        return this.foldersRepo.upsertFolderNode(orgId, sourceId, path, name);
     }
-    async getFileNode(orgId, sourceId, path) {
-        const query = `
-      MATCH (f:File {org_id: $orgId, source_id: $sourceId, path: $path, current: true, deleted: false})
-      RETURN f
-    `;
-        const result = await this.neo4jService.run(query, { orgId, sourceId, path });
-        if (result.records.length === 0) {
-            return null;
-        }
-        const fileNode = result.records[0].get('f');
-        return {
-            id: fileNode.properties.id,
-            properties: fileNode.properties
-        };
-    }
+    async getFileNode(orgId, sourceId, path) { return this.filesRepo.getFileNode(orgId, sourceId, path); }
     async createEntityVersion(entityId, entityType, properties, commitId) {
         this.logger.debug(`Creating version for ${entityType} ${entityId}`, { commitId });
     }
-    async updateFileNode(fileId, metadata, commitId) {
-        const query = `
-      MATCH (f:File {id: $fileId})
-      SET 
-        f.name = $name,
-        f.size = $size,
-        f.mime_type = $mimeType,
-        f.checksum = $checksum,
-        f.updated_at = datetime(),
-        f.modified = datetime($modified),
-        f.metadata = $metadataJson
-      RETURN f
-    `;
-        await this.neo4jService.run(query, {
-            fileId,
+    async updateFileNode(fileId, metadata, _commitId) {
+        await this.filesRepo.updateFileNode(fileId, {
             name: metadata.name,
             size: metadata.size,
             mimeType: metadata.mimeType,
@@ -337,14 +259,7 @@ class FileStewardAgent extends BaseAgent_1.BaseAgent {
             metadataJson: JSON.stringify(metadata.extra || {})
         });
     }
-    async softDeleteFileNode(fileId, commitId) {
-        const query = `
-      MATCH (f:File {id: $fileId})
-      SET f.deleted = true, f.current = false, f.end_date = datetime()
-      RETURN f
-    `;
-        await this.neo4jService.run(query, { fileId });
-    }
+    async softDeleteFileNode(fileId, _commitId) { await this.filesRepo.softDeleteFileNode(fileId); }
     async cleanupOrphanedFolders(orgId, sourceId, resourcePath, commitId) {
         this.logger.debug(`Cleaning up orphaned folders for path: ${resourcePath}`);
     }
@@ -389,192 +304,23 @@ class FileStewardAgent extends BaseAgent_1.BaseAgent {
         }
         return false;
     }
-    inferMimeType(filename) {
-        const ext = filename.split('.').pop()?.toLowerCase() || '';
-        const mimeTypes = {
-            'pdf': 'application/pdf',
-            'doc': 'application/msword',
-            'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-            'xls': 'application/vnd.ms-excel',
-            'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            'txt': 'text/plain',
-            'html': 'text/html',
-            'jpg': 'image/jpeg',
-            'jpeg': 'image/jpeg',
-            'png': 'image/png',
-            'gif': 'image/gif',
-            'mp4': 'video/mp4',
-            'mp3': 'audio/mpeg',
-            'zip': 'application/zip',
-            'json': 'application/json'
-        };
-        return mimeTypes[ext] || 'application/octet-stream';
-    }
-    async classifyFile(jobData) {
-        const { orgId, fileId, filePath, metadata, fileContent } = jobData;
-        this.logger.info(`Classifying file: ${filePath}`, { orgId, fileId });
-        try {
-            const classification = await this.classificationService.classify(orgId, {
-                name: path_1.default.basename(filePath),
-                path: filePath,
-                mimeType: metadata?.mimeType,
-                size: metadata?.size,
-                extractedText: fileContent
-            });
-            const taxonomyClassification = {
-                slot: classification.slotKey,
-                confidence: classification.confidence,
-                method: classification.method === 'taxonomy' ? 'rule_based' : 'ml_based',
-                rule_id: classification.ruleId || undefined,
-                metadata: {}
-            };
-            await this.taxonomyService.applyClassification(fileId, taxonomyClassification, orgId, 'system');
-            await this.updateFileClassification(fileId, {
-                status: 'classified',
-                confidence: classification.confidence,
-                metadata: { method: classification.method, ruleId: classification.ruleId, slotKey: classification.slotKey }
-            });
-            this.logger.info(`File classified successfully: ${filePath}`, { classification });
-        }
-        catch (error) {
-            this.logger.error(`Failed to classify file: ${filePath}`, error);
-            throw error;
-        }
-    }
+    inferMimeType(filename) { return (0, mime_1.inferMimeType)(filename); }
+    async classifyFile(jobData) { await this.handlers.classifyFile(jobData); }
     async updateFileClassification(fileId, classification) {
-        const query = `
-      MATCH (f:File {id: $fileId})
-      SET 
-        f.classification_status = $status,
-        f.classification_confidence = $confidence,
-        f.classification_metadata = $metadata
-      RETURN f
-    `;
-        await this.neo4jService.run(query, {
-            fileId,
-            status: classification.status || 'classified',
-            confidence: classification.confidence || 0,
-            metadata: JSON.stringify(classification.metadata || {})
-        });
+        await this.classificationRepo.updateFileClassification(fileId, classification);
     }
-    async extractContent(jobData) {
-        const { orgId, fileId, filePath, metadata } = jobData;
-        this.logger.info(`Extracting content from file: ${filePath}`, { orgId, fileId });
-        try {
-            const extractedContent = await this.fileProcessingService.extractContent({
-                orgId,
-                sourceId: metadata.sourceId,
-                path: filePath,
-                mimeType: metadata.mimeType
-            });
-            const normalizedExtracted = typeof extractedContent === 'string'
-                ? { text: extractedContent, metadata: {} }
-                : extractedContent;
-            await this.updateFileContent(fileId, normalizedExtracted);
-            this.logger.info(`Content extracted successfully: ${filePath}`);
-        }
-        catch (error) {
-            this.logger.error(`Failed to extract content from file: ${filePath}`, error);
-            throw error;
-        }
-    }
-    async updateFileContent(fileId, extractedContent) {
-        const query = `
-      MATCH (f:File {id: $fileId})
-      SET 
-        f.extracted_text = $text,
-        f.content_metadata = $metadata,
-        f.extraction_status = 'completed'
-      RETURN f
-    `;
-        await this.neo4jService.run(query, {
-            fileId,
-            text: extractedContent.text || '',
-            metadata: JSON.stringify(extractedContent.metadata || {})
-        });
-    }
+    async extractContent(jobData) { await this.handlers.extractContent(jobData); }
+    async updateFileContent(fileId, extractedContent) { await this.contentRepo.updateFileContent(fileId, extractedContent); }
     async processFileWithCluster(orgId, sourceId, fileId, resourcePath, fileMetadata, commitId) {
         this.logger.info(`Processing file with cluster-centric approach: ${resourcePath}`, { orgId, fileId });
-        const clusterId = await this.createContentCluster(orgId, fileId, commitId);
-        const slots = await this.performMultiSlotClassification(orgId, fileId, resourcePath, fileMetadata);
-        const extractionTriggered = await this.queueExtractionJobs(orgId, fileId, slots, fileMetadata);
-        const crossLayerLinksCreated = await this.createInitialCrossLayerLinks(orgId, fileId, slots);
-        return {
-            fileId,
-            clusterId,
-            slots,
-            extractionTriggered,
-            crossLayerLinksCreated
-        };
+        const clusterId = await this.clusterService.createContentCluster(orgId, fileId);
+        const slots = await this.classifier.performMultiSlotClassification(orgId, fileId, resourcePath, fileMetadata);
+        const extractionTriggered = await this.extractionJobs.queueExtractionJobs(orgId, fileId, slots, fileMetadata);
+        const crossLayerLinksCreated = await this.crossLayerLinkService.createInitialCrossLayerLinks(orgId, fileId, slots);
+        return { fileId, clusterId, slots, extractionTriggered, crossLayerLinksCreated };
     }
-    async createContentCluster(orgId, fileId, commitId) {
-        const clusterId = (0, uuid_1.v4)();
-        const query = `
-      MATCH (f:File {id: $fileId})
-      CREATE (cc:ContentCluster {
-        id: $clusterId,
-        orgId: $orgId,
-        fileId: $fileId,
-        projectId: f.project_id,
-        status: 'empty',
-        entitiesCount: 0,
-        linksCount: 0,
-        createdAt: datetime(),
-        updatedAt: datetime()
-      })
-      CREATE (f)-[:HAS_CLUSTER]->(cc)
-      RETURN cc.id as clusterId
-    `;
-        await this.neo4jService.run(query, { clusterId, orgId, fileId });
-        await this.postgresService.query(`
-      INSERT INTO content_cluster (id, org_id, file_id, status, entities_count, links_count, created_at, updated_at)
-      VALUES ($1, $2, $3, 'empty', 0, 0, NOW(), NOW())
-    `, [clusterId, orgId, fileId]);
-        this.logger.debug(`Created content cluster: ${clusterId}`, { fileId, orgId });
-        return clusterId;
-    }
-    async performMultiSlotClassification(orgId, fileId, resourcePath, fileMetadata) {
-        const slots = [];
-        try {
-            try {
-                const classifications = await this.taxonomyService.classifyFile(fileId, orgId);
-                for (const c of classifications) {
-                    if (!slots.includes(c.slot))
-                        slots.push(c.slot);
-                    await this.createSlotEdgeFact(fileId, c.slot, c.confidence ?? 0.7, c.rule_id || 'taxonomy', orgId);
-                }
-            }
-            catch { }
-            if (slots.length === 0) {
-                const rules = await this.getApplicableTaxonomyRules(orgId, fileMetadata);
-                for (const rule of rules) {
-                    const confidence = this.calculateRuleConfidence(rule, fileMetadata, resourcePath);
-                    if (confidence >= (rule.min_confidence ?? (rule.minConfidence ?? 0))) {
-                        slots.push(rule.slot);
-                        await this.createSlotEdgeFact(fileId, rule.slot, confidence, rule.id, orgId);
-                    }
-                }
-            }
-            const fileName = path_1.default.basename(resourcePath).toLowerCase();
-            if ((fileName.endsWith('.fdx') || fileName.includes('script')) && !slots.includes('SCRIPT_PRIMARY')) {
-                slots.push('SCRIPT_PRIMARY');
-                await this.createSlotEdgeFact(fileId, 'SCRIPT_PRIMARY', 0.9, 'filename_heuristic', orgId);
-            }
-            if (slots.length === 0) {
-                const fallbackSlot = this.getFallbackSlot(fileMetadata.mimeType);
-                if (fallbackSlot) {
-                    slots.push(fallbackSlot);
-                    await this.createSlotEdgeFact(fileId, fallbackSlot, 0.5, 'fallback', orgId);
-                }
-            }
-            this.logger.debug(`Multi-slot classification completed`, { fileId, slots });
-            return slots;
-        }
-        catch (error) {
-            this.logger.error(`Multi-slot classification failed`, { fileId, error });
-            return [];
-        }
-    }
+    async createContentCluster(orgId, fileId, _commitId) { return this.clusterService.createContentCluster(orgId, fileId); }
+    async performMultiSlotClassification(orgId, fileId, resourcePath, fileMetadata) { return this.classifier.performMultiSlotClassification(orgId, fileId, resourcePath, fileMetadata); }
     async getApplicableTaxonomyRules(orgId, fileMetadata) {
         const result = await this.postgresService.query(`
       SELECT * FROM parser_registry 
@@ -638,30 +384,7 @@ class FileStewardAgent extends BaseAgent_1.BaseAgent {
         };
         return fallbackMap[mimeType] || 'FILE_UNCLASSIFIED';
     }
-    async queueExtractionJobs(orgId, fileId, slots, fileMetadata) {
-        let jobsQueued = false;
-        for (const slot of slots) {
-            const parsers = await this.getApplicableParsers(orgId, slot, fileMetadata.mimeType);
-            for (const parser of parsers) {
-                const jobId = (0, uuid_1.v4)();
-                await this.postgresService.query(`
-          INSERT INTO extraction_job (id, org_id, file_id, parser_name, parser_version, status, created_at)
-          VALUES ($1, $2, $3, $4, $5, 'queued', NOW())
-        `, [jobId, orgId, fileId, parser.parser_name, parser.parser_version]);
-                await this.queueService.addJob('content-extraction', 'extract-content', {
-                    jobId,
-                    orgId,
-                    fileId,
-                    slot,
-                    parser: parser.parser_name,
-                    parserVersion: parser.parser_version,
-                    metadata: fileMetadata
-                });
-                jobsQueued = true;
-            }
-        }
-        return jobsQueued;
-    }
+    async queueExtractionJobs(orgId, fileId, slots, fileMetadata) { return this.extractionJobs.queueExtractionJobs(orgId, fileId, slots, { mimeType: fileMetadata.mimeType }); }
     async getApplicableParsers(orgId, slot, mimeType) {
         const result = await this.postgresService.query(`
       SELECT * FROM parser_registry 
@@ -673,24 +396,7 @@ class FileStewardAgent extends BaseAgent_1.BaseAgent {
     `, [orgId, slot, mimeType]);
         return result.rows;
     }
-    async createInitialCrossLayerLinks(orgId, fileId, slots) {
-        let linksCreated = 0;
-        if (slots.includes('SCRIPT_PRIMARY')) {
-            const projectScenes = await this.getProjectScenes(orgId, fileId);
-            for (const scene of projectScenes) {
-                await this.createCrossLayerLink(fileId, scene.id, 'SCRIPT_FOR', orgId);
-                linksCreated++;
-            }
-        }
-        if (slots.includes('BUDGET_MASTER')) {
-            const projectPOs = await this.getProjectPurchaseOrders(orgId, fileId);
-            for (const po of projectPOs) {
-                await this.createCrossLayerLink(fileId, po.id, 'BUDGET_FOR', orgId);
-                linksCreated++;
-            }
-        }
-        return linksCreated;
-    }
+    async createInitialCrossLayerLinks(orgId, fileId, slots) { return this.crossLayerLinkService.createInitialCrossLayerLinks(orgId, fileId, slots); }
     async getProjectScenes(orgId, fileId) {
         const query = `
       MATCH (f:File {id: $fileId})-[:BELONGS_TO]->(p:Project)

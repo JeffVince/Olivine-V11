@@ -1,29 +1,6 @@
 import { BaseAgent, AgentConfig } from './BaseAgent';
 import { QueueService } from '../services/queues/QueueService';
-export interface SyncJobData {
-    orgId: string;
-    sourceId: string;
-    eventType: 'file_created' | 'file_updated' | 'file_deleted' | 'folder_created' | 'folder_updated' | 'folder_deleted';
-    resourcePath: string;
-    eventData: any;
-}
-export interface ClusterProcessingResult {
-    fileId: string;
-    clusterId: string;
-    slots: string[];
-    extractionTriggered: boolean;
-    crossLayerLinksCreated: number;
-}
-export interface FileMetadata {
-    name: string;
-    size: number;
-    mimeType: string;
-    checksum?: string;
-    modified: string;
-    dbId: string;
-    provider: 'dropbox' | 'gdrive' | 'supabase';
-    extra: any;
-}
+import { SyncJobData, ClusterProcessingResult } from './FileStewardAgent/types';
 export declare class FileStewardAgent extends BaseAgent {
     private neo4jService;
     private postgresService;
@@ -34,6 +11,16 @@ export declare class FileStewardAgent extends BaseAgent {
     private taxonomyService;
     private clusterMode;
     private eventBus;
+    private filesRepo;
+    private foldersRepo;
+    private classificationRepo;
+    private contentRepo;
+    private classifier;
+    private extractor;
+    private extractionJobs;
+    private clusterService;
+    private crossLayerLinkService;
+    private handlers;
     constructor(queueService: QueueService, config?: Partial<AgentConfig>);
     protected onStart(): Promise<void>;
     protected onStop(): Promise<void>;

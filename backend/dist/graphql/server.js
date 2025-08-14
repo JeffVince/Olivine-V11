@@ -151,6 +151,7 @@ class GraphQLServer {
         const schemaPath = __dirname.includes('/dist/')
             ? (0, path_1.join)(__dirname, 'schema')
             : (0, path_1.join)(process.cwd(), 'src', 'graphql', 'schema');
+        const enhancedTypeDefs = '';
         let coreTypeDefs = (0, fs_1.readFileSync)((0, path_1.join)(schemaPath, 'core.graphql'), 'utf8');
         const e2eExtensions = `
       scalar DateTime

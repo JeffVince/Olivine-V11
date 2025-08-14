@@ -28,7 +28,7 @@ exports.agentTypeDefs = (0, apollo_server_express_1.gql) `
 
   type AgentJob {
     id: ID!
-    orgId: ID!
+    organizationId: ID!
     type: String!
     target: String!
     status: JobStatus!
