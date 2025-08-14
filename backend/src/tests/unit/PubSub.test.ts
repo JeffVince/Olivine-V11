@@ -1,4 +1,4 @@
-import { pubsub, TOPICS } from '../../services/graphql/PubSub';
+import { createPubSub, pubsub, TOPICS } from '../../services/graphql/PubSub';
 import { PubSub } from 'graphql-subscriptions';
 
 // Mock PubSub class
@@ -17,8 +17,12 @@ describe('PubSub', () => {
 
   describe('pubsub instance', () => {
     it('should create a new PubSub instance', () => {
+      // After jest.clearAllMocks in beforeEach, call factory to trigger constructor spy
+      const instance = createPubSub();
       expect(PubSub).toHaveBeenCalled();
-      expect(pubsub).toBeInstanceOf(PubSub);
+      const { PubSub: ActualPubSub } = jest.requireActual('graphql-subscriptions');
+      expect(instance).toBeInstanceOf(ActualPubSub);
+      expect(pubsub).toBeTruthy();
     });
   });
 

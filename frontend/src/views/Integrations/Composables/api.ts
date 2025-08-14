@@ -2,20 +2,37 @@ import { showAddDialog, logs, integrations, newIntegration, loading, selectedInt
 import { API_BASE } from './constants'
 import { showError, showSuccess } from './utils'
 import type { Integration, AvailableIntegration } from './Interface'
+import { createSource } from './graphql'
 
 // Integration methods
 export async function connectIntegration(integration: Integration) {
   try {
     loading.value = true
     
-    // For existing integrations, redirect to OAuth
-    if (integration.__existing) {
-      window.location.href = `${API_BASE}/auth/${integration.type}?organizationId=12345`
+    const provider = integration.type
+    const orgId = '12345'
+
+    // For existing integrations, redirect with sourceId
+    if (integration.__existing && integration.id) {
+      window.location.href = `${API_BASE}/oauth/${provider}?organizationId=${encodeURIComponent(orgId)}&sourceId=${encodeURIComponent(integration.id)}`
       return
     }
-    
-    // For new integrations, start OAuth flow
-    window.location.href = `${API_BASE}/auth/${integration.type}?organizationId=12345`
+
+    // For new integrations, create a Source first to obtain sourceId
+    const created = await createSource({
+      input: {
+        organizationId: orgId,
+        type: provider === 'googledrive' ? 'google_drive' : provider,
+        name: integration.name || `${provider} Integration`,
+        config: {}
+      }
+    })
+
+    const sourceId = (created as any)?.data?.createSource?.id
+    if (!sourceId) throw new Error('Failed to create source before OAuth')
+
+    // Redirect to backend OAuth endpoint with state (org + source)
+    window.location.href = `${API_BASE}/oauth/${provider}?organizationId=${encodeURIComponent(orgId)}&sourceId=${encodeURIComponent(sourceId)}`
   } catch (error: any) {
     showError(`Failed to connect ${integration.name}: ${error}`)
   } finally {

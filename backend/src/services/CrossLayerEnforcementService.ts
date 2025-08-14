@@ -454,7 +454,8 @@ export class CrossLayerEnforcementService {
     let alias = 'n';
     const m = vq.match(/MATCH\s*\((\w+)\s*:/i);
     if (m && m[1]) alias = m[1];
-    const amended = vq.includes('RETURN') ? vq.replace(/RETURN/i, `AND ${alias}.org_id = $orgId RETURN`) : `${vq} AND ${alias}.org_id = $orgId`;
+    const orgFilter = `(${alias}.org_id = $orgId OR ${alias}.orgId = $orgId)`;
+    const amended = vq.includes('RETURN') ? vq.replace(/RETURN/i, `AND ${orgFilter} RETURN`) : `${vq} AND ${orgFilter}`;
     const violations = await this.neo4jService.run(amended, { orgId });
 
     const result: ValidationResult = {

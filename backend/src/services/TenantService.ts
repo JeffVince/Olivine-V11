@@ -1,4 +1,4 @@
-import { Neo4jService } from './Neo4jService';
+import type { Neo4jService } from './Neo4jService';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -48,7 +48,8 @@ export class TenantService {
   private neo4jService: Neo4jService;
 
   constructor(neo4jService?: Neo4jService) {
-    this.neo4jService = neo4jService ?? new Neo4jService();
+    // Defer instantiation to runtime require so Jest mocks are applied
+    this.neo4jService = neo4jService ?? new (require('./Neo4jService').Neo4jService)();
   }
 
   /**
@@ -115,7 +116,7 @@ export class TenantService {
     // Add org_id to params
     const tenantParams = this.addOrgIdToParams(params, orgId);
     
-    // Execute query with Neo4j service
+    // Execute query with Neo4j service (tests expect two-arg call forwarding exact params)
     const result = await this.neo4jService.executeQuery(query, tenantParams);
     return result;
   }

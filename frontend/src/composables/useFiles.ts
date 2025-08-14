@@ -145,12 +145,12 @@ export function useFiles() {
   }
 
   function downloadFile(file: File) {
-    const url = file?.metadata?.downloadUrl
+    const url = file?.metadata?.downloadUrl as string | undefined
     if (url) window.open(url, '_blank')
   }
 
   function openInProvider(file: File) {
-    const url = file?.metadata?.providerUrl || file?.metadata?.previewUrl
+    const url = (file?.metadata?.providerUrl || file?.metadata?.previewUrl) as string | undefined
     if (url) window.open(url, '_blank')
   }
 

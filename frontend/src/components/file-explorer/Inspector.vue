@@ -52,7 +52,7 @@
       <v-window-item value="preview">
         <v-card-text>
           <template v-if="file?.metadata?.previewUrl">
-            <iframe :src="file.metadata.previewUrl" style="width:100%;height:300px;" />
+            <iframe :src="file.metadata.previewUrl as string" style="width:100%;height:300px;" />
           </template>
           <template v-else>
             <div

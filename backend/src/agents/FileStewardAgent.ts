@@ -909,7 +909,7 @@ export class FileStewardAgent extends BaseAgent {
       for (const rule of rules) {
         const confidence = this.calculateRuleConfidence(rule, fileMetadata, resourcePath);
         
-        if (confidence >= rule.minConfidence) {
+        if (confidence >= (rule.min_confidence ?? (rule.minConfidence ?? 0))) {
           slots.push(rule.slot);
           
           // Create EdgeFact for this classification
@@ -917,7 +917,14 @@ export class FileStewardAgent extends BaseAgent {
         }
       }
 
-      // Fallback classification if no rules matched
+      // Always include SCRIPT_PRIMARY for .fdx or filenames containing 'script'
+      const fileName = path.basename(resourcePath).toLowerCase();
+      if ((fileName.endsWith('.fdx') || fileName.includes('script')) && !slots.includes('SCRIPT_PRIMARY')) {
+        slots.push('SCRIPT_PRIMARY');
+        await this.createSlotEdgeFact(fileId, 'SCRIPT_PRIMARY', 0.9, 'filename_heuristic', orgId);
+      }
+
+      // Fallback classification if still empty
       if (slots.length === 0) {
         const fallbackSlot = this.getFallbackSlot(fileMetadata.mimeType);
         if (fallbackSlot) {
@@ -1051,9 +1058,9 @@ export class FileStewardAgent extends BaseAgent {
         
         // Create extraction job record
         await this.postgresService.query(`
-          INSERT INTO extraction_job (id, org_id, file_id, slot, parser_name, parser_version, status, created_at)
-          VALUES ($1, $2, $3, $4, $5, $6, 'queued', NOW())
-        `, [jobId, orgId, fileId, slot, parser.parser_name, parser.parser_version]);
+          INSERT INTO extraction_job (id, org_id, file_id, parser_name, parser_version, status, created_at)
+          VALUES ($1, $2, $3, $4, $5, 'queued', NOW())
+        `, [jobId, orgId, fileId, parser.parser_name, parser.parser_version]);
 
         // Queue the actual extraction job
         await this.queueService.addJob('content-extraction', 'extract-content', {

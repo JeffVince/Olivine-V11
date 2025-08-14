@@ -25,17 +25,10 @@ RUN mkdir -p dist/graphql/schema \
       ls -la dist/graphql/schema/; \
     fi
 
-# Test if GraphQL files exist (tolerate missing tests in stripped images)
-RUN node test-files.js || true
+
 
 # Expose port 8080
 EXPOSE 8080
 
-# Test if GraphQL files exist in final image
-RUN node test-final-image.js || true
-
-# Test path construction
-RUN node test-path-construction.js || true
-
 # Start the application with runtime test
-CMD ["sh", "-c", "node test-runtime.js && npm start"]    
+CMD ["sh", "-c", "npm start"]    

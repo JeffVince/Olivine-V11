@@ -224,8 +224,8 @@ import CreateAgentDialog from './Components/CreateAgentDialog.vue'
 import { Agent, Log, Job } from './Composables/Interface'
 
 const notificationStore = useNotificationStore()
-const { jobs, logs, subscribeJobLogs, cancel } = useAgentJobs()
-const { healthData } = useAgentHealth()
+const { jobs, logs, subscribeJobLogs, cancelJob } = useAgentJobs()
+const { status: healthStatus, agents: healthAgents, queues: healthQueues, refetch: refetchHealth } = useAgentHealth()
 const {
   agents,
   showCreateDialog,
@@ -261,7 +261,7 @@ const {
   getJobStatusColor,
   formatDuration,
   formatDate
-} = useJobManagement(jobs, logs, subscribeJobLogs, cancel)
+} = useJobManagement(jobs, logs, subscribeJobLogs, cancelJob)
 
 // Logs dialog state
 const showLogDialog = ref(false)
@@ -297,14 +297,6 @@ const organizationStore = useOrganizationStore()
 const orgIdRef = computed(() => organizationStore.currentOrg?.id || '')
 const { status: healthStatus, queues } = useAgentHealth(orgIdRef)
 
-// Job filters bind to query variables
-const jobStatusFilter = ref<string | null>(null)
-const jobTypeFilter = ref<string | null>(null)
-watchEffect(() => {
-  jobStatusFilter.value = jobStatusFilter.value || null
-  jobTypeFilter.value = jobTypeFilter.value || null
-})
-
 // Queue statistics
 const totalActive = computed(() => queues.value.reduce((s: number, q: any) => s + (q.active || 0), 0))
 const totalWaiting = computed(() => queues.value.reduce((s: number, q: any) => s + (q.waiting || 0), 0))
@@ -336,47 +328,17 @@ const jobHeaders = [
   { title: 'Actions', key: 'actions', sortable: false },
 ]
 
-// Logs dialog state
-const showLogDialog = ref(false)
-
 const selectedJobId = ref<string | null>(null)
 const subscribed = ref<Set<string>>(new Set())
 const selectedLogs = computed(() => (selectedJobId.value ? (logs.value[selectedJobId.value] || []) as Log[] : []))
 
-const filteredJobs = computed(() => {
-  // This is a placeholder implementation
-  // In a real implementation, you would filter the jobs based on search criteria
-  return jobs.value
-})
-
 const loading = ref(false)
-
-function refetchJobs() {
-  // This is a placeholder implementation
-  // In a real implementation, you would refetch the jobs
-  console.log('Refetching jobs')
-}
-
-function cancelJob(job: Job) {
-  // This is a placeholder implementation
-  // In a real implementation, you would cancel the job
-  console.log('Canceling job', job.id)
-}
 
 function saveAgent(agent: Agent) {
   // This is a placeholder implementation
   // In a real implementation, you would save the agent
   console.log('Saving agent', agent)
   showCreateDialog.value = false
-}
-
-function openLogs(job: any) {
-  if (!subscribed.value.has(job.id)) {
-    subscribeJobLogs(job.id)
-    subscribed.value.add(job.id)
-  }
-  selectedJobId.value = job.id
-  showLogDialog.value = true
 }
 
 async function onCancelJob(item: any) {

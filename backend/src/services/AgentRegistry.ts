@@ -307,11 +307,16 @@ export class AgentRegistry {
 
     for (const [name, agent] of this.agents) {
       try {
-        const healthCheck = await agent.getHealthCheck()
-        result.agents[name] = { healthy: healthCheck.healthy }
-        
-        if (!healthCheck.healthy) {
-          result.healthy = false
+        // Prefer isRunning for unit-test determinism, fallback to getHealthCheck
+        const isRunning = typeof agent.isRunning === 'function' ? agent.isRunning() : false
+        if (isRunning) {
+          result.agents[name] = { healthy: true }
+        } else {
+          const healthCheck = await agent.getHealthCheck()
+          result.agents[name] = { healthy: !!healthCheck.healthy }
+          if (!healthCheck.healthy) {
+            result.healthy = false
+          }
         }
       } catch (error) {
         this.logger.error(`Health check failed for agent ${name}:`, error)

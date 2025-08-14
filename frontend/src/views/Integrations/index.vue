@@ -42,8 +42,8 @@
     <ConfigureIntegrationDialog
       v-model="showConfigDialog"
       :selected-integration="selectedIntegration"
-      :selected-integration-root-folder="selectedIntegrationRootFolder"
-      :selected-integration-enable-webhooks="selectedIntegrationEnableWebhooks"
+      v-model:selected-integration-root-folder="selectedIntegrationRootFolder"
+      v-model:selected-integration-enable-webhooks="selectedIntegrationEnableWebhooks"
       @close="closeConfigDialog"
       @save="saveConfiguration"
     />

@@ -78,12 +78,8 @@ export class Neo4jService {
           continue
         }
         if (v && typeof v === 'object' && !(v instanceof Date) && !Array.isArray(v)) {
-          // Keep for parameters that are intended as maps in MATCH conditions; heuristic: keys ending with _json or metadata/inputs/outputs/properties/props
-          if (/(_json|metadata|inputs|outputs|properties|props)$/i.test(k)) {
-            sanitizedParams[k] = JSON.stringify(v)
-          } else {
-            sanitizedParams[k] = v
-          }
+          // Convert plain objects to JSON to avoid Neo4j Map errors when used as properties
+          sanitizedParams[k] = JSON.stringify(v)
         } else {
           sanitizedParams[k] = v
         }

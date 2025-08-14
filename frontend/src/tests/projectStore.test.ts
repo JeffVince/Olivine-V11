@@ -20,7 +20,7 @@ describe('projectStore actions', () => {
   })
 
   it('creates a project and updates state', async () => {
-    (apolloClient.mutate as jest.Mock).mockResolvedValue({
+    (apolloClient.mutate as ReturnType<typeof vi.fn>).mockResolvedValue({
       data: { createProject: { id: '1', name: 'Test', status: 'ACTIVE' } },
     })
     const store = useProjectStore()
@@ -33,7 +33,7 @@ describe('projectStore actions', () => {
   it('archives a project', async () => {
     const store = useProjectStore()
     store.projects = [{ id: '1', name: 'Test', status: 'active' }]
-    ;(apolloClient.mutate as jest.Mock).mockResolvedValue({
+    (apolloClient.mutate as ReturnType<typeof vi.fn>).mockResolvedValue({
       data: { updateProject: { id: '1', name: 'Test', status: 'archived' } },
     })
     await store.archiveProject('1')
@@ -43,7 +43,7 @@ describe('projectStore actions', () => {
   it('sets error on delete failure', async () => {
     const store = useProjectStore()
     store.projects = [{ id: '1', name: 'Test', status: 'active' }]
-    ;(apolloClient.mutate as jest.Mock).mockRejectedValue(new Error('fail'))
+    (apolloClient.mutate as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('fail'))
     await expect(store.deleteProject('1')).rejects.toThrow('fail')
     expect(store.error).toBe('fail')
     expect(store.projects.length).toBe(1)

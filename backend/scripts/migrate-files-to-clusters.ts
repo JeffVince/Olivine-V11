@@ -532,7 +532,7 @@ class ClusterMigrationService {
   /**
    * Calculate confidence for migrated classifications
    */
-  private calculateMigrationConfidence(file: any): number {
+  private calculateMigrationConfidence(file: { path: string }): number {
     let confidence = 0.6; // Base confidence for legacy data
 
     // Boost confidence based on file name patterns

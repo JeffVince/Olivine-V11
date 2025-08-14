@@ -9,7 +9,7 @@
       </v-card-title>
       <v-card-text>
         <v-text-field
-          v-model="selectedIntegrationRootFolder"
+          v-model="rootFolderProxy"
           label="Root Folder Path"
         />
         <!-- <v-switch
@@ -39,7 +39,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import type { Integration } from '@/views/Integrations/Composables/Interface'
 
 // Props
@@ -55,6 +55,18 @@ const emit = defineEmits(['update:modelValue', 'update:selectedIntegrationRootFo
 
 // Reactive variables
 const showDialog = ref(props.modelValue)
+
+// Computed proxies to avoid mutating props directly with v-model
+const rootFolderProxy = computed({
+  get: () => props.selectedIntegrationRootFolder,
+  set: (val: string) => emit('update:selectedIntegrationRootFolder', val),
+})
+
+// If/when enabling the switch again, use a similar proxy:
+// const enableWebhooksProxy = computed({
+//   get: () => props.selectedIntegrationEnableWebhooks,
+//   set: (val: boolean) => emit('update:selectedIntegrationEnableWebhooks', val),
+// })
 
 // Watch for changes
 watch(() => props.modelValue, (newValue) => {

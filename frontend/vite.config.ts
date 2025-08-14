@@ -38,10 +38,31 @@ export default defineConfig({
       output: {
         manualChunks: {
           vue: ['vue', 'vue-router', 'pinia'],
-          apollo: ['@apollo/client', '@vue/apollo-composable'],
+          apollo: [
+            '@apollo/client',
+            '@apollo/client/core',
+            '@apollo/client/link/context',
+            '@apollo/client/utilities',
+            '@vue/apollo-composable',
+            'graphql-tag',
+            'graphql',
+            'apollo-upload-client',
+            'graphql-ws'
+          ],
           supabase: ['@supabase/supabase-js']
         }
       }
     }
+  },
+  optimizeDeps: {
+    include: [
+      '@apollo/client/core',
+      '@apollo/client/link/context',
+      '@apollo/client/utilities',
+      'graphql-tag',
+      'graphql',
+      'apollo-upload-client',
+      'graphql-ws'
+    ]
   }
 })

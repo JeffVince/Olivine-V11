@@ -21,13 +21,23 @@ import PageContainer from '@components/layout/PageContainer.vue'
 import NotificationBell from '@components/layout/NotificationBell.vue'
 import ToastContainer from '@components/common/ToastContainer.vue'
 import { useProjectStore } from '@/stores/projectStore'
+import { useOrganizationStore } from '@/stores/organizationStore'
 
 const drawer = ref(true)
+const organizationStore = useOrganizationStore()
 const projectStore = useProjectStore()
 
-// Initialize project store when app starts
-onMounted(() => {
-  projectStore.initializeProject()
+// Initialize stores when app starts
+onMounted(async () => {
+  try {
+    // Initialize organization store first
+    organizationStore.initialize()
+    
+    // Then initialize projects
+    await projectStore.initializeProject()
+  } catch (error) {
+    console.error('Failed to initialize app:', error)
+  }
 })
 </script>
 

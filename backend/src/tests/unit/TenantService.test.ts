@@ -21,7 +21,8 @@ describe('TenantService', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    tenantService = new TenantService();
+    // Inject the mock service instance to avoid path mismatch issues with jest.mock
+    tenantService = new TenantService(mockNeo4jService as any);
     mockFs = fs as jest.Mocked<typeof fs>;
   });
 
@@ -690,12 +691,12 @@ describe('TenantService', () => {
 
   describe('applyMigrations', () => {
     beforeEach(() => {
-      // Mock file system operations
-      mockFs.existsSync = jest.fn().mockReturnValue(true);
-      mockFs.promises = {
-        readdir: jest.fn().mockResolvedValue(['001_initial.json', '002_update.json']),
-        readFile: jest.fn()
-      } as any;
+      // Mock file system operations without reassigning read-only properties
+      jest.spyOn(fs, 'existsSync').mockReturnValue(true);
+      // fs.promises is not a real object in jest.mock('fs') shim; stub using any
+      (fs as any).promises = (fs as any).promises || {};
+      (fs as any).promises.readdir = jest.fn().mockResolvedValue(['001_initial.json', '002_update.json']);
+      (fs as any).promises.readFile = jest.fn().mockResolvedValue('');
     });
 
     test('should apply pending migrations', async () => {
@@ -717,9 +718,10 @@ describe('TenantService', () => {
         }
       ];
 
-      (mockFs.promises.readFile as jest.Mock)
-        .mockResolvedValueOnce(JSON.stringify(mockMigrations[0]))
-        .mockResolvedValueOnce(JSON.stringify(mockMigrations[1]));
+      // Bypass filesystem by stubbing loader to return our migrations
+      jest
+        .spyOn(tenantService as any, 'loadMigrationFiles')
+        .mockResolvedValue(mockMigrations as any);
 
       // Mock current version
       mockNeo4jService.executeQuery
