@@ -4,6 +4,21 @@ export declare class ProvenanceResolvers {
     constructor();
     getResolvers(): {
         Query: {
+            commits: (_: any, { filter, limit }: {
+                filter?: {
+                    orgId?: string;
+                    branchName?: string;
+                };
+                limit?: number;
+            }) => Promise<any>;
+            commitHistory: (_: any, { orgId, branchName, limit }: {
+                orgId: string;
+                branchName: string;
+                limit?: number;
+            }) => Promise<any>;
+            branches: (_: any, { orgId }: {
+                orgId: string;
+            }) => Promise<any>;
             entityHistory: (_: any, { entityId, entityType, orgId }: {
                 entityId: string;
                 entityType: string;
@@ -49,6 +64,21 @@ export declare class ProvenanceResolvers {
 }
 export declare const provenanceResolvers: {
     Query: {
+        commits: (_: any, { filter, limit }: {
+            filter?: {
+                orgId?: string;
+                branchName?: string;
+            } | undefined;
+            limit?: number;
+        }) => Promise<any>;
+        commitHistory: (_: any, { orgId, branchName, limit }: {
+            orgId: string;
+            branchName: string;
+            limit?: number;
+        }) => Promise<any>;
+        branches: (_: any, { orgId }: {
+            orgId: string;
+        }) => Promise<any>;
         entityHistory: (_: any, { entityId, entityType, orgId }: {
             entityId: string;
             entityType: string;

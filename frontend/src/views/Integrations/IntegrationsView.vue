@@ -81,8 +81,6 @@ import {
   loading, 
   selectedIntegrationRootFolder, 
   selectedIntegrationEnableWebhooks, 
-  integrations, 
-  search, 
   connectIntegration, 
   disconnectIntegration, 
   triggerSync, 
@@ -98,7 +96,7 @@ import {
 
 // Import Apollo Client composable
 import { useSourcesQuery } from '@/views/Integrations/Composables/graphql'
-import { useRoute } from 'vue-router'
+
 import { useOrganizationStore } from '@/stores/organizationStore'
 import { watch } from 'vue'
 
@@ -109,10 +107,10 @@ const organizationStore = useOrganizationStore()
 // Use the GraphQL query within component context
 // Use organization ID from store, fallback to a default for development
 const organizationId = organizationStore.currentOrg?.id || '00000000-0000-0000-0000-000000000000'
-const { result, error } = useSourcesQuery(organizationId)
+const { result } = useSourcesQuery(organizationId)
 
 // Watch for changes in the query result and update integrations
-watch(result, (newResult: any) => {
+watch(result, (newResult) => {
   if (newResult) {
     updateIntegrationsFromResult(newResult)
   }

@@ -54,6 +54,7 @@ const SecurityMiddleware_1 = require("./middleware/SecurityMiddleware");
 const core_1 = require("./resolvers/core");
 const ContentOntologyResolvers_1 = require("./resolvers/ContentOntologyResolvers");
 const OperationsResolvers_1 = require("./resolvers/OperationsResolvers");
+const ProvenanceResolvers_1 = require("./resolvers/ProvenanceResolvers");
 const Neo4jService_1 = require("../services/Neo4jService");
 const PostgresService_1 = require("../services/PostgresService");
 const QueueService_1 = require("../services/queues/QueueService");
@@ -245,6 +246,11 @@ class GraphQLServer {
         createPurchaseOrder(input: PurchaseOrderInput!, userId: String!): PurchaseOrder!
         linkSceneToCharacter(sceneId: ID!, characterId: ID!, orgId: ID!, userId: String!): LinkResult!
       }
+      
+      # Add minimal query to list branches until full provenance resolver set is available
+      extend type Query {
+        branches(orgId: ID!): [Branch!]!
+      }
     `;
         const sanitizedEnhanced = enhancedTypeDefs
             .replace(/budgetVsActualAnalysis\s*\([^)]*\):\s*\[\s*JSON!\s*\]\s*!/g, 'budgetVsActualAnalysis(projectId: ID!, orgId: String!): [BudgetVsActualRow!]!')
@@ -261,10 +267,12 @@ class GraphQLServer {
             ...coreResolvers,
             ...contentResolvers,
             ...opsResolvers,
+            ...ProvenanceResolvers_1.provenanceResolvers,
             Query: {
                 ...coreResolvers.Query,
                 ...contentResolvers.Query,
                 ...opsResolvers.Query,
+                ...ProvenanceResolvers_1.provenanceResolvers.Query,
                 budgetVsActualAnalysis: async (_, args, ctx, info) => {
                     const fn = opsResolvers.Query?.budgetVsActualAnalysis;
                     const data = fn ? await fn(_, args, ctx, info) : [];
@@ -280,6 +288,7 @@ class GraphQLServer {
                 ...coreResolvers.Mutation,
                 ...contentResolvers.Mutation,
                 ...opsResolvers.Mutation,
+                ...ProvenanceResolvers_1.provenanceResolvers.Mutation,
             },
         };
         return (0, schema_1.makeExecutableSchema)({

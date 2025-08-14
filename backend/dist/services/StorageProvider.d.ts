@@ -14,6 +14,7 @@ export interface StorageProvider {
 }
 export type StorageProviderType = 'dropbox' | 'gdrive' | 'supabase';
 export declare class StorageProviderFactory {
+    private static instances;
     static createProvider(type: StorageProviderType): Promise<StorageProvider>;
 }
 export interface SyncOrchestrator {

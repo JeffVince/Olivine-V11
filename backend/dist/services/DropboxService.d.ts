@@ -52,10 +52,9 @@ export interface RetryOptions {
     retryCondition?: (error: unknown) => boolean;
 }
 export declare class DropboxService extends EventEmitter implements StorageProvider {
-    private dropboxClient;
-    private dropboxAuth;
-    private postgresService;
-    private configService;
+    private dropboxAuth?;
+    private postgresService?;
+    private configService?;
     private appKey;
     private appSecret;
     private redirectUri;
@@ -65,6 +64,8 @@ export declare class DropboxService extends EventEmitter implements StorageProvi
     private logs;
     private maxLogEntries;
     constructor();
+    private getPostgresService;
+    private getDropboxAuth;
     private log;
     private logError;
     private updateMetrics;

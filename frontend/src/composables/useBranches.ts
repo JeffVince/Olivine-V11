@@ -12,7 +12,7 @@ interface Branch {
 }
 
 const LIST_BRANCHES = gql`
-  query Branches($orgId: ID!) { branches(orgId: $orgId) { id name description active baseCommitId } }
+  query Branches($orgId: ID!) { branches(orgId: $orgId) { name description status created_from_commit head_commit created_at } }
 `
 
 const CREATE_BRANCH = gql`
@@ -32,7 +32,18 @@ export function useBranches() {
   const branches = ref<Branch[]>([])
 
   watchEffect(() => { variables.value.orgId = org.currentOrg?.id || '' })
-  watchEffect(() => { if (result.value?.branches) branches.value = result.value.branches })
+  watchEffect(() => {
+    if (result.value?.branches) {
+      // Map backend Branch shape to frontend interface
+      branches.value = result.value.branches.map((b: any) => ({
+        id: b.name,
+        name: b.name,
+        description: b.description,
+        active: b.status === 'active',
+        baseCommitId: b.created_from_commit || b.head_commit || ''
+      }))
+    }
+  })
 
   const { mutate: create } = useMutation(CREATE_BRANCH)
   const { mutate: merge } = useMutation(MERGE_BRANCH)

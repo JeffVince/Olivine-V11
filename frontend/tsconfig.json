@@ -3,7 +3,7 @@
     "target": "ES2020",
     "useDefineForClassFields": true,
     "module": "ESNext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "strict": true,
     "jsx": "preserve",
     "resolveJsonModule": true,
@@ -11,34 +11,36 @@
     "esModuleInterop": true,
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "skipLibCheck": true,
-    "types": [
-      "vite/client",
-      "node"
-    ],
-    "typeRoots": [
-      "./node_modules/@types",
-      "./src/types"
-    ],
     "noEmit": true,
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
-    "baseUrl": "./",
+    "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"],
-      "@components/*": ["src/components/*"],
-      "@composables/*": ["src/composables/*"],
-      "@stores/*": ["src/stores/*"],
-      "@views/*": ["src/views/*"],
-      "@router/*": ["src/router/*"],
-      "@assets/*": ["src/assets/*"]
-    }
+      "@/*": ["./src/*"],
+      "@components/*": ["./src/components/*"],
+      "@composables/*": ["./src/composables/*"],
+      "@stores/*": ["./src/stores/*"],
+      "@views/*": ["./src/views/*"],
+      "@router/*": ["./src/router/*"],
+      "@assets/*": ["./src/assets/*"]
+    },
+    "types": ["vite/client", "node"],
+    "typeRoots": ["./node_modules/@types", "./src/types"]
   },
   "include": [
-    "src/**/*"
+    "src/**/*.ts",
+    "src/**/*.d.ts",
+    "src/**/*.tsx",
+    "src/**/*.vue"
   ],
   "exclude": [
     "node_modules",
     "dist",
     "tests"
+  ],
+  "references": [
+    {
+      "path": "./tsconfig.node.json"
+    }
   ]
 }

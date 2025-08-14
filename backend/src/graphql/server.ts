@@ -19,6 +19,7 @@ import { SecurityMiddleware, GraphQLContext } from './middleware/SecurityMiddlew
 import { buildCoreResolvers } from './resolvers/core';
 import { contentOntologyResolvers } from './resolvers/ContentOntologyResolvers';
 import { operationsResolvers } from './resolvers/OperationsResolvers';
+import { provenanceResolvers } from './resolvers/ProvenanceResolvers';
 import { Neo4jService } from '../services/Neo4jService';
 import { PostgresService } from '../services/PostgresService';
 import { QueueService } from '../services/queues/QueueService';
@@ -290,6 +291,11 @@ export class GraphQLServer {
         createPurchaseOrder(input: PurchaseOrderInput!, userId: String!): PurchaseOrder!
         linkSceneToCharacter(sceneId: ID!, characterId: ID!, orgId: ID!, userId: String!): LinkResult!
       }
+      
+      # Add minimal query to list branches until full provenance resolver set is available
+      extend type Query {
+        branches(orgId: ID!): [Branch!]!
+      }
     `;
 
     // Combine type definitions
@@ -315,10 +321,12 @@ export class GraphQLServer {
       // Include type-level resolvers from feature modules (e.g., PurchaseOrder)
       ...(contentResolvers as any),
       ...(opsResolvers as any),
+      ...(provenanceResolvers as any),
       Query: {
         ...(coreResolvers as any).Query,
         ...(contentResolvers as any).Query,
         ...(opsResolvers as any).Query,
+        ...(provenanceResolvers as any).Query,
         // Coerce analysis queries into arrays of objects to satisfy selection sets
         budgetVsActualAnalysis: async (_: any, args: any, ctx: any, info: any) => {
           const fn = (opsResolvers as any).Query?.budgetVsActualAnalysis;
@@ -337,6 +345,7 @@ export class GraphQLServer {
         ...(coreResolvers as any).Mutation,
         ...(contentResolvers as any).Mutation,
         ...(opsResolvers as any).Mutation,
+        ...(provenanceResolvers as any).Mutation,
       },
     } as any;
 

@@ -12,7 +12,7 @@ interface Commit {
 
 const COMMITS = gql`
   query Commits($orgId: ID!, $branchName: String) {
-    commits(orgId: $orgId, branchName: $branchName, limit: 50) {
+    commitHistory(orgId: $orgId, branchName: $branchName, limit: 50) {
       id
       message
       createdAt
@@ -33,7 +33,7 @@ export function useCommits() {
   })
 
   watchEffect(() => {
-    if (result.value?.commits) items.value = result.value.commits
+    if ((result.value as any)?.commitHistory) items.value = (result.value as any).commitHistory
   })
 
   return { items, loading, refetch }

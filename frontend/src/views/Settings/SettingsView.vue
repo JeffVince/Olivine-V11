@@ -58,7 +58,9 @@ import { useRoute } from 'vue-router'
 import SettingsHeader from '@/views/Settings/Components/SettingsHeader.vue'
 import ProfileSettings from '@/views/Settings/Components/ProfileSettings.vue'
 import NotificationSettings from '@/views/Settings/Components/NotificationSettings.vue'
+import type { NotificationSettings as NotificationSettingsType } from '@/views/Settings/Composables/Interface'
 import ProjectSettings from '@/views/Settings/Components/ProjectSettings.vue'
+import type { Profile, ProjectOptions } from '@/views/Settings/Composables'
 
 // Initialize settings lifecycle
 useSettingsLifecycle()
@@ -66,15 +68,15 @@ useSettingsLifecycle()
 const route = useRoute()
 
 // Event handlers
-async function handleSaveProfile(profileData: any) {
+async function handleSaveProfile(profileData: Profile) {
   await saveProfile(profileData)
 }
 
-async function handleSaveNotifications(notifData: any) {
+async function handleSaveNotifications(notifData: NotificationSettingsType) {
   await saveNotifications(notifData)
 }
 
-async function handleSaveProject(projectData: any) {
+async function handleSaveProject(projectData: ProjectOptions) {
   await saveProject(route.params.id as string, projectData)
 }
 </script>

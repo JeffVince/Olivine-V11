@@ -218,7 +218,6 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
 import { useProjectStore } from '@/stores/projectStore'
-import { useNotificationStore } from '@/stores/notificationStore'
 
 // Import composables
 // Some variables from composables are imported but not used
@@ -226,16 +225,13 @@ import { useNotificationStore } from '@/stores/notificationStore'
 import {
   projects,
   showCreateDialog,
-  showEditDialog as showEditDialogRef,
-  showDeleteDialog as showDeleteDialogRef,
-  selectedProject,
-  newProject,
-  loading,
+  showDeleteDialog,
   openProject,
   editProject,
   archiveProject,
   deleteProject,
   confirmDelete,
+  newProject,
   createProject,
   getStatusColor,
   formatDate,
@@ -243,8 +239,6 @@ import {
 } from '@/views/Projects/Composables'
 
 // Import components
-import ProjectsHeader from '@/views/Projects/Components/ProjectsHeader.vue'
-import ProjectCard from '@/views/Projects/Components/ProjectCard.vue'
 import CreateProjectDialog from '@/views/Projects/Components/CreateProjectDialog.vue'
 
 const projectStore = useProjectStore()

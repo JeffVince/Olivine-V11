@@ -9,6 +9,56 @@ class ProvenanceResolvers {
     getResolvers() {
         return {
             Query: {
+                commits: async (_, { filter, limit }) => {
+                    const orgId = filter?.orgId;
+                    const branch = filter?.branchName || 'main';
+                    if (!orgId)
+                        return [];
+                    const agentLike = this.provenanceService;
+                    if (typeof agentLike.getCommitHistory === 'function') {
+                        return await agentLike.getCommitHistory(orgId, branch, limit ?? 50);
+                    }
+                    const result = await this.provenanceService.neo4j.executeQuery(`MATCH (c:Commit {org_id: $orgId, branch_name: $branchName}) RETURN c ORDER BY c.created_at DESC LIMIT $limit`, { orgId, branchName: branch, limit: limit ?? 50 }, orgId);
+                    return result.records.map((r) => {
+                        const c = r.get('c').properties;
+                        return {
+                            id: c.id,
+                            orgId: c.org_id,
+                            message: c.message,
+                            author: c.author,
+                            authorType: c.author_type,
+                            createdAt: c.created_at,
+                            parentCommitId: c.parent_commit_id,
+                            branchName: c.branch_name,
+                            signature: c.signature,
+                        };
+                    });
+                },
+                commitHistory: async (_, { orgId, branchName, limit }) => {
+                    const agentLike = this.provenanceService;
+                    if (typeof agentLike.getCommitHistory === 'function') {
+                        return await agentLike.getCommitHistory(orgId, branchName, limit ?? 50);
+                    }
+                    const result = await this.provenanceService.neo4j.executeQuery(`MATCH (c:Commit {org_id: $orgId, branch_name: $branchName}) RETURN c ORDER BY c.created_at DESC LIMIT $limit`, { orgId, branchName, limit: limit ?? 50 }, orgId);
+                    return result.records.map((r) => {
+                        const c = r.get('c').properties;
+                        return {
+                            id: c.id,
+                            orgId: c.org_id,
+                            message: c.message,
+                            author: c.author,
+                            authorType: c.author_type,
+                            createdAt: c.created_at,
+                            parentCommitId: c.parent_commit_id,
+                            branchName: c.branch_name,
+                            signature: c.signature,
+                        };
+                    });
+                },
+                branches: async (_, { orgId }) => {
+                    const result = await this.provenanceService.neo4j.executeQuery(`MATCH (b:Branch {org_id: $orgId}) RETURN b ORDER BY b.created_at DESC`, { orgId }, orgId);
+                    return result.records.map((r) => r.get('b').properties);
+                },
                 entityHistory: async (_, { entityId, entityType, orgId }) => {
                     return await this.provenanceService.getEntityHistory(entityId, entityType, orgId);
                 },

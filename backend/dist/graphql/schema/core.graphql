@@ -459,6 +459,10 @@ extend type Query {
   # Cross-layer validation queries
   validateCrossLayerLinks(organizationId: ID!): JSON!
   getCrossLayerStatistics(organizationId: ID!): JSON!
+  
+  # Minimal provenance queries used by UI
+  commits(filter: CommitFilter, limit: Int = 50, offset: Int = 0): [Commit!]!
+  commitHistory(orgId: ID!, branchName: String!, limit: Int = 50): [Commit!]!
 }
 
 extend type Mutation {
