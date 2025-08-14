@@ -51,7 +51,7 @@ class DbTestUtils {
     async createTestUser(email, password, orgId, role = 'member') {
         try {
             const passwordHash = await this.authService.hashPassword(password);
-            const result = await this.postgresService.executeQuery(`INSERT INTO users (email, password_hash, organization_id, role) VALUES ($1, $2, $3, $4) RETURNING id, email, organization_id, role`, [email, passwordHash, orgId, role]);
+            const result = await this.postgresService.executeQuery(`INSERT INTO users (email, password_hash, orgId, role) VALUES ($1, $2, $3, $4) RETURNING id, email, orgId, role`, [email, passwordHash, orgId, role]);
             return result.rows[0];
         }
         catch (error) {

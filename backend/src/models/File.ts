@@ -3,7 +3,7 @@ import { Neo4jService } from '../services/Neo4jService';
 
 export interface FileMetadata {
   id: string;
-  organizationId: string;
+  orgId: string;
   sourceId: string;
   path: string;
   name: string;
@@ -52,13 +52,13 @@ export class FileModel {
   async upsertFile(fileData: Partial<FileMetadata>): Promise<FileMetadata> {
     const query = `
       INSERT INTO files (
-        id, organization_id, source_id, path, name, extension, mime_type, size,
+        id, orgId, source_id, path, name, extension, mime_type, size,
         created_at, updated_at, modified_at, version_id, metadata, classification_status
       ) VALUES (
         COALESCE($1, gen_random_uuid()), $2, $3, $4, $5, $6, $7, $8,
         COALESCE($9, NOW()), NOW(), $10, $11, $12, COALESCE($13, 'pending')
       )
-      ON CONFLICT (organization_id, source_id, path)
+      ON CONFLICT (orgId, source_id, path)
       DO UPDATE SET
         name = EXCLUDED.name,
         extension = EXCLUDED.extension,
@@ -74,7 +74,7 @@ export class FileModel {
 
     const values = [
       fileData.id,
-      fileData.organizationId,
+      fileData.orgId,
       fileData.sourceId,
       fileData.path,
       fileData.name,
@@ -95,42 +95,42 @@ export class FileModel {
   /**
    * Get a file by ID and organization
    */
-  async getFile(fileId: string, organizationId: string): Promise<FileMetadata | null> {
+  async getFile(fileId: string, orgId: string): Promise<FileMetadata | null> {
     const query = `
       SELECT * FROM files 
-      WHERE id = $1 AND organization_id = $2 AND deleted_at IS NULL
+      WHERE id = $1 AND orgId = $2 AND deleted_at IS NULL
     `;
     
-    const result = await this.postgresService.executeQuery(query, [fileId, organizationId]);
+    const result = await this.postgresService.executeQuery(query, [fileId, orgId]);
     return result.rows.length > 0 ? this.mapRowToFile(result.rows[0]) : null;
   }
 
   /**
    * Get files by source and organization
    */
-  async getFilesBySource(sourceId: string, organizationId: string, limit = 100): Promise<FileMetadata[]> {
+  async getFilesBySource(sourceId: string, orgId: string, limit = 100): Promise<FileMetadata[]> {
     const query = `
       SELECT * FROM files 
-      WHERE source_id = $1 AND organization_id = $2 AND deleted_at IS NULL
+      WHERE source_id = $1 AND orgId = $2 AND deleted_at IS NULL
       ORDER BY updated_at DESC
       LIMIT $3
     `;
     
-    const result = await this.postgresService.executeQuery(query, [sourceId, organizationId, limit]);
+    const result = await this.postgresService.executeQuery(query, [sourceId, orgId, limit]);
     return result.rows.map(row => this.mapRowToFile(row));
   }
 
   /**
    * Mark a file as deleted (soft delete)
    */
-  async deleteFile(fileId: string, organizationId: string): Promise<boolean> {
+  async deleteFile(fileId: string, orgId: string): Promise<boolean> {
     const query = `
       UPDATE files 
       SET deleted_at = NOW(), updated_at = NOW()
-      WHERE id = $1 AND organization_id = $2
+      WHERE id = $1 AND orgId = $2
     `;
     
-    const result = await this.postgresService.executeQuery(query, [fileId, organizationId]);
+    const result = await this.postgresService.executeQuery(query, [fileId, orgId]);
     return (result.rowCount || 0) > 0;
   }
 
@@ -139,7 +139,7 @@ export class FileModel {
    */
   async updateClassification(
     fileId: string, 
-    organizationId: string, 
+    orgId: string, 
     classification: FileClassification,
     status: FileMetadata['classificationStatus'] = 'completed'
   ): Promise<boolean> {
@@ -149,7 +149,7 @@ export class FileModel {
         classification_status = $3,
         metadata = COALESCE(metadata, '{}'::jsonb) || $4::jsonb,
         updated_at = NOW()
-      WHERE id = $1 AND organization_id = $2
+      WHERE id = $1 AND orgId = $2
     `;
     
     const classificationData = {
@@ -161,7 +161,7 @@ export class FileModel {
     
     const result = await this.postgresService.executeQuery(query, [
       fileId, 
-      organizationId, 
+      orgId, 
       status,
       JSON.stringify(classificationData)
     ]);
@@ -174,7 +174,7 @@ export class FileModel {
    */
   async updateExtractedContent(
     fileId: string, 
-    organizationId: string, 
+    orgId: string, 
     extractedText: string
   ): Promise<boolean> {
     const query = `
@@ -182,10 +182,10 @@ export class FileModel {
       SET 
         extracted_text = $3,
         updated_at = NOW()
-      WHERE id = $1 AND organization_id = $2
+      WHERE id = $1 AND orgId = $2
     `;
     
-    const result = await this.postgresService.executeQuery(query, [fileId, organizationId, extractedText]);
+    const result = await this.postgresService.executeQuery(query, [fileId, orgId, extractedText]);
     return (result.rowCount || 0) > 0;
   }
 
@@ -194,7 +194,7 @@ export class FileModel {
    */
   async syncToGraph(fileData: FileMetadata): Promise<void> {
     const query = `
-      MERGE (f:File {id: $fileId, organizationId: $orgId})
+      MERGE (f:File {id: $fileId, orgId: $orgId})
       SET f.path = $path,
           f.name = $name,
           f.extension = $extension,
@@ -208,7 +208,7 @@ export class FileModel {
       
       // Create relationship to source
       WITH f
-      MATCH (s:Source {id: $sourceId, organizationId: $orgId})
+      MATCH (s:Source {id: $sourceId, orgId: $orgId})
       MERGE (f)-[:STORED_IN]->(s)
       
       RETURN f
@@ -216,7 +216,7 @@ export class FileModel {
 
     const params = {
       fileId: fileData.id,
-      orgId: fileData.organizationId,
+      orgId: fileData.orgId,
       sourceId: fileData.sourceId,
       path: fileData.path,
       name: fileData.name,
@@ -236,13 +236,13 @@ export class FileModel {
   /**
    * Remove file node from Neo4j knowledge graph
    */
-  async removeFromGraph(fileId: string, organizationId: string): Promise<void> {
+  async removeFromGraph(fileId: string, orgId: string): Promise<void> {
     const query = `
-      MATCH (f:File {id: $fileId, organizationId: $orgId})
+      MATCH (f:File {id: $fileId, orgId: $orgId})
       DETACH DELETE f
     `;
 
-    await this.neo4jService.executeQuery(query, { fileId, orgId: organizationId });
+    await this.neo4jService.executeQuery(query, { fileId, orgId: orgId });
   }
 
   /**
@@ -251,7 +251,7 @@ export class FileModel {
   private mapRowToFile(row: any): FileMetadata {
     return {
       id: row.id,
-      organizationId: row.organization_id,
+      orgId: row.orgId,
       sourceId: row.source_id,
       path: row.path,
       name: row.name,

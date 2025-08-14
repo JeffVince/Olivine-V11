@@ -6,15 +6,15 @@ const JobService_1 = require("../../services/agent/JobService");
 exports.agentResolvers = {
     Query: {
         agentJobs: async (_, args, context) => {
-            const { organizationId, status, type, limit = 50, offset = 0 } = args;
-            if (context.user.organizationId !== organizationId) {
+            const { orgId, status, type, limit = 50, offset = 0 } = args;
+            if (context.user.orgId !== orgId) {
                 throw new Error('Unauthorized access to organization jobs');
             }
             const jobService = new JobService_1.JobService(new QueueService_1.QueueService());
             const jobs = await jobService.listAgentJobs({ status, type, limit, offset });
             return jobs.map((job) => ({
                 id: job.id,
-                organizationId: job.data.organizationId,
+                orgId: job.data.orgId,
                 type: job.name,
                 target: job.data.target || job.data.sceneId || job.data.characterId || job.data.projectId,
                 status: job.status,
@@ -29,15 +29,15 @@ exports.agentResolvers = {
             }));
         },
         agentHealth: async (_, args, context) => {
-            const { organizationId } = args;
-            if (context.user.organizationId !== organizationId) {
+            const { orgId } = args;
+            if (context.user.orgId !== orgId) {
                 throw new Error('Unauthorized access to organization health');
             }
             return { status: 'ok', agents: [] };
         },
         queues: async (_, args, context) => {
-            const { organizationId } = args;
-            if (context.user.organizationId !== organizationId) {
+            const { orgId } = args;
+            if (context.user.orgId !== orgId) {
                 throw new Error('Unauthorized access to organization queues');
             }
             const jobService = new JobService_1.JobService(new QueueService_1.QueueService());
@@ -46,33 +46,33 @@ exports.agentResolvers = {
     },
     Mutation: {
         enqueueAgentJob: async (_, args, context) => {
-            const { organizationId, type, target, params, priority = 0 } = args.input;
-            if (context.user.organizationId !== organizationId) {
+            const { orgId, type, target, params, priority = 0 } = args.input;
+            if (context.user.orgId !== orgId) {
                 throw new Error('Unauthorized access to organization jobs');
             }
             const jobService = new JobService_1.JobService(new QueueService_1.QueueService());
-            const job = await jobService.enqueueAgentJob({ orgId: organizationId, type, target, params, priority });
+            const job = await jobService.enqueueAgentJob({ orgId: orgId, type, target, params, priority });
             return { id: job.id, success: true };
         },
         cancelAgentJob: async (_, args, context) => {
-            const { organizationId, id } = args;
-            if (context.user.organizationId !== organizationId) {
+            const { orgId, id } = args;
+            if (context.user.orgId !== orgId) {
                 throw new Error('Unauthorized access to organization jobs');
             }
             const jobService = new JobService_1.JobService(new QueueService_1.QueueService());
-            console.log(`Cancelling job ${id} for org ${organizationId}`);
+            console.log(`Cancelling job ${id} for org ${orgId}`);
             return await jobService.cancelAgentJob(id);
         }
     },
     Subscription: {
         jobUpdated: {
             subscribe: async (_, args, context) => {
-                const { organizationId } = args;
-                if (context.user.organizationId !== organizationId) {
+                const { orgId } = args;
+                if (context.user.orgId !== orgId) {
                     throw new Error('Unauthorized access to organization job updates');
                 }
                 const queueService = new QueueService_1.QueueService();
-                return queueService.subscribeToJobUpdates(organizationId);
+                return queueService.subscribeToJobUpdates(orgId);
             }
         }
     }

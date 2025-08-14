@@ -8,12 +8,12 @@ export declare class OperationsResolvers {
             amount: (src: any) => any;
         };
         Query: {
-            budgetVsActualAnalysis: (_: any, { projectId, organizationId }: {
+            budgetVsActualAnalysis: (_: any, { projectId, orgId }: {
                 projectId: string;
-                organizationId: string;
+                orgId: string;
             }) => Promise<unknown>;
-            vendorPerformanceAnalysis: (_: any, { organizationId }: {
-                organizationId: string;
+            vendorPerformanceAnalysis: (_: any, { orgId }: {
+                orgId: string;
             }) => Promise<unknown[]>;
         };
         Mutation: {
@@ -46,12 +46,12 @@ export declare const operationsResolvers: {
         amount: (src: any) => any;
     };
     Query: {
-        budgetVsActualAnalysis: (_: any, { projectId, organizationId }: {
+        budgetVsActualAnalysis: (_: any, { projectId, orgId }: {
             projectId: string;
-            organizationId: string;
+            orgId: string;
         }) => Promise<unknown>;
-        vendorPerformanceAnalysis: (_: any, { organizationId }: {
-            organizationId: string;
+        vendorPerformanceAnalysis: (_: any, { orgId }: {
+            orgId: string;
         }) => Promise<unknown[]>;
     };
     Mutation: {

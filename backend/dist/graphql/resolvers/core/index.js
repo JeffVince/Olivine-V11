@@ -49,42 +49,42 @@ function buildCoreResolvers() {
         },
         Query: {
             getSources: async (_, args) => {
-                return sourceLogic.getSources(args.organizationId);
+                return sourceLogic.getSources(args.orgId);
             },
             getSource: async (_, args) => {
-                return sourceLogic.getSource(args.sourceId, args.organizationId);
+                return sourceLogic.getSource(args.sourceId, args.orgId);
             },
             getFiles: async (_, args) => {
-                return fileLogic.getFiles(args.organizationId, args.sourceId, args.limit);
+                return fileLogic.getFiles(args.orgId, args.sourceId, args.limit);
             },
             getFile: async (_, args) => {
-                return fileLogic.getFile(args.fileId, args.organizationId);
+                return fileLogic.getFile(args.fileId, args.orgId);
             },
             getFileStats: async (_, args) => {
-                return fileLogic.getFileStats(args.organizationId);
+                return fileLogic.getFileStats(args.orgId);
             },
             getSourceStats: async (_, args) => {
-                return sourceLogic.getSourceStats(args.sourceId, args.organizationId);
+                return sourceLogic.getSourceStats(args.sourceId, args.orgId);
             },
         },
         Mutation: {
             createSource: async (_, args) => {
-                return sourceLogic.createSource(args.organizationId, args.name, args.type, args.config || {});
+                return sourceLogic.createSource(args.orgId, args.name, args.type, args.config || {});
             },
             updateSourceConfig: async (_, args) => {
-                return sourceLogic.updateSourceConfig(args.sourceId, args.organizationId, args.config);
+                return sourceLogic.updateSourceConfig(args.sourceId, args.orgId, args.config);
             },
             updateSourceStatus: async (_, args) => {
-                return sourceLogic.updateSourceStatus(args.sourceId, args.organizationId, args.active);
+                return sourceLogic.updateSourceStatus(args.sourceId, args.orgId, args.active);
             },
             deleteSource: async (_, args) => {
-                return sourceLogic.deleteSource(args.sourceId, args.organizationId);
+                return sourceLogic.deleteSource(args.sourceId, args.orgId);
             },
             triggerSourceResync: async (_, args) => {
-                return sourceLogic.triggerSourceResync(args.sourceId, args.organizationId);
+                return sourceLogic.triggerSourceResync(args.sourceId, args.orgId);
             },
             reprocessFile: async (_, args) => {
-                return fileLogic.reprocessFile(args.fileId, args.organizationId);
+                return fileLogic.reprocessFile(args.fileId, args.orgId);
             },
         },
     };

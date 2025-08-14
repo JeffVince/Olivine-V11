@@ -10,7 +10,7 @@ export function buildAgentJobResolvers(queueService: QueueService) {
     Query: {
       agentJobs: async (_: any, args: any) => jobService.listAgentJobs({ status: args.status, type: args.type, limit: args.limit, offset: args.offset }),
       agentJob: async (_: any, args: any) => jobService.getAgentJob(args.id),
-      runbooks: async (_: any, args: any) => runbookService.list(args.organizationId),
+      runbooks: async (_: any, args: any) => runbookService.list(args.orgId),
       queues: async () => jobService.getQueueStats(),
       agentHealth: async () => {
         // Basic health info; extend with Neo4j/Redis checks
@@ -28,7 +28,7 @@ export function buildAgentJobResolvers(queueService: QueueService) {
       },
       cancelAgentJob: async (_: any, { id }: any) => jobService.cancelAgentJob(id),
       saveRunbook: async (_: any, { input }: any) => runbookService.save(input),
-      executeRunbook: async (_: any, { organizationId, id, params }: any) => jobService.enqueueAgentJob({ orgId: organizationId, type: 'custom', target: id, params }),
+      executeRunbook: async (_: any, { orgId, id, params }: any) => jobService.enqueueAgentJob({ orgId: orgId, type: 'custom', target: id, params }),
     },
     Subscription: {
       jobUpdated: {

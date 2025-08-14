@@ -63,7 +63,7 @@ export declare function buildAgentJobResolvers(queueService: QueueService): {
         }>;
         cancelAgentJob: (_: any, { id }: any) => Promise<boolean>;
         saveRunbook: (_: any, { input }: any) => Promise<import("../../../services/agent/RunbookService").Runbook>;
-        executeRunbook: (_: any, { organizationId, id, params }: any) => Promise<{
+        executeRunbook: (_: any, { orgId, id, params }: any) => Promise<{
             id: any;
             orgId: any;
             type: any;

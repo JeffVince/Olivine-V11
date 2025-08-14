@@ -93,14 +93,14 @@ class DropboxWebhookHandler {
     async processDeltaChanges(account) {
         try {
             const sourcesQuery = `
-        SELECT id, organization_id, metadata
+        SELECT id, orgId, metadata
         FROM sources 
         WHERE metadata->>'dropbox_account_id' = $1 OR metadata->>'dropbox_team_member_id' = $1
       `;
             const sourcesResult = await this.postgresService.executeQuery(sourcesQuery, [account]);
             for (const source of sourcesResult.rows) {
                 const sourceId = source.id;
-                const orgId = source.organization_id;
+                const orgId = source.orgId;
                 const metadata = source.metadata;
                 let cursor = metadata.dropbox_cursor;
                 if (!cursor && metadata.cursor) {
@@ -177,9 +177,9 @@ class DropboxWebhookHandler {
             id: entry.id
         };
         const upsertQuery = `
-      INSERT INTO files (organization_id, source_id, path, metadata)
+      INSERT INTO files (orgId, source_id, path, metadata)
       VALUES ($1, $2, $3, $4)
-      ON CONFLICT (organization_id, source_id, path) 
+      ON CONFLICT (orgId, source_id, path) 
       DO UPDATE SET 
         metadata = EXCLUDED.metadata,
         updated_at = NOW()
@@ -194,7 +194,7 @@ class DropboxWebhookHandler {
             const fileId = (0, uuid_1.v4)();
             await this.fileProcessingService.processFileChange({
                 fileId,
-                organizationId: orgId,
+                orgId: orgId,
                 sourceId,
                 filePath: entry.path_display,
                 action: 'create',
@@ -213,7 +213,7 @@ class DropboxWebhookHandler {
         const deleteQuery = `
       UPDATE files 
       SET deleted_at = NOW()
-      WHERE organization_id = $1 AND source_id = $2 AND path = $3
+      WHERE orgId = $1 AND source_id = $2 AND path = $3
     `;
         await this.postgresService.executeQuery(deleteQuery, [
             orgId,
@@ -223,7 +223,7 @@ class DropboxWebhookHandler {
         const fileId = (0, uuid_1.v4)();
         await this.fileProcessingService.processFileChange({
             fileId,
-            organizationId: orgId,
+            orgId: orgId,
             sourceId,
             filePath: entry.path_display,
             action: 'delete'
@@ -245,7 +245,7 @@ class DropboxWebhookHandler {
             const sourceQuery = `
         SELECT metadata
         FROM sources 
-        WHERE id = $1 AND organization_id = $2
+        WHERE id = $1 AND orgId = $2
       `;
             const sources = await this.postgresService.executeQuery(sourceQuery, [sourceId, orgId]);
             if (sources.rows.length === 0) {
@@ -301,7 +301,7 @@ class DropboxWebhookHandler {
       UPDATE sources 
       SET metadata = metadata || $1::jsonb,
           updated_at = NOW()
-      WHERE organization_id = $2 AND id = $3
+      WHERE orgId = $2 AND id = $3
     `;
         const metadata = cursor ? { dropbox_cursor: cursor } : { dropbox_cursor: null };
         await this.postgresService.executeQuery(query, [JSON.stringify(metadata), orgId, sourceId]);

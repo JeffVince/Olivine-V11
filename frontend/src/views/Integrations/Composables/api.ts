@@ -17,14 +17,14 @@ export async function connectIntegration(integration: Integration) {
 
     // For existing integrations, redirect with sourceId
     if (integration.__existing && integration.id) {
-      window.location.href = `${API_BASE}/oauth/${provider}?organizationId=${encodeURIComponent(orgId)}&sourceId=${encodeURIComponent(integration.id)}`
+      window.location.href = `${API_BASE}/oauth/${provider}?orgId=${encodeURIComponent(orgId)}&sourceId=${encodeURIComponent(integration.id)}`
       return
     }
 
     // For new integrations, create a Source first to obtain sourceId
     const created = await createSource({
       input: {
-        organizationId: orgId,
+        orgId: orgId,
         type: provider === 'googledrive' ? 'google_drive' : provider,
         name: integration.name || `${provider} Integration`,
         config: {}
@@ -35,7 +35,7 @@ export async function connectIntegration(integration: Integration) {
     if (!sourceId) throw new Error('Failed to create source before OAuth')
 
     // Redirect to backend OAuth endpoint with state (org + source)
-    window.location.href = `${API_BASE}/oauth/${provider}?organizationId=${encodeURIComponent(orgId)}&sourceId=${encodeURIComponent(sourceId)}`
+    window.location.href = `${API_BASE}/oauth/${provider}?orgId=${encodeURIComponent(orgId)}&sourceId=${encodeURIComponent(sourceId)}`
   } catch (error: any) {
     showError(`Failed to connect ${integration.name}: ${error}`)
   } finally {

@@ -24,21 +24,21 @@ export class FileResolvers {
   /**
    * Get files for an organization
    */
-  async getFiles(organizationId: string, sourceId?: string, limit: number = 100): Promise<FileMetadata[]> {
-    if (!organizationId || organizationId.trim() === '') {
+  async getFiles(orgId: string, sourceId?: string, limit: number = 100): Promise<FileMetadata[]> {
+    if (!orgId || orgId.trim() === '') {
       throw new Error('Organization ID is required');
     }
     
     if (sourceId) {
-      return await this.fileModel.getFilesBySource(sourceId, organizationId, limit);
+      return await this.fileModel.getFilesBySource(sourceId, orgId, limit);
     }
     
     // Get all sources for the organization and then get files from all sources
-    const sources = await this.sourceModel.getSourcesByOrganization(organizationId);
+    const sources = await this.sourceModel.getSourcesByOrganization(orgId);
     const allFiles: FileMetadata[] = [];
     
     for (const source of sources) {
-      const sourceFiles = await this.fileModel.getFilesBySource(source.id, organizationId, limit);
+      const sourceFiles = await this.fileModel.getFilesBySource(source.id, orgId, limit);
       allFiles.push(...sourceFiles);
     }
     
@@ -51,29 +51,29 @@ export class FileResolvers {
   /**
    * Get a specific file by ID
    */
-  async getFile(fileId: string, organizationId: string): Promise<FileMetadata | null> {
+  async getFile(fileId: string, orgId: string): Promise<FileMetadata | null> {
     if (!fileId || fileId.trim() === '') {
       throw new Error('File ID is required');
     }
-    if (!organizationId || organizationId.trim() === '') {
+    if (!orgId || orgId.trim() === '') {
       throw new Error('Organization ID is required');
     }
-    return await this.fileModel.getFile(fileId, organizationId);
+    return await this.fileModel.getFile(fileId, orgId);
   }
 
   /**
    * Trigger file reprocessing (classification and extraction)
    */
-  async reprocessFile(fileId: string, organizationId: string): Promise<boolean> {
+  async reprocessFile(fileId: string, orgId: string): Promise<boolean> {
     if (!fileId || fileId.trim() === '') {
       throw new Error('File ID is required');
     }
-    if (!organizationId || organizationId.trim() === '') {
+    if (!orgId || orgId.trim() === '') {
       throw new Error('Organization ID is required');
     }
     
     try {
-      const file = await this.fileModel.getFile(fileId, organizationId);
+      const file = await this.fileModel.getFile(fileId, orgId);
       if (!file) {
         throw new Error('File not found');
       }
@@ -81,7 +81,7 @@ export class FileResolvers {
       // Trigger file reprocessing through the file processing service
       await this.fileProcessingService.processFileChange({
         fileId: file.id,
-        organizationId: file.organizationId,
+        orgId: file.orgId,
         sourceId: file.sourceId,
         filePath: file.path,
         action: 'update',
@@ -99,8 +99,8 @@ export class FileResolvers {
   /**
    * Get file classification status
    */
-  async getFileClassificationStatus(fileId: string, organizationId: string): Promise<string | null> {
-    const file = await this.fileModel.getFile(fileId, organizationId);
+  async getFileClassificationStatus(fileId: string, orgId: string): Promise<string | null> {
+    const file = await this.fileModel.getFile(fileId, orgId);
     return file?.classificationStatus || null;
   }
 
@@ -108,7 +108,7 @@ export class FileResolvers {
    * Search files by content or metadata
    */
   async searchFiles(
-    organizationId: string,
+    orgId: string,
     query: string,
     sourceId?: string,
     mimeType?: string,
@@ -118,15 +118,15 @@ export class FileResolvers {
     // For now, we'll do a basic search by name and extracted text
     
     const sources = sourceId 
-      ? [await this.sourceModel.getSource(sourceId, organizationId)].filter(Boolean)
-      : await this.sourceModel.getSourcesByOrganization(organizationId);
+      ? [await this.sourceModel.getSource(sourceId, orgId)].filter(Boolean)
+      : await this.sourceModel.getSourcesByOrganization(orgId);
     
     const searchResults: FileMetadata[] = [];
     
     for (const source of sources) {
       if (!source) continue;
       
-      const files = await this.fileModel.getFilesBySource(source.id, organizationId, 1000);
+      const files = await this.fileModel.getFilesBySource(source.id, orgId, 1000);
       
       const filteredFiles = files.filter(file => {
         // Filter by MIME type if specified
@@ -158,12 +158,12 @@ export class FileResolvers {
   /**
    * Get file processing statistics for an organization
    */
-  async getFileStats(organizationId: string): Promise<{
+  async getFileStats(orgId: string): Promise<{
     total: number;
     byStatus: { [status: string]: number };
     byMimeType: { [mimeType: string]: number };
   }> {
-    const sources = await this.sourceModel.getSourcesByOrganization(organizationId);
+    const sources = await this.sourceModel.getSourcesByOrganization(orgId);
     const stats = {
       total: 0,
       byStatus: {} as { [status: string]: number },
@@ -171,7 +171,7 @@ export class FileResolvers {
     };
     
     for (const source of sources) {
-      const files = await this.fileModel.getFilesBySource(source.id, organizationId, 10000);
+      const files = await this.fileModel.getFilesBySource(source.id, orgId, 10000);
       
       stats.total += files.length;
       

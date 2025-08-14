@@ -2,7 +2,7 @@ import { EventProcessingService } from './EventProcessingService';
 import { FileClassification } from '../models/File';
 export interface FileProcessingJobData {
     fileId: string;
-    organizationId: string;
+    orgId: string;
     sourceId: string;
     filePath: string;
     action: 'create' | 'update' | 'delete';

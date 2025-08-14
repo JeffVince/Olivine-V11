@@ -63,7 +63,7 @@ export interface IntegrationBase {
 export type Maybe<T> = T | null
 
 export interface CreateSourceInput {
-  organizationId: string
+  orgId: string
   type: string
   name: string
   config?: any

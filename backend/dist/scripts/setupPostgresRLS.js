@@ -20,22 +20,22 @@ async function setupPostgresRLS() {
         await postgresService.executeQuery(`
       CREATE POLICY org_isolation_policy ON organizations 
       FOR ALL TO PUBLIC 
-      USING (id = current_setting('app.organization_id')::UUID)
+      USING (id = current_setting('app.orgId')::UUID)
     `);
         await postgresService.executeQuery(`
       CREATE POLICY user_org_isolation_policy ON users 
       FOR ALL TO PUBLIC 
-      USING (organization_id = current_setting('app.organization_id')::UUID)
+      USING (orgId = current_setting('app.orgId')::UUID)
     `);
         await postgresService.executeQuery(`
       CREATE POLICY source_org_isolation_policy ON sources 
       FOR ALL TO PUBLIC 
-      USING (organization_id = current_setting('app.organization_id')::UUID)
+      USING (orgId = current_setting('app.orgId')::UUID)
     `);
         await postgresService.executeQuery(`
       CREATE POLICY file_org_isolation_policy ON files 
       FOR ALL TO PUBLIC 
-      USING (organization_id = current_setting('app.organization_id')::UUID)
+      USING (orgId = current_setting('app.orgId')::UUID)
     `);
         console.log('PostgreSQL RLS setup completed successfully!');
     }

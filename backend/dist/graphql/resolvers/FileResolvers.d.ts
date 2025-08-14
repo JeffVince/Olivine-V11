@@ -5,12 +5,12 @@ export declare class FileResolvers {
     private fileProcessingService;
     private eventProcessingService;
     constructor();
-    getFiles(organizationId: string, sourceId?: string, limit?: number): Promise<FileMetadata[]>;
-    getFile(fileId: string, organizationId: string): Promise<FileMetadata | null>;
-    reprocessFile(fileId: string, organizationId: string): Promise<boolean>;
-    getFileClassificationStatus(fileId: string, organizationId: string): Promise<string | null>;
-    searchFiles(organizationId: string, query: string, sourceId?: string, mimeType?: string, limit?: number): Promise<FileMetadata[]>;
-    getFileStats(organizationId: string): Promise<{
+    getFiles(orgId: string, sourceId?: string, limit?: number): Promise<FileMetadata[]>;
+    getFile(fileId: string, orgId: string): Promise<FileMetadata | null>;
+    reprocessFile(fileId: string, orgId: string): Promise<boolean>;
+    getFileClassificationStatus(fileId: string, orgId: string): Promise<string | null>;
+    searchFiles(orgId: string, query: string, sourceId?: string, mimeType?: string, limit?: number): Promise<FileMetadata[]>;
+    getFileStats(orgId: string): Promise<{
         total: number;
         byStatus: {
             [status: string]: number;

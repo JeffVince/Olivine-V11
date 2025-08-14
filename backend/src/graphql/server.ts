@@ -200,7 +200,7 @@ export class GraphQLServer {
       scalar JSON
 
       input ProjectInput {
-        organization_id: String!
+        orgId: String!
         title: String!
         type: String!
         status: String!
@@ -210,7 +210,7 @@ export class GraphQLServer {
       }
 
       input CharacterInput {
-        organization_id: String!
+        orgId: String!
         project_id: String!
         name: String!
         role_type: String!
@@ -218,7 +218,7 @@ export class GraphQLServer {
       }
 
       input SceneInput {
-        organization_id: String!
+        orgId: String!
         project_id: String!
         number: String!
         title: String!
@@ -230,7 +230,7 @@ export class GraphQLServer {
       }
 
       input VendorInput {
-        organization_id: String!
+        orgId: String!
         name: String!
         category: String
         contact_email: String
@@ -239,7 +239,7 @@ export class GraphQLServer {
       }
 
       input BudgetInput {
-        organization_id: String!
+        orgId: String!
         project_id: String!
         name: String!
         total_budget: Float!
@@ -586,30 +586,30 @@ export class GraphQLServer {
     try {
       const queries = [
         // Organization constraints
-        'CREATE CONSTRAINT organization_id_unique IF NOT EXISTS FOR (o:Organization) REQUIRE o.id IS UNIQUE',
+        'CREATE CONSTRAINT orgId_unique IF NOT EXISTS FOR (o:Organization) REQUIRE o.id IS UNIQUE',
         
         // Project constraints and indexes
         'CREATE CONSTRAINT project_id_unique IF NOT EXISTS FOR (p:Project) REQUIRE p.id IS UNIQUE',
-        'CREATE INDEX project_organization_id IF NOT EXISTS FOR (p:Project) ON (p.organization_id)',
+        'CREATE INDEX project_orgId IF NOT EXISTS FOR (p:Project) ON (p.orgId)',
         
         // Source constraints and indexes
         'CREATE CONSTRAINT source_id_unique IF NOT EXISTS FOR (s:Source) REQUIRE s.id IS UNIQUE',
-        'CREATE INDEX source_organization_id IF NOT EXISTS FOR (s:Source) ON (s.organization_id)',
+        'CREATE INDEX source_orgId IF NOT EXISTS FOR (s:Source) ON (s.orgId)',
         
         // File constraints and indexes
         'CREATE CONSTRAINT file_id_unique IF NOT EXISTS FOR (f:File) REQUIRE f.id IS UNIQUE',
-        'CREATE INDEX file_organization_source IF NOT EXISTS FOR (f:File) ON (f.organization_id, f.source_id)',
+        'CREATE INDEX file_organization_source IF NOT EXISTS FOR (f:File) ON (f.orgId, f.source_id)',
         'CREATE INDEX file_path IF NOT EXISTS FOR (f:File) ON (f.path)',
         'CREATE INDEX file_classification IF NOT EXISTS FOR (f:File) ON (f.classification_status)',
         
         // Content constraints and indexes
         'CREATE CONSTRAINT content_id_unique IF NOT EXISTS FOR (c:Content) REQUIRE c.id IS UNIQUE',
-        'CREATE INDEX content_organization_id IF NOT EXISTS FOR (c:Content) ON (c.organization_id)',
+        'CREATE INDEX content_orgId IF NOT EXISTS FOR (c:Content) ON (c.orgId)',
         'CREATE INDEX content_type IF NOT EXISTS FOR (c:Content) ON (c.content_type)',
         
         // Commit constraints and indexes
         'CREATE CONSTRAINT commit_id_unique IF NOT EXISTS FOR (c:Commit) REQUIRE c.id IS UNIQUE',
-        'CREATE INDEX commit_organization_branch IF NOT EXISTS FOR (c:Commit) ON (c.organization_id, c.branch_name)',
+        'CREATE INDEX commit_organization_branch IF NOT EXISTS FOR (c:Commit) ON (c.orgId, c.branch_name)',
         
         // Version constraints and indexes
         'CREATE CONSTRAINT version_id_unique IF NOT EXISTS FOR (v:Version) REQUIRE v.id IS UNIQUE',

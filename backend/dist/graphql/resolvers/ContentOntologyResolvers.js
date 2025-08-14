@@ -9,14 +9,14 @@ class ContentOntologyResolvers {
     getResolvers() {
         return {
             Query: {
-                project: async (_, { id, organizationId }) => {
-                    return await this.contentService.getProject(id, organizationId);
+                project: async (_, { id, orgId }) => {
+                    return await this.contentService.getProject(id, orgId);
                 },
-                projects: async (_, { organizationId }) => {
-                    return await this.contentService.getProjects(organizationId);
+                projects: async (_, { orgId }) => {
+                    return await this.contentService.getProjects(orgId);
                 },
-                sceneBreakdown: async (_, { shootDayDate, organizationId }) => {
-                    return await this.contentService.getSceneBreakdown(shootDayDate, organizationId);
+                sceneBreakdown: async (_, { shootDayDate, orgId }) => {
+                    return await this.contentService.getSceneBreakdown(shootDayDate, orgId);
                 }
             },
             Mutation: {
@@ -35,8 +35,8 @@ class ContentOntologyResolvers {
                 createCrew: async (_, { input, userId }) => {
                     return await this.contentService.createCrew(input, userId);
                 },
-                linkSceneToCharacter: async (_, { sceneId, characterId, organizationId, userId }) => {
-                    await this.contentService.linkSceneToCharacter(sceneId, characterId, organizationId, userId);
+                linkSceneToCharacter: async (_, { sceneId, characterId, orgId, userId }) => {
+                    await this.contentService.linkSceneToCharacter(sceneId, characterId, orgId, userId);
                     return { success: true };
                 }
             }

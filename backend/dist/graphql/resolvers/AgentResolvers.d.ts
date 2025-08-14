@@ -1,6 +1,6 @@
 interface AgentJob {
     id: string;
-    organizationId: string;
+    orgId: string;
     type: string;
     target: string;
     status: 'waiting' | 'active' | 'completed' | 'failed' | 'delayed';
@@ -28,23 +28,23 @@ interface QueueStats {
 export declare const agentResolvers: {
     Query: {
         agentJobs: (_: any, args: {
-            organizationId: string;
+            orgId: string;
             status?: string;
             type?: string;
             limit?: number;
             offset?: number;
         }, context: any) => Promise<AgentJob[]>;
         agentHealth: (_: any, args: {
-            organizationId: string;
+            orgId: string;
         }, context: any) => Promise<AgentHealthStatus>;
         queues: (_: any, args: {
-            organizationId: string;
+            orgId: string;
         }, context: any) => Promise<QueueStats[]>;
     };
     Mutation: {
         enqueueAgentJob: (_: any, args: {
             input: {
-                organizationId: string;
+                orgId: string;
                 type: string;
                 target: string;
                 params: any;
@@ -55,14 +55,14 @@ export declare const agentResolvers: {
             success: boolean;
         }>;
         cancelAgentJob: (_: any, args: {
-            organizationId: string;
+            orgId: string;
             id: string;
         }, context: any) => Promise<boolean>;
     };
     Subscription: {
         jobUpdated: {
             subscribe: (_: any, args: {
-                organizationId: string;
+                orgId: string;
             }, context: any) => Promise<AsyncIterableIterator<any>>;
         };
     };

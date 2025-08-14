@@ -47,46 +47,46 @@ export function buildCoreResolvers() {
       deletedAt: (f: any) => (f.deletedAt instanceof Date ? f.deletedAt.toISOString() : f.deletedAt),
     },
     Query: {
-      getSources: async (_: any, args: { organizationId: string }) => {
-        return sourceLogic.getSources(args.organizationId)
+      getSources: async (_: any, args: { orgId: string }) => {
+        return sourceLogic.getSources(args.orgId)
       },
-      getSource: async (_: any, args: { sourceId: string, organizationId: string }) => {
-        return sourceLogic.getSource(args.sourceId, args.organizationId)
+      getSource: async (_: any, args: { sourceId: string, orgId: string }) => {
+        return sourceLogic.getSource(args.sourceId, args.orgId)
       },
-      getFiles: async (_: any, args: { organizationId: string, sourceId?: string, limit?: number }) => {
-        return fileLogic.getFiles(args.organizationId, args.sourceId, args.limit)
+      getFiles: async (_: any, args: { orgId: string, sourceId?: string, limit?: number }) => {
+        return fileLogic.getFiles(args.orgId, args.sourceId, args.limit)
       },
-      getFile: async (_: any, args: { fileId: string, organizationId: string }) => {
-        return fileLogic.getFile(args.fileId, args.organizationId)
+      getFile: async (_: any, args: { fileId: string, orgId: string }) => {
+        return fileLogic.getFile(args.fileId, args.orgId)
       },
-      getFileStats: async (_: any, args: { organizationId: string }) => {
-        return fileLogic.getFileStats(args.organizationId)
+      getFileStats: async (_: any, args: { orgId: string }) => {
+        return fileLogic.getFileStats(args.orgId)
       },
-      getSourceStats: async (_: any, args: { sourceId: string, organizationId: string }) => {
-        return sourceLogic.getSourceStats(args.sourceId, args.organizationId)
+      getSourceStats: async (_: any, args: { sourceId: string, orgId: string }) => {
+        return sourceLogic.getSourceStats(args.sourceId, args.orgId)
       },
     },
     Mutation: {
       createSource: async (
         _: any,
-        args: { organizationId: string, name: string, type: 'dropbox' | 'google_drive' | 'onedrive' | 'local', config?: any }
+        args: { orgId: string, name: string, type: 'dropbox' | 'google_drive' | 'onedrive' | 'local', config?: any }
       ) => {
-        return sourceLogic.createSource(args.organizationId, args.name, args.type, args.config || {})
+        return sourceLogic.createSource(args.orgId, args.name, args.type, args.config || {})
       },
-      updateSourceConfig: async (_: any, args: { sourceId: string, organizationId: string, config: any }) => {
-        return sourceLogic.updateSourceConfig(args.sourceId, args.organizationId, args.config)
+      updateSourceConfig: async (_: any, args: { sourceId: string, orgId: string, config: any }) => {
+        return sourceLogic.updateSourceConfig(args.sourceId, args.orgId, args.config)
       },
-      updateSourceStatus: async (_: any, args: { sourceId: string, organizationId: string, active: boolean }) => {
-        return sourceLogic.updateSourceStatus(args.sourceId, args.organizationId, args.active)
+      updateSourceStatus: async (_: any, args: { sourceId: string, orgId: string, active: boolean }) => {
+        return sourceLogic.updateSourceStatus(args.sourceId, args.orgId, args.active)
       },
-      deleteSource: async (_: any, args: { sourceId: string, organizationId: string }) => {
-        return sourceLogic.deleteSource(args.sourceId, args.organizationId)
+      deleteSource: async (_: any, args: { sourceId: string, orgId: string }) => {
+        return sourceLogic.deleteSource(args.sourceId, args.orgId)
       },
-      triggerSourceResync: async (_: any, args: { sourceId: string, organizationId: string }) => {
-        return sourceLogic.triggerSourceResync(args.sourceId, args.organizationId)
+      triggerSourceResync: async (_: any, args: { sourceId: string, orgId: string }) => {
+        return sourceLogic.triggerSourceResync(args.sourceId, args.orgId)
       },
-      reprocessFile: async (_: any, args: { fileId: string, organizationId: string }) => {
-        return fileLogic.reprocessFile(args.fileId, args.organizationId)
+      reprocessFile: async (_: any, args: { fileId: string, orgId: string }) => {
+        return fileLogic.reprocessFile(args.fileId, args.orgId)
       },
     },
   }

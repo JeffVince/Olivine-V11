@@ -1,3 +1,4 @@
+import type { Scene, Character, Prop } from '../../services/ContentOntologyService'
 export interface ScriptBreakdownResult {
   scenes: Scene[]
   characters: Character[]

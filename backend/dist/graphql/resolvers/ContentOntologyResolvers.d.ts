@@ -4,16 +4,16 @@ export declare class ContentOntologyResolvers {
     constructor();
     getResolvers(): {
         Query: {
-            project: (_: any, { id, organizationId }: {
+            project: (_: any, { id, orgId }: {
                 id: string;
-                organizationId: string;
+                orgId: string;
             }) => Promise<Project | null>;
-            projects: (_: any, { organizationId }: {
-                organizationId: string;
+            projects: (_: any, { orgId }: {
+                orgId: string;
             }) => Promise<Project[]>;
-            sceneBreakdown: (_: any, { shootDayDate, organizationId }: {
+            sceneBreakdown: (_: any, { shootDayDate, orgId }: {
                 shootDayDate: Date;
-                organizationId: string;
+                orgId: string;
             }) => Promise<any>;
         };
         Mutation: {
@@ -37,10 +37,10 @@ export declare class ContentOntologyResolvers {
                 input: Omit<Crew, "id" | "created_at" | "updated_at">;
                 userId: string;
             }) => Promise<Crew>;
-            linkSceneToCharacter: (_: any, { sceneId, characterId, organizationId, userId }: {
+            linkSceneToCharacter: (_: any, { sceneId, characterId, orgId, userId }: {
                 sceneId: string;
                 characterId: string;
-                organizationId: string;
+                orgId: string;
                 userId: string;
             }) => Promise<{
                 success: boolean;
@@ -50,16 +50,16 @@ export declare class ContentOntologyResolvers {
 }
 export declare const contentOntologyResolvers: {
     Query: {
-        project: (_: any, { id, organizationId }: {
+        project: (_: any, { id, orgId }: {
             id: string;
-            organizationId: string;
+            orgId: string;
         }) => Promise<Project | null>;
-        projects: (_: any, { organizationId }: {
-            organizationId: string;
+        projects: (_: any, { orgId }: {
+            orgId: string;
         }) => Promise<Project[]>;
-        sceneBreakdown: (_: any, { shootDayDate, organizationId }: {
+        sceneBreakdown: (_: any, { shootDayDate, orgId }: {
             shootDayDate: Date;
-            organizationId: string;
+            orgId: string;
         }) => Promise<any>;
     };
     Mutation: {
@@ -83,10 +83,10 @@ export declare const contentOntologyResolvers: {
             input: Omit<Crew, "id" | "created_at" | "updated_at">;
             userId: string;
         }) => Promise<Crew>;
-        linkSceneToCharacter: (_: any, { sceneId, characterId, organizationId, userId }: {
+        linkSceneToCharacter: (_: any, { sceneId, characterId, orgId, userId }: {
             sceneId: string;
             characterId: string;
-            organizationId: string;
+            orgId: string;
             userId: string;
         }) => Promise<{
             success: boolean;

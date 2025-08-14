@@ -35,7 +35,7 @@ class FileProcessingService {
             if (source) {
                 const syntheticFile = {
                     id: 'temp',
-                    organizationId: orgId,
+                    orgId: orgId,
                     sourceId: sourceId,
                     path: filePath,
                     name: this.extractFileName(filePath),
@@ -64,20 +64,20 @@ class FileProcessingService {
         }
     }
     async processFileChange(jobData) {
-        const { fileId, organizationId, sourceId, filePath, action, metadata } = jobData;
+        const { fileId, orgId, sourceId, filePath, action, metadata } = jobData;
         console.log(`Processing file change: ${action} for ${filePath} in source ${sourceId}`);
         try {
-            const source = await this.sourceModel.getSource(sourceId, organizationId);
+            const source = await this.sourceModel.getSource(sourceId, orgId);
             if (!source) {
                 throw new Error(`Source not found: ${sourceId}`);
             }
             switch (action) {
                 case 'create':
                 case 'update':
-                    await this.handleFileCreateOrUpdate(fileId, organizationId, source, filePath, metadata);
+                    await this.handleFileCreateOrUpdate(fileId, orgId, source, filePath, metadata);
                     break;
                 case 'delete':
-                    await this.handleFileDelete(fileId, organizationId, sourceId, filePath);
+                    await this.handleFileDelete(fileId, orgId, sourceId, filePath);
                     break;
                 default:
                     throw new Error(`Unknown action: ${action}`);
@@ -89,7 +89,7 @@ class FileProcessingService {
             throw error;
         }
     }
-    async handleFileCreateOrUpdate(fileId, organizationId, source, filePath, metadata) {
+    async handleFileCreateOrUpdate(fileId, orgId, source, filePath, metadata) {
         const fileName = this.extractFileName(filePath);
         const fileExtension = this.extractFileExtension(fileName);
         const mimeType = this.determineMimeType(fileExtension, metadata);
@@ -97,7 +97,7 @@ class FileProcessingService {
         const parsedModifiedAt = modifiedRaw ? new Date(modifiedRaw) : undefined;
         const fileData = {
             id: fileId,
-            organizationId,
+            orgId,
             sourceId: source.id,
             path: filePath,
             name: fileName,
@@ -119,19 +119,19 @@ class FileProcessingService {
         await this.eventProcessingService.addSyncJob({
             fileId: savedFile.id,
             sourceId: source.id,
-            orgId: organizationId,
+            orgId: orgId,
             action: 'update',
             filePath,
             metadata: metadata
         });
     }
-    async handleFileDelete(fileId, organizationId, sourceId, filePath) {
-        await this.fileModel.deleteFile(fileId, organizationId);
-        await this.fileModel.removeFromGraph(fileId, organizationId);
+    async handleFileDelete(fileId, orgId, sourceId, filePath) {
+        await this.fileModel.deleteFile(fileId, orgId);
+        await this.fileModel.removeFromGraph(fileId, orgId);
         await this.eventProcessingService.addSyncJob({
             fileId,
             sourceId,
-            orgId: organizationId,
+            orgId: orgId,
             action: 'delete',
             filePath,
             metadata: {}
@@ -143,16 +143,16 @@ class FileProcessingService {
             if (fileContent) {
                 await this.eventProcessingService.addClassificationJob({
                     fileId: file.id,
-                    orgId: file.organizationId,
+                    orgId: file.orgId,
                     fileContent,
                     mimeType: file.mimeType || 'application/octet-stream'
                 });
-                await this.fileModel.updateClassification(file.id, file.organizationId, { type: 'unknown', confidence: 0, categories: [], tags: [] }, 'processing');
+                await this.fileModel.updateClassification(file.id, file.orgId, { type: 'unknown', confidence: 0, categories: [], tags: [] }, 'processing');
             }
         }
         catch (error) {
             console.error(`Error queueing file for classification: ${file.path}`, error);
-            await this.fileModel.updateClassification(file.id, file.organizationId, { type: 'unknown', confidence: 0, categories: [], tags: [] }, 'failed');
+            await this.fileModel.updateClassification(file.id, file.orgId, { type: 'unknown', confidence: 0, categories: [], tags: [] }, 'failed');
         }
     }
     async queueFileForExtraction(file, source) {
@@ -161,7 +161,7 @@ class FileProcessingService {
             if (fileContent) {
                 await this.eventProcessingService.addExtractionJob({
                     fileId: file.id,
-                    orgId: file.organizationId,
+                    orgId: file.orgId,
                     fileContent,
                     mimeType: file.mimeType || 'application/octet-stream'
                 });
@@ -190,7 +190,7 @@ class FileProcessingService {
     }
     async downloadFromDropbox(file, source) {
         try {
-            const result = await this.dropboxService.downloadFile(file.organizationId, source.id, file.path);
+            const result = await this.dropboxService.downloadFile(file.orgId, source.id, file.path);
             let buffer = null;
             if (result?.fileBinary) {
                 const binary = result.fileBinary;
@@ -233,7 +233,7 @@ class FileProcessingService {
                 console.warn(`Missing Google Drive file ID in metadata for ${file.path}`);
                 return null;
             }
-            const streamOrData = await this.googleDriveService.downloadFile(file.organizationId, source.id, candidateId);
+            const streamOrData = await this.googleDriveService.downloadFile(file.orgId, source.id, candidateId);
             let buffer = null;
             if (streamOrData && typeof streamOrData.read === 'function') {
                 buffer = await this.streamToBuffer(streamOrData);
@@ -351,12 +351,12 @@ class FileProcessingService {
         const totalQuery = `
       SELECT COUNT(*)::int AS total
       FROM files
-      WHERE (org_id = $1 OR organization_id = $1) AND deleted_at IS NULL
+      WHERE (org_id = $1 OR orgId = $1) AND deleted_at IS NULL
     `;
         const classifiedQuery = `
       SELECT COUNT(*)::int AS classified
       FROM files
-      WHERE (org_id = $1 OR organization_id = $1) AND deleted_at IS NULL AND classification_status = 'completed'
+      WHERE (org_id = $1 OR orgId = $1) AND deleted_at IS NULL AND classification_status = 'completed'
     `;
         const [totalRes, classifiedRes] = await Promise.all([
             postgresService.executeQuery(totalQuery, [orgId]),

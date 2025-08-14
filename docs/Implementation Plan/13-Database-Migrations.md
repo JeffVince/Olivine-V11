@@ -191,7 +191,7 @@ CREATE INDEX action_commit_id FOR (a:Action) ON (a.commit_id);
 CREATE INDEX action_org_id FOR (a:Action) ON (a.org_id);
 
 // Create constraints for Organization nodes
-CREATE CONSTRAINT organization_id IF NOT EXISTS FOR (o:Organization) REQUIRE o.id IS UNIQUE;
+CREATE CONSTRAINT orgId IF NOT EXISTS FOR (o:Organization) REQUIRE o.id IS UNIQUE;
 CREATE INDEX organization_name FOR (o:Organization) ON (o.name);
 
 // Create constraints for Source nodes

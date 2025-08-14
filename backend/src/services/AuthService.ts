@@ -101,7 +101,7 @@ export class AuthService {
     try {
       // Find user by email
       const result = await this.postgresService.executeQuery(
-        'SELECT id, organization_id, password_hash, role, name, avatar_url, notification_prefs FROM users WHERE email = $1',
+        'SELECT id, orgId, password_hash, role, name, avatar_url, notification_prefs FROM users WHERE email = $1',
         [email]
       );
 
@@ -119,7 +119,7 @@ export class AuthService {
       }
 
       // Generate token
-      const token = this.generateToken(user.id, user.organization_id, user.role);
+      const token = this.generateToken(user.id, user.orgId, user.role);
 
       // Update last login
       await this.postgresService.executeQuery(
@@ -130,7 +130,7 @@ export class AuthService {
       return {
         token,
         userId: user.id,
-        orgId: user.organization_id,
+        orgId: user.orgId,
         role: user.role
       };
     } catch (error) {
@@ -153,7 +153,7 @@ export class AuthService {
 
       const passwordHash = await this.hashPassword(password);
       const userResult = await this.postgresService.executeQuery(
-        'INSERT INTO users (email, password_hash, organization_id, role) VALUES ($1, $2, $3, $4) RETURNING id, role',
+        'INSERT INTO users (email, password_hash, orgId, role) VALUES ($1, $2, $3, $4) RETURNING id, role',
         [email, passwordHash, orgId, 'admin']
       );
       const userId = userResult.rows[0].id as string;
@@ -194,7 +194,7 @@ export class AuthService {
   async getUserById(userId: string): Promise<{ id: string; orgId: string; email: string; role: string; name: string; avatar: string; notificationPrefs: Record<string, unknown>; createdAt: Date; lastLogin: Date } | null> {
     try {
       const result = await this.postgresService.executeQuery(
-        'SELECT id, organization_id, email, role, name, avatar_url, notification_prefs, created_at, last_login FROM users WHERE id = $1',
+        'SELECT id, orgId, email, role, name, avatar_url, notification_prefs, created_at, last_login FROM users WHERE id = $1',
         [userId]
       );
 
@@ -205,7 +205,7 @@ export class AuthService {
       const user = result.rows[0];
       return {
         id: user.id,
-        orgId: user.organization_id,
+        orgId: user.orgId,
         email: user.email,
         role: user.role,
         name: user.name,

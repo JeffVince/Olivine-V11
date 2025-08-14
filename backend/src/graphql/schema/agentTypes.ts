@@ -26,7 +26,7 @@ export const agentTypeDefs = gql`
 
   type AgentJob {
     id: ID!
-    organizationId: ID!
+    orgId: ID!
     type: String!
     target: String!
     status: JobStatus!
@@ -55,7 +55,7 @@ export const agentTypeDefs = gql`
   }
 
   input EnqueueAgentJobInput {
-    organizationId: ID!
+    orgId: ID!
     type: String!
     target: String!
     params: JSON!
@@ -70,25 +70,25 @@ export const agentTypeDefs = gql`
 
   extend type Query {
     agentJobs(
-      organizationId: ID!
+      orgId: ID!
       status: JobStatus
       type: JobType
       limit: Int
       offset: Int
     ): [AgentJob!]!
 
-    agentHealth(organizationId: ID!): AgentHealth!
+    agentHealth(orgId: ID!): AgentHealth!
     
-    queues(organizationId: ID!): [QueueStats!]!
+    queues(orgId: ID!): [QueueStats!]!
   }
 
   extend type Mutation {
     enqueueAgentJob(input: EnqueueAgentJobInput!): EnqueueAgentJobResult!
     
-    cancelAgentJob(organizationId: ID!, id: ID!): Boolean!
+    cancelAgentJob(orgId: ID!, id: ID!): Boolean!
   }
 
   extend type Subscription {
-    jobUpdated(organizationId: ID!): AgentJob!
+    jobUpdated(orgId: ID!): AgentJob!
   }
 `

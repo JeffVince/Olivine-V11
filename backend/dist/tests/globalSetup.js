@@ -102,7 +102,7 @@ async function globalSetup() {
       )`,
             `CREATE TABLE IF NOT EXISTS sources (
         id VARCHAR(255) PRIMARY KEY,
-        organization_id VARCHAR(255) NOT NULL,
+        orgId VARCHAR(255) NOT NULL,
         type VARCHAR(50),
         metadata JSONB DEFAULT '{}'::jsonb,
         created_at TIMESTAMP DEFAULT NOW(),
@@ -217,7 +217,7 @@ async function globalSetup() {
         mime_type VARCHAR(100),
         size INTEGER,
         checksum VARCHAR(255),
-        organization_id VARCHAR(255),
+        orgId VARCHAR(255),
         deleted_at TIMESTAMP,
         classification_status TEXT DEFAULT 'pending',
         extracted_text TEXT,

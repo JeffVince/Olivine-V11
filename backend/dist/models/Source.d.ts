@@ -1,6 +1,6 @@
 export interface SourceMetadata {
     id: string;
-    organizationId: string;
+    orgId: string;
     name: string;
     type: 'dropbox' | 'google_drive' | 'onedrive' | 'local';
     config: any;
@@ -27,13 +27,13 @@ export declare class SourceModel {
     private neo4jService;
     constructor();
     createSource(sourceData: Omit<SourceMetadata, 'id' | 'createdAt' | 'updatedAt'>): Promise<SourceMetadata>;
-    getSource(sourceId: string, organizationId: string): Promise<SourceMetadata | null>;
-    getSourcesByOrganization(organizationId: string): Promise<SourceMetadata[]>;
-    updateSourceConfig(sourceId: string, organizationId: string, config: SourceConfig): Promise<boolean>;
-    updateSourceStatus(sourceId: string, organizationId: string, active: boolean): Promise<boolean>;
-    deleteSource(sourceId: string, organizationId: string): Promise<boolean>;
+    getSource(sourceId: string, orgId: string): Promise<SourceMetadata | null>;
+    getSourcesByOrganization(orgId: string): Promise<SourceMetadata[]>;
+    updateSourceConfig(sourceId: string, orgId: string, config: SourceConfig): Promise<boolean>;
+    updateSourceStatus(sourceId: string, orgId: string, active: boolean): Promise<boolean>;
+    deleteSource(sourceId: string, orgId: string): Promise<boolean>;
     syncToGraph(sourceData: SourceMetadata): Promise<void>;
-    removeFromGraph(sourceId: string, organizationId: string): Promise<void>;
+    removeFromGraph(sourceId: string, orgId: string): Promise<void>;
     private mapRowToSource;
 }
 //# sourceMappingURL=Source.d.ts.map

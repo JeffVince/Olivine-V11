@@ -3,14 +3,14 @@ import { gql } from '@apollo/client/core';
 export const DASHBOARD_STATS_QUERY = gql`
   query DashboardStats($orgId: ID!) {
     # File statistics - Updated to match backend schema
-    fileStats: getFileStats(organizationId: $orgId) {
+    fileStats: getFileStats(orgId: $orgId) {
       total
       byStatus
       byMimeType
     }
     
     # Get recent files - Using getFiles query
-    recentFiles: getFiles(organizationId: $orgId, limit: 10) {
+    recentFiles: getFiles(orgId: $orgId, limit: 10) {
       id
       name
       path
@@ -22,7 +22,7 @@ export const DASHBOARD_STATS_QUERY = gql`
     }
     
     # Get sources for additional stats
-    sources: getSources(organizationId: $orgId) {
+    sources: getSources(orgId: $orgId) {
       id
       name
       type

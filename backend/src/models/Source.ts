@@ -3,7 +3,7 @@ import { Neo4jService } from '../services/Neo4jService';
 
 export interface SourceMetadata {
   id: string;
-  organizationId: string;
+  orgId: string;
   name: string;
   type: 'dropbox' | 'google_drive' | 'onedrive' | 'local';
   config: any;
@@ -52,13 +52,13 @@ export class SourceModel {
    */
   async createSource(sourceData: Omit<SourceMetadata, 'id' | 'createdAt' | 'updatedAt'>): Promise<SourceMetadata> {
     const query = `
-      INSERT INTO sources (organization_id, name, type, config, active, created_at, updated_at)
+      INSERT INTO sources (orgId, name, type, config, active, created_at, updated_at)
       VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
       RETURNING *
     `;
 
     const values = [
-      sourceData.organizationId,
+      sourceData.orgId,
       sourceData.name,
       sourceData.type,
       JSON.stringify(sourceData.config),
@@ -72,43 +72,43 @@ export class SourceModel {
   /**
    * Get a source by ID and organization
    */
-  async getSource(sourceId: string, organizationId: string): Promise<SourceMetadata | null> {
+  async getSource(sourceId: string, orgId: string): Promise<SourceMetadata | null> {
     const query = `
       SELECT * FROM sources 
-      WHERE id = $1 AND organization_id = $2
+      WHERE id = $1 AND orgId = $2
     `;
     
-    const result = await this.postgresService.executeQuery(query, [sourceId, organizationId]);
+    const result = await this.postgresService.executeQuery(query, [sourceId, orgId]);
     return result.rows.length > 0 ? this.mapRowToSource(result.rows[0]) : null;
   }
 
   /**
    * Get all sources for an organization
    */
-  async getSourcesByOrganization(organizationId: string): Promise<SourceMetadata[]> {
+  async getSourcesByOrganization(orgId: string): Promise<SourceMetadata[]> {
     const query = `
       SELECT * FROM sources 
-      WHERE organization_id = $1
+      WHERE orgId = $1
       ORDER BY created_at DESC
     `;
     
-    const result = await this.postgresService.executeQuery(query, [organizationId]);
+    const result = await this.postgresService.executeQuery(query, [orgId]);
     return result.rows.map(row => this.mapRowToSource(row));
   }
 
   /**
    * Update source configuration
    */
-  async updateSourceConfig(sourceId: string, organizationId: string, config: SourceConfig): Promise<boolean> {
+  async updateSourceConfig(sourceId: string, orgId: string, config: SourceConfig): Promise<boolean> {
     const query = `
       UPDATE sources 
       SET config = $3, updated_at = NOW()
-      WHERE id = $1 AND organization_id = $2
+      WHERE id = $1 AND orgId = $2
     `;
     
     const result = await this.postgresService.executeQuery(query, [
       sourceId, 
-      organizationId, 
+      orgId, 
       JSON.stringify(config)
     ]);
     
@@ -118,27 +118,27 @@ export class SourceModel {
   /**
    * Update source active status
    */
-  async updateSourceStatus(sourceId: string, organizationId: string, active: boolean): Promise<boolean> {
+  async updateSourceStatus(sourceId: string, orgId: string, active: boolean): Promise<boolean> {
     const query = `
       UPDATE sources 
       SET active = $3, updated_at = NOW()
-      WHERE id = $1 AND organization_id = $2
+      WHERE id = $1 AND orgId = $2
     `;
     
-    const result = await this.postgresService.executeQuery(query, [sourceId, organizationId, active]);
+    const result = await this.postgresService.executeQuery(query, [sourceId, orgId, active]);
     return (result.rowCount || 0) > 0;
   }
 
   /**
    * Delete a source
    */
-  async deleteSource(sourceId: string, organizationId: string): Promise<boolean> {
+  async deleteSource(sourceId: string, orgId: string): Promise<boolean> {
     const query = `
       DELETE FROM sources 
-      WHERE id = $1 AND organization_id = $2
+      WHERE id = $1 AND orgId = $2
     `;
     
-    const result = await this.postgresService.executeQuery(query, [sourceId, organizationId]);
+    const result = await this.postgresService.executeQuery(query, [sourceId, orgId]);
     return (result.rowCount || 0) > 0;
   }
 
@@ -147,7 +147,7 @@ export class SourceModel {
    */
   async syncToGraph(sourceData: SourceMetadata): Promise<void> {
     const query = `
-      MERGE (s:Source {id: $sourceId, organizationId: $orgId})
+      MERGE (s:Source {id: $sourceId, orgId: $orgId})
       SET s.name = $name,
           s.type = $type,
           s.active = $active,
@@ -165,7 +165,7 @@ export class SourceModel {
 
     const params = {
       sourceId: sourceData.id,
-      orgId: sourceData.organizationId,
+      orgId: sourceData.orgId,
       name: sourceData.name,
       type: sourceData.type,
       active: sourceData.active,
@@ -180,13 +180,13 @@ export class SourceModel {
   /**
    * Remove source node from Neo4j knowledge graph
    */
-  async removeFromGraph(sourceId: string, organizationId: string): Promise<void> {
+  async removeFromGraph(sourceId: string, orgId: string): Promise<void> {
     const query = `
-      MATCH (s:Source {id: $sourceId, organizationId: $orgId})
+      MATCH (s:Source {id: $sourceId, orgId: $orgId})
       DETACH DELETE s
     `;
 
-    await this.neo4jService.executeQuery(query, { sourceId, orgId: organizationId });
+    await this.neo4jService.executeQuery(query, { sourceId, orgId: orgId });
   }
 
   /**
@@ -195,7 +195,7 @@ export class SourceModel {
   private mapRowToSource(row: any): SourceMetadata {
     return {
       id: row.id,
-      organizationId: row.organization_id,
+      orgId: row.orgId,
       name: row.name,
       type: row.type,
       config: row.config,

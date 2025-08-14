@@ -158,7 +158,7 @@ class GraphQLServer {
       scalar JSON
 
       input ProjectInput {
-        organization_id: String!
+        orgId: String!
         title: String!
         type: String!
         status: String!
@@ -168,7 +168,7 @@ class GraphQLServer {
       }
 
       input CharacterInput {
-        organization_id: String!
+        orgId: String!
         project_id: String!
         name: String!
         role_type: String!
@@ -176,7 +176,7 @@ class GraphQLServer {
       }
 
       input SceneInput {
-        organization_id: String!
+        orgId: String!
         project_id: String!
         number: String!
         title: String!
@@ -188,7 +188,7 @@ class GraphQLServer {
       }
 
       input VendorInput {
-        organization_id: String!
+        orgId: String!
         name: String!
         category: String
         contact_email: String
@@ -197,7 +197,7 @@ class GraphQLServer {
       }
 
       input BudgetInput {
-        organization_id: String!
+        orgId: String!
         project_id: String!
         name: String!
         total_budget: Float!
@@ -473,20 +473,20 @@ class GraphQLServer {
         this.logger.info('Creating Neo4j indexes and constraints...');
         try {
             const queries = [
-                'CREATE CONSTRAINT organization_id_unique IF NOT EXISTS FOR (o:Organization) REQUIRE o.id IS UNIQUE',
+                'CREATE CONSTRAINT orgId_unique IF NOT EXISTS FOR (o:Organization) REQUIRE o.id IS UNIQUE',
                 'CREATE CONSTRAINT project_id_unique IF NOT EXISTS FOR (p:Project) REQUIRE p.id IS UNIQUE',
-                'CREATE INDEX project_organization_id IF NOT EXISTS FOR (p:Project) ON (p.organization_id)',
+                'CREATE INDEX project_orgId IF NOT EXISTS FOR (p:Project) ON (p.orgId)',
                 'CREATE CONSTRAINT source_id_unique IF NOT EXISTS FOR (s:Source) REQUIRE s.id IS UNIQUE',
-                'CREATE INDEX source_organization_id IF NOT EXISTS FOR (s:Source) ON (s.organization_id)',
+                'CREATE INDEX source_orgId IF NOT EXISTS FOR (s:Source) ON (s.orgId)',
                 'CREATE CONSTRAINT file_id_unique IF NOT EXISTS FOR (f:File) REQUIRE f.id IS UNIQUE',
-                'CREATE INDEX file_organization_source IF NOT EXISTS FOR (f:File) ON (f.organization_id, f.source_id)',
+                'CREATE INDEX file_organization_source IF NOT EXISTS FOR (f:File) ON (f.orgId, f.source_id)',
                 'CREATE INDEX file_path IF NOT EXISTS FOR (f:File) ON (f.path)',
                 'CREATE INDEX file_classification IF NOT EXISTS FOR (f:File) ON (f.classification_status)',
                 'CREATE CONSTRAINT content_id_unique IF NOT EXISTS FOR (c:Content) REQUIRE c.id IS UNIQUE',
-                'CREATE INDEX content_organization_id IF NOT EXISTS FOR (c:Content) ON (c.organization_id)',
+                'CREATE INDEX content_orgId IF NOT EXISTS FOR (c:Content) ON (c.orgId)',
                 'CREATE INDEX content_type IF NOT EXISTS FOR (c:Content) ON (c.content_type)',
                 'CREATE CONSTRAINT commit_id_unique IF NOT EXISTS FOR (c:Commit) REQUIRE c.id IS UNIQUE',
-                'CREATE INDEX commit_organization_branch IF NOT EXISTS FOR (c:Commit) ON (c.organization_id, c.branch_name)',
+                'CREATE INDEX commit_organization_branch IF NOT EXISTS FOR (c:Commit) ON (c.orgId, c.branch_name)',
                 'CREATE CONSTRAINT version_id_unique IF NOT EXISTS FOR (v:Version) REQUIRE v.id IS UNIQUE',
                 'CREATE INDEX version_entity IF NOT EXISTS FOR (v:Version) ON (v.entity_id, v.entity_type)',
                 'CREATE FULLTEXT INDEX file_content_search IF NOT EXISTS FOR (f:File) ON EACH [f.name, f.path, f.extracted_text]',

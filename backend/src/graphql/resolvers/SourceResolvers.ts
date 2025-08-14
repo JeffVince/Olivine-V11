@@ -30,40 +30,40 @@ export class SourceResolvers {
   /**
    * Get all sources for an organization
    */
-  async getSources(organizationId: string): Promise<SourceMetadata[]> {
-    if (!organizationId || organizationId.trim() === '') {
+  async getSources(orgId: string): Promise<SourceMetadata[]> {
+    if (!orgId || orgId.trim() === '') {
       throw new Error('Organization ID is required');
     }
-    return await this.sourceModel.getSourcesByOrganization(organizationId);
+    return await this.sourceModel.getSourcesByOrganization(orgId);
   }
 
   /**
    * Get a specific source by ID
    */
-  async getSource(sourceId: string, organizationId: string): Promise<SourceMetadata | null> {
+  async getSource(sourceId: string, orgId: string): Promise<SourceMetadata | null> {
     if (!sourceId || sourceId.trim() === '') {
       throw new Error('Source ID is required');
     }
-    if (!organizationId || organizationId.trim() === '') {
+    if (!orgId || orgId.trim() === '') {
       throw new Error('Organization ID is required');
     }
-    return await this.sourceModel.getSource(sourceId, organizationId);
+    return await this.sourceModel.getSource(sourceId, orgId);
   }
 
   /**
    * Create a new source
    */
   async createSource(
-    organizationId: string,
+    orgId: string,
     name: string,
     type: 'dropbox' | 'google_drive' | 'onedrive' | 'local',
     config: SourceConfig
   ): Promise<SourceMetadata> {
-    if (!organizationId || organizationId.trim() === '') {
+    if (!orgId || orgId.trim() === '') {
       throw new Error('Organization ID is required');
     }
     const source = await this.sourceModel.createSource({
-      organizationId,
+      orgId,
       name,
       type,
       config,
@@ -81,17 +81,17 @@ export class SourceResolvers {
    */
   async updateSourceConfig(
     sourceId: string,
-    organizationId: string,
+    orgId: string,
     config: SourceConfig
   ): Promise<boolean> {
-    if (!organizationId || organizationId.trim() === '') {
+    if (!orgId || orgId.trim() === '') {
       throw new Error('Organization ID is required');
     }
-    const success = await this.sourceModel.updateSourceConfig(sourceId, organizationId, config);
+    const success = await this.sourceModel.updateSourceConfig(sourceId, orgId, config);
     
     if (success) {
       // Re-sync to Neo4j with updated config
-      const source = await this.sourceModel.getSource(sourceId, organizationId);
+      const source = await this.sourceModel.getSource(sourceId, orgId);
       if (source) {
         await this.sourceModel.syncToGraph(source);
       }
@@ -105,17 +105,17 @@ export class SourceResolvers {
    */
   async updateSourceStatus(
     sourceId: string,
-    organizationId: string,
+    orgId: string,
     active: boolean
   ): Promise<boolean> {
-    if (!organizationId || organizationId.trim() === '') {
+    if (!orgId || orgId.trim() === '') {
       throw new Error('Organization ID is required');
     }
-    const success = await this.sourceModel.updateSourceStatus(sourceId, organizationId, active);
+    const success = await this.sourceModel.updateSourceStatus(sourceId, orgId, active);
     
     if (success) {
       // Re-sync to Neo4j with updated status
-      const source = await this.sourceModel.getSource(sourceId, organizationId);
+      const source = await this.sourceModel.getSource(sourceId, orgId);
       if (source) {
         await this.sourceModel.syncToGraph(source);
       }
@@ -127,24 +127,24 @@ export class SourceResolvers {
   /**
    * Delete a source and all its files
    */
-  async deleteSource(sourceId: string, organizationId: string): Promise<boolean> {
-    if (!organizationId || organizationId.trim() === '') {
+  async deleteSource(sourceId: string, orgId: string): Promise<boolean> {
+    if (!orgId || orgId.trim() === '') {
       throw new Error('Organization ID is required');
     }
     try {
       // First, get all files from this source and mark them as deleted
-      const files = await this.fileModel.getFilesBySource(sourceId, organizationId, 10000);
+      const files = await this.fileModel.getFilesBySource(sourceId, orgId, 10000);
       
       for (const file of files) {
-        await this.fileModel.deleteFile(file.id, organizationId);
-        await this.fileModel.removeFromGraph(file.id, organizationId);
+        await this.fileModel.deleteFile(file.id, orgId);
+        await this.fileModel.removeFromGraph(file.id, orgId);
       }
       
       // Remove source from Neo4j
-      await this.sourceModel.removeFromGraph(sourceId, organizationId);
+      await this.sourceModel.removeFromGraph(sourceId, orgId);
       
       // Delete source from PostgreSQL
-      const success = await this.sourceModel.deleteSource(sourceId, organizationId);
+      const success = await this.sourceModel.deleteSource(sourceId, orgId);
       
       return success;
     } catch (error) {
@@ -156,16 +156,16 @@ export class SourceResolvers {
   /**
    * Get source statistics
    */
-  async getSourceStats(sourceId: string, organizationId: string): Promise<{
+  async getSourceStats(sourceId: string, orgId: string): Promise<{
     fileCount: number;
     totalSize: number;
     lastSync: Date | null;
     classificationStats: { [status: string]: number };
   }> {
-    if (!organizationId || organizationId.trim() === '') {
+    if (!orgId || orgId.trim() === '') {
       throw new Error('Organization ID is required');
     }
-    const files = await this.fileModel.getFilesBySource(sourceId, organizationId, 10000);
+    const files = await this.fileModel.getFilesBySource(sourceId, orgId, 10000);
     
     const stats = {
       fileCount: files.length,
@@ -188,12 +188,12 @@ export class SourceResolvers {
   /**
    * Trigger full resync for a source
    */
-  async triggerSourceResync(sourceId: string, organizationId: string): Promise<boolean> {
-    if (!organizationId || organizationId.trim() === '') {
+  async triggerSourceResync(sourceId: string, orgId: string): Promise<boolean> {
+    if (!orgId || orgId.trim() === '') {
       throw new Error('Organization ID is required');
     }
     try {
-      const source = await this.sourceModel.getSource(sourceId, organizationId);
+      const source = await this.sourceModel.getSource(sourceId, orgId);
       if (!source) {
         throw new Error(`Source not found: ${sourceId}`);
       }
@@ -202,14 +202,14 @@ export class SourceResolvers {
         const queue: { path: string }[] = [{ path: '' }];
         while (queue.length > 0) {
           const { path } = queue.shift() as { path: string };
-          const resp = await this.dropboxService.listFolder(organizationId, sourceId, path, 'home');
+          const resp = await this.dropboxService.listFolder(orgId, sourceId, path, 'home');
           const entries = (resp?.result?.entries || []) as any[];
           for (const entry of entries) {
             if (entry['.tag'] === 'folder') {
               queue.push({ path: entry.path_lower || entry.path_display || '' });
             } else if (entry['.tag'] === 'file') {
               await this.fileModel.upsertFile({
-                organizationId,
+                orgId,
                 sourceId,
                 path: entry.path_display,
                 name: entry.name,
@@ -233,12 +233,12 @@ export class SourceResolvers {
         // Page through files
         let pageToken: string | undefined = undefined;
         do {
-          const data = await this.googleDriveService.listFiles(organizationId, sourceId, pageToken);
+          const data = await this.googleDriveService.listFiles(orgId, sourceId, pageToken);
           const files = Array.isArray(data) ? data : (data.files || []);
           for (const f of files) {
             if (f.mimeType === 'application/vnd.google-apps.folder') continue;
             await this.fileModel.upsertFile({
-              organizationId,
+              orgId,
               sourceId,
               path: f.id,
               name: f.name,
@@ -263,13 +263,13 @@ export class SourceResolvers {
   /**
    * Test source connection
    */
-  async testSourceConnection(sourceId: string, organizationId: string): Promise<{
+  async testSourceConnection(sourceId: string, orgId: string): Promise<{
     success: boolean;
     message: string;
     details?: any;
   }> {
     try {
-      const source = await this.sourceModel.getSource(sourceId, organizationId);
+      const source = await this.sourceModel.getSource(sourceId, orgId);
       if (!source) {
         return {
           success: false,

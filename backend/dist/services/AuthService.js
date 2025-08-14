@@ -62,7 +62,7 @@ class AuthService {
     }
     async authenticateUser(email, password) {
         try {
-            const result = await this.postgresService.executeQuery('SELECT id, organization_id, password_hash, role, name, avatar_url, notification_prefs FROM users WHERE email = $1', [email]);
+            const result = await this.postgresService.executeQuery('SELECT id, orgId, password_hash, role, name, avatar_url, notification_prefs FROM users WHERE email = $1', [email]);
             if (result.rows.length === 0) {
                 return null;
             }
@@ -71,12 +71,12 @@ class AuthService {
             if (!isPasswordValid) {
                 return null;
             }
-            const token = this.generateToken(user.id, user.organization_id, user.role);
+            const token = this.generateToken(user.id, user.orgId, user.role);
             await this.postgresService.executeQuery('UPDATE users SET last_login = NOW() WHERE id = $1', [user.id]);
             return {
                 token,
                 userId: user.id,
-                orgId: user.organization_id,
+                orgId: user.orgId,
                 role: user.role
             };
         }
@@ -91,7 +91,7 @@ class AuthService {
             const orgResult = await this.postgresService.executeQuery('INSERT INTO organizations (name, slug) VALUES ($1, $2) RETURNING id', [orgName, slug]);
             const orgId = orgResult.rows[0].id;
             const passwordHash = await this.hashPassword(password);
-            const userResult = await this.postgresService.executeQuery('INSERT INTO users (email, password_hash, organization_id, role) VALUES ($1, $2, $3, $4) RETURNING id, role', [email, passwordHash, orgId, 'admin']);
+            const userResult = await this.postgresService.executeQuery('INSERT INTO users (email, password_hash, orgId, role) VALUES ($1, $2, $3, $4) RETURNING id, role', [email, passwordHash, orgId, 'admin']);
             const userId = userResult.rows[0].id;
             const role = userResult.rows[0].role;
             const token = this.generateToken(userId, orgId, role);
@@ -115,14 +115,14 @@ class AuthService {
     }
     async getUserById(userId) {
         try {
-            const result = await this.postgresService.executeQuery('SELECT id, organization_id, email, role, name, avatar_url, notification_prefs, created_at, last_login FROM users WHERE id = $1', [userId]);
+            const result = await this.postgresService.executeQuery('SELECT id, orgId, email, role, name, avatar_url, notification_prefs, created_at, last_login FROM users WHERE id = $1', [userId]);
             if (result.rows.length === 0) {
                 return null;
             }
             const user = result.rows[0];
             return {
                 id: user.id,
-                orgId: user.organization_id,
+                orgId: user.orgId,
                 email: user.email,
                 role: user.role,
                 name: user.name,

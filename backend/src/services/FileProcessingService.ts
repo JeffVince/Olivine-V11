@@ -6,7 +6,7 @@ import { GoogleDriveService } from './GoogleDriveService';
 
 export interface FileProcessingJobData {
   fileId: string;
-  organizationId: string;
+  orgId: string;
   sourceId: string;
   filePath: string;
   action: 'create' | 'update' | 'delete';
@@ -69,7 +69,7 @@ export class FileProcessingService {
       if (source) {
         const syntheticFile: FileMetadata = {
           id: 'temp',
-          organizationId: orgId,
+          orgId: orgId,
           sourceId: sourceId,
           path: filePath,
           name: this.extractFileName(filePath),
@@ -100,13 +100,13 @@ export class FileProcessingService {
    * This is the main entry point for file sync operations
    */
   async processFileChange(jobData: FileProcessingJobData): Promise<void> {
-    const { fileId, organizationId, sourceId, filePath, action, metadata } = jobData;
+    const { fileId, orgId, sourceId, filePath, action, metadata } = jobData;
     
     console.log(`Processing file change: ${action} for ${filePath} in source ${sourceId}`);
     
     try {
       // Get source information
-      const source = await this.sourceModel.getSource(sourceId, organizationId);
+      const source = await this.sourceModel.getSource(sourceId, orgId);
       if (!source) {
         throw new Error(`Source not found: ${sourceId}`);
       }
@@ -114,11 +114,11 @@ export class FileProcessingService {
       switch (action) {
         case 'create':
         case 'update':
-          await this.handleFileCreateOrUpdate(fileId, organizationId, source, filePath, metadata);
+          await this.handleFileCreateOrUpdate(fileId, orgId, source, filePath, metadata);
           break;
           
         case 'delete':
-          await this.handleFileDelete(fileId, organizationId, sourceId, filePath);
+          await this.handleFileDelete(fileId, orgId, sourceId, filePath);
           break;
           
         default:
@@ -137,7 +137,7 @@ export class FileProcessingService {
    */
   private async handleFileCreateOrUpdate(
     fileId: string,
-    organizationId: string,
+    orgId: string,
     source: SourceMetadata,
     filePath: string,
     metadata: unknown
@@ -153,7 +153,7 @@ export class FileProcessingService {
 
     const fileData: Partial<FileMetadata> = {
       id: fileId,
-      organizationId,
+      orgId,
       sourceId: source.id,
       path: filePath,
       name: fileName,
@@ -183,7 +183,7 @@ export class FileProcessingService {
     await this.eventProcessingService.addSyncJob({
       fileId: savedFile.id,
       sourceId: source.id,
-      orgId: organizationId,
+      orgId: orgId,
       action: 'update',
       filePath,
       metadata: metadata as Record<string, unknown>
@@ -195,21 +195,21 @@ export class FileProcessingService {
    */
   private async handleFileDelete(
     fileId: string,
-    organizationId: string,
+    orgId: string,
     sourceId: string,
     filePath: string
   ): Promise<void> {
     // Mark file as deleted in PostgreSQL
-    await this.fileModel.deleteFile(fileId, organizationId);
+    await this.fileModel.deleteFile(fileId, orgId);
     
     // Remove from Neo4j knowledge graph
-    await this.fileModel.removeFromGraph(fileId, organizationId);
+    await this.fileModel.removeFromGraph(fileId, orgId);
     
     // Add to file sync queue for cleanup
     await this.eventProcessingService.addSyncJob({
       fileId,
       sourceId,
-      orgId: organizationId,
+      orgId: orgId,
       action: 'delete',
       filePath,
       metadata: {}
@@ -227,7 +227,7 @@ export class FileProcessingService {
       if (fileContent) {
         await this.eventProcessingService.addClassificationJob({
           fileId: file.id,
-          orgId: file.organizationId,
+          orgId: file.orgId,
           fileContent,
           mimeType: file.mimeType || 'application/octet-stream'
         });
@@ -235,7 +235,7 @@ export class FileProcessingService {
         // Update classification status to processing
         await this.fileModel.updateClassification(
           file.id,
-          file.organizationId,
+          file.orgId,
           { type: 'unknown', confidence: 0, categories: [], tags: [] },
           'processing'
         );
@@ -245,7 +245,7 @@ export class FileProcessingService {
       // Update classification status to failed
       await this.fileModel.updateClassification(
         file.id,
-        file.organizationId,
+        file.orgId,
         { type: 'unknown', confidence: 0, categories: [], tags: [] },
         'failed'
       );
@@ -263,7 +263,7 @@ export class FileProcessingService {
       if (fileContent) {
         await this.eventProcessingService.addExtractionJob({
           fileId: file.id,
-          orgId: file.organizationId,
+          orgId: file.orgId,
           fileContent,
           mimeType: file.mimeType || 'application/octet-stream'
         });
@@ -302,7 +302,7 @@ export class FileProcessingService {
     try {
       // Use DropboxService to download file content
       const result: any = await this.dropboxService.downloadFile(
-        file.organizationId,
+        file.orgId,
         source.id,
         file.path
       );
@@ -357,7 +357,7 @@ export class FileProcessingService {
       }
 
       const streamOrData: any = await this.googleDriveService.downloadFile(
-        file.organizationId,
+        file.orgId,
         source.id,
         candidateId
       );
@@ -519,12 +519,12 @@ export class FileProcessingService {
     const totalQuery = `
       SELECT COUNT(*)::int AS total
       FROM files
-      WHERE (org_id = $1 OR organization_id = $1) AND deleted_at IS NULL
+      WHERE (org_id = $1 OR orgId = $1) AND deleted_at IS NULL
     `;
     const classifiedQuery = `
       SELECT COUNT(*)::int AS classified
       FROM files
-      WHERE (org_id = $1 OR organization_id = $1) AND deleted_at IS NULL AND classification_status = 'completed'
+      WHERE (org_id = $1 OR orgId = $1) AND deleted_at IS NULL AND classification_status = 'completed'
     `;
 
     const [totalRes, classifiedRes] = await Promise.all([

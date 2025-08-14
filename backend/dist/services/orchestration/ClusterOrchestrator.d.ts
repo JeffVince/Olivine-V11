@@ -6,7 +6,7 @@ import { ContentExtractionService } from '../extraction/ContentExtractionService
 import { PromotionService } from '../extraction/PromotionService';
 import { EventEmitter } from 'events';
 export interface WorkflowContext {
-    organizationId: string;
+    orgId: string;
     fileId: string;
     clusterId: string;
     sessionId: string;

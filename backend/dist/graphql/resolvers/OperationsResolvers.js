@@ -13,11 +13,11 @@ class OperationsResolvers {
                 amount: (src) => src.amount || src.total_amount,
             },
             Query: {
-                budgetVsActualAnalysis: async (_, { projectId, organizationId }) => {
-                    return await this.operationsService.getBudgetVsActualAnalysis(projectId, organizationId);
+                budgetVsActualAnalysis: async (_, { projectId, orgId }) => {
+                    return await this.operationsService.getBudgetVsActualAnalysis(projectId, orgId);
                 },
-                vendorPerformanceAnalysis: async (_, { organizationId }) => {
-                    return await this.operationsService.getVendorPerformanceAnalysis(organizationId);
+                vendorPerformanceAnalysis: async (_, { orgId }) => {
+                    return await this.operationsService.getVendorPerformanceAnalysis(orgId);
                 }
             },
             Mutation: {

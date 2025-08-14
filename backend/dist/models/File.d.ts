@@ -1,6 +1,6 @@
 export interface FileMetadata {
     id: string;
-    organizationId: string;
+    orgId: string;
     sourceId: string;
     path: string;
     name: string;
@@ -32,13 +32,13 @@ export declare class FileModel {
     private neo4jService;
     constructor();
     upsertFile(fileData: Partial<FileMetadata>): Promise<FileMetadata>;
-    getFile(fileId: string, organizationId: string): Promise<FileMetadata | null>;
-    getFilesBySource(sourceId: string, organizationId: string, limit?: number): Promise<FileMetadata[]>;
-    deleteFile(fileId: string, organizationId: string): Promise<boolean>;
-    updateClassification(fileId: string, organizationId: string, classification: FileClassification, status?: FileMetadata['classificationStatus']): Promise<boolean>;
-    updateExtractedContent(fileId: string, organizationId: string, extractedText: string): Promise<boolean>;
+    getFile(fileId: string, orgId: string): Promise<FileMetadata | null>;
+    getFilesBySource(sourceId: string, orgId: string, limit?: number): Promise<FileMetadata[]>;
+    deleteFile(fileId: string, orgId: string): Promise<boolean>;
+    updateClassification(fileId: string, orgId: string, classification: FileClassification, status?: FileMetadata['classificationStatus']): Promise<boolean>;
+    updateExtractedContent(fileId: string, orgId: string, extractedText: string): Promise<boolean>;
     syncToGraph(fileData: FileMetadata): Promise<void>;
-    removeFromGraph(fileId: string, organizationId: string): Promise<void>;
+    removeFromGraph(fileId: string, orgId: string): Promise<void>;
     private mapRowToFile;
 }
 //# sourceMappingURL=File.d.ts.map

@@ -19,27 +19,27 @@ class SourceResolvers {
         this.dropboxService = new DropboxService_1.DropboxService();
         this.googleDriveService = new GoogleDriveService_1.GoogleDriveService();
     }
-    async getSources(organizationId) {
-        if (!organizationId || organizationId.trim() === '') {
+    async getSources(orgId) {
+        if (!orgId || orgId.trim() === '') {
             throw new Error('Organization ID is required');
         }
-        return await this.sourceModel.getSourcesByOrganization(organizationId);
+        return await this.sourceModel.getSourcesByOrganization(orgId);
     }
-    async getSource(sourceId, organizationId) {
+    async getSource(sourceId, orgId) {
         if (!sourceId || sourceId.trim() === '') {
             throw new Error('Source ID is required');
         }
-        if (!organizationId || organizationId.trim() === '') {
+        if (!orgId || orgId.trim() === '') {
             throw new Error('Organization ID is required');
         }
-        return await this.sourceModel.getSource(sourceId, organizationId);
+        return await this.sourceModel.getSource(sourceId, orgId);
     }
-    async createSource(organizationId, name, type, config) {
-        if (!organizationId || organizationId.trim() === '') {
+    async createSource(orgId, name, type, config) {
+        if (!orgId || orgId.trim() === '') {
             throw new Error('Organization ID is required');
         }
         const source = await this.sourceModel.createSource({
-            organizationId,
+            orgId,
             name,
             type,
             config,
@@ -48,44 +48,44 @@ class SourceResolvers {
         await this.sourceModel.syncToGraph(source);
         return source;
     }
-    async updateSourceConfig(sourceId, organizationId, config) {
-        if (!organizationId || organizationId.trim() === '') {
+    async updateSourceConfig(sourceId, orgId, config) {
+        if (!orgId || orgId.trim() === '') {
             throw new Error('Organization ID is required');
         }
-        const success = await this.sourceModel.updateSourceConfig(sourceId, organizationId, config);
+        const success = await this.sourceModel.updateSourceConfig(sourceId, orgId, config);
         if (success) {
-            const source = await this.sourceModel.getSource(sourceId, organizationId);
+            const source = await this.sourceModel.getSource(sourceId, orgId);
             if (source) {
                 await this.sourceModel.syncToGraph(source);
             }
         }
         return success;
     }
-    async updateSourceStatus(sourceId, organizationId, active) {
-        if (!organizationId || organizationId.trim() === '') {
+    async updateSourceStatus(sourceId, orgId, active) {
+        if (!orgId || orgId.trim() === '') {
             throw new Error('Organization ID is required');
         }
-        const success = await this.sourceModel.updateSourceStatus(sourceId, organizationId, active);
+        const success = await this.sourceModel.updateSourceStatus(sourceId, orgId, active);
         if (success) {
-            const source = await this.sourceModel.getSource(sourceId, organizationId);
+            const source = await this.sourceModel.getSource(sourceId, orgId);
             if (source) {
                 await this.sourceModel.syncToGraph(source);
             }
         }
         return success;
     }
-    async deleteSource(sourceId, organizationId) {
-        if (!organizationId || organizationId.trim() === '') {
+    async deleteSource(sourceId, orgId) {
+        if (!orgId || orgId.trim() === '') {
             throw new Error('Organization ID is required');
         }
         try {
-            const files = await this.fileModel.getFilesBySource(sourceId, organizationId, 10000);
+            const files = await this.fileModel.getFilesBySource(sourceId, orgId, 10000);
             for (const file of files) {
-                await this.fileModel.deleteFile(file.id, organizationId);
-                await this.fileModel.removeFromGraph(file.id, organizationId);
+                await this.fileModel.deleteFile(file.id, orgId);
+                await this.fileModel.removeFromGraph(file.id, orgId);
             }
-            await this.sourceModel.removeFromGraph(sourceId, organizationId);
-            const success = await this.sourceModel.deleteSource(sourceId, organizationId);
+            await this.sourceModel.removeFromGraph(sourceId, orgId);
+            const success = await this.sourceModel.deleteSource(sourceId, orgId);
             return success;
         }
         catch (error) {
@@ -93,11 +93,11 @@ class SourceResolvers {
             return false;
         }
     }
-    async getSourceStats(sourceId, organizationId) {
-        if (!organizationId || organizationId.trim() === '') {
+    async getSourceStats(sourceId, orgId) {
+        if (!orgId || orgId.trim() === '') {
             throw new Error('Organization ID is required');
         }
-        const files = await this.fileModel.getFilesBySource(sourceId, organizationId, 10000);
+        const files = await this.fileModel.getFilesBySource(sourceId, orgId, 10000);
         const stats = {
             fileCount: files.length,
             totalSize: files.reduce((sum, file) => sum + (file.size || 0), 0),
@@ -110,12 +110,12 @@ class SourceResolvers {
         });
         return stats;
     }
-    async triggerSourceResync(sourceId, organizationId) {
-        if (!organizationId || organizationId.trim() === '') {
+    async triggerSourceResync(sourceId, orgId) {
+        if (!orgId || orgId.trim() === '') {
             throw new Error('Organization ID is required');
         }
         try {
-            const source = await this.sourceModel.getSource(sourceId, organizationId);
+            const source = await this.sourceModel.getSource(sourceId, orgId);
             if (!source) {
                 throw new Error(`Source not found: ${sourceId}`);
             }
@@ -123,7 +123,7 @@ class SourceResolvers {
                 const queue = [{ path: '' }];
                 while (queue.length > 0) {
                     const { path } = queue.shift();
-                    const resp = await this.dropboxService.listFolder(organizationId, sourceId, path, 'home');
+                    const resp = await this.dropboxService.listFolder(orgId, sourceId, path, 'home');
                     const entries = (resp?.result?.entries || []);
                     for (const entry of entries) {
                         if (entry['.tag'] === 'folder') {
@@ -131,7 +131,7 @@ class SourceResolvers {
                         }
                         else if (entry['.tag'] === 'file') {
                             await this.fileModel.upsertFile({
-                                organizationId,
+                                orgId,
                                 sourceId,
                                 path: entry.path_display,
                                 name: entry.name,
@@ -155,13 +155,13 @@ class SourceResolvers {
             else if (source.type === 'google_drive') {
                 let pageToken = undefined;
                 do {
-                    const data = await this.googleDriveService.listFiles(organizationId, sourceId, pageToken);
+                    const data = await this.googleDriveService.listFiles(orgId, sourceId, pageToken);
                     const files = Array.isArray(data) ? data : (data.files || []);
                     for (const f of files) {
                         if (f.mimeType === 'application/vnd.google-apps.folder')
                             continue;
                         await this.fileModel.upsertFile({
-                            organizationId,
+                            orgId,
                             sourceId,
                             path: f.id,
                             name: f.name,
@@ -183,9 +183,9 @@ class SourceResolvers {
             return false;
         }
     }
-    async testSourceConnection(sourceId, organizationId) {
+    async testSourceConnection(sourceId, orgId) {
         try {
-            const source = await this.sourceModel.getSource(sourceId, organizationId);
+            const source = await this.sourceModel.getSource(sourceId, orgId);
             if (!source) {
                 return {
                     success: false,

@@ -5,7 +5,7 @@ enum JobType { reindexProject reclassifyLowConfidence generateCallSheet extractC
 
 type AgentJob {
   id: ID!
-  organizationId: ID!
+  orgId: ID!
   type: JobType!
   target: String
   status: JobStatus!
@@ -21,7 +21,7 @@ type AgentJob {
 
 type Runbook {
   id: ID!
-  organizationId: ID!
+  orgId: ID!
   name: String!
   description: String
   spec: JSON!
@@ -44,7 +44,7 @@ type AgentHealth {
 }
 
 input EnqueueAgentJobInput {
-  organizationId: ID!
+  orgId: ID!
   type: JobType!
   target: String
   priority: Int
@@ -52,7 +52,7 @@ input EnqueueAgentJobInput {
 }
 
 input RunbookInput {
-  organizationId: ID!
+  orgId: ID!
   name: String!
   description: String
   spec: JSON!
@@ -60,25 +60,25 @@ input RunbookInput {
 
 input SaveRunbookInput {
   id: ID
-  organizationId: ID!
+  orgId: ID!
   name: String!
   description: String
   spec: JSON!
 }
 
 type Query {
-  agentJobs(organizationId: ID!, status: JobStatus, type: JobType, limit: Int, offset: Int): [AgentJob!]!
-  agentJob(organizationId: ID!, id: ID!): AgentJob
-  runbooks(organizationId: ID!): [Runbook!]!
-  agentHealth(organizationId: ID!): AgentHealth!
-  queues(organizationId: ID!): [QueueStats!]!
+  agentJobs(orgId: ID!, status: JobStatus, type: JobType, limit: Int, offset: Int): [AgentJob!]!
+  agentJob(orgId: ID!, id: ID!): AgentJob
+  runbooks(orgId: ID!): [Runbook!]!
+  agentHealth(orgId: ID!): AgentHealth!
+  queues(orgId: ID!): [QueueStats!]!
 }
 
 type Mutation {
   enqueueAgentJob(input: EnqueueAgentJobInput!): AgentJob!
-  cancelAgentJob(organizationId: ID!, id: ID!): Boolean!
-  executeRunbook(organizationId: ID!, id: ID!, params: JSON): AgentJob!
-  saveRunbook(organizationId: ID!, input: SaveRunbookInput!): Runbook!
+  cancelAgentJob(orgId: ID!, id: ID!): Boolean!
+  executeRunbook(orgId: ID!, id: ID!, params: JSON): AgentJob!
+  saveRunbook(orgId: ID!, input: SaveRunbookInput!): Runbook!
 }
 
 type LogEntry {
@@ -89,7 +89,7 @@ type LogEntry {
 }
 
 type Subscription {
-  jobUpdated(organizationId: ID!): AgentJob!
+  jobUpdated(orgId: ID!): AgentJob!
   jobLogAppended(jobId: ID!): LogEntry!
 }
 

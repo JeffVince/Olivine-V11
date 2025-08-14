@@ -41,11 +41,11 @@ const dropboxService = new DropboxService_1.DropboxService();
 const gdriveService = new GoogleDriveService_1.GoogleDriveService();
 router.get('/dropbox', async (req, res) => {
     try {
-        const { organizationId, sourceId, state: stateParam } = req.query;
+        const { orgId, sourceId, state: stateParam } = req.query;
         let state = stateParam || '';
-        if (!state && organizationId) {
+        if (!state && orgId) {
             state = JSON.stringify({
-                organizationId,
+                orgId,
                 sourceId,
                 projectId: req.query.projectId || ''
             });
@@ -78,9 +78,9 @@ router.get('/dropbox/callback', async (req, res) => {
                     state = stateParam;
                 }
                 if (typeof state === 'object' && state !== null) {
-                    const { organizationId, sourceId, projectId } = state;
-                    if (organizationId && sourceId) {
-                        await dropboxService.storeTokens(organizationId, sourceId, {
+                    const { orgId, sourceId, projectId } = state;
+                    if (orgId && sourceId) {
+                        await dropboxService.storeTokens(orgId, sourceId, {
                             access_token: tokenData.access_token,
                             refresh_token: tokenData.refresh_token,
                             expires_at: tokenData.expires_at,
@@ -113,11 +113,11 @@ router.get('/dropbox/callback', async (req, res) => {
 });
 router.get('/gdrive', (req, res) => {
     try {
-        const { organizationId, sourceId } = req.query;
+        const { orgId, sourceId } = req.query;
         const authUrl = gdriveService.generateAuthUrl();
         const redirect = new URL(authUrl);
-        if (organizationId)
-            redirect.searchParams.set('state', JSON.stringify({ organizationId, sourceId }));
+        if (orgId)
+            redirect.searchParams.set('state', JSON.stringify({ orgId, sourceId }));
         return res.redirect(redirect.toString());
     }
     catch (error) {
@@ -136,10 +136,10 @@ router.get('/gdrive/callback', async (req, res) => {
         try {
             if (state) {
                 const parsed = JSON.parse(state);
-                const organizationId = parsed.organizationId;
+                const orgId = parsed.orgId;
                 const sourceId = parsed.sourceId;
-                if (organizationId && sourceId) {
-                    await gdriveService.storeTokens(organizationId, sourceId, tokenData);
+                if (orgId && sourceId) {
+                    await gdriveService.storeTokens(orgId, sourceId, tokenData);
                 }
                 if (parsed.projectId) {
                     redirectTo = `/#/projects/${parsed.projectId}/integrations?connected=googledrive`;

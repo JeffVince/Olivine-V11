@@ -67,14 +67,14 @@ export function useDashboard(): UseDashboardReturn {
   const isRefreshing = ref(false);
   
   // Get organization ID
-  const organizationId = computed(() => 
+  const orgId = computed(() => 
     organizationStore.currentOrg?.id || '00000000-0000-0000-0000-000000000000'
   );
 
   // GraphQL query
   const { refetch } = useQuery(
     DASHBOARD_STATS_QUERY,
-    () => ({ orgId: organizationId.value }),
+    () => ({ orgId: orgId.value }),
     { 
       fetchPolicy: 'cache-and-network',
       onResult: (result: ApolloQueryResult<{

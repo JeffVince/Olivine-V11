@@ -127,7 +127,7 @@ describe('AuthService', () => {
           id: userId,
           email,
           password_hash: hashedPassword,
-          organization_id: orgId,
+          orgId: orgId,
           role
         }],
         command: 'SELECT',

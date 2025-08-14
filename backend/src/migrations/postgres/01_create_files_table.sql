@@ -1,7 +1,7 @@
 -- Create files table
 CREATE TABLE IF NOT EXISTS files (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  organization_id UUID NOT NULL,
+  orgId UUID NOT NULL,
   source_id UUID NOT NULL,
   path TEXT NOT NULL,
   name TEXT NOT NULL,
@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS files (
 );
 
 -- Create indexes
-CREATE INDEX IF NOT EXISTS idx_files_organization_id ON files(organization_id);
+CREATE INDEX IF NOT EXISTS idx_files_orgId ON files(orgId);
 CREATE INDEX IF NOT EXISTS idx_files_source_id ON files(source_id);
 CREATE INDEX IF NOT EXISTS idx_files_path ON files(path);
 CREATE INDEX IF NOT EXISTS idx_files_name ON files(name);
@@ -39,4 +39,4 @@ ALTER TABLE files ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS file_isolation ON files;
 
 -- Create policy for tenant isolation
-CREATE POLICY file_isolation ON files FOR ALL USING (organization_id = current_setting('app.current_org_id')::uuid);
+CREATE POLICY file_isolation ON files FOR ALL USING (orgId = current_setting('app.current_org_id')::uuid);

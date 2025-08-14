@@ -10,12 +10,12 @@ class SourceModel {
     }
     async createSource(sourceData) {
         const query = `
-      INSERT INTO sources (organization_id, name, type, config, active, created_at, updated_at)
+      INSERT INTO sources (orgId, name, type, config, active, created_at, updated_at)
       VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
       RETURNING *
     `;
         const values = [
-            sourceData.organizationId,
+            sourceData.orgId,
             sourceData.name,
             sourceData.type,
             JSON.stringify(sourceData.config),
@@ -24,56 +24,56 @@ class SourceModel {
         const result = await this.postgresService.executeQuery(query, values);
         return this.mapRowToSource(result.rows[0]);
     }
-    async getSource(sourceId, organizationId) {
+    async getSource(sourceId, orgId) {
         const query = `
       SELECT * FROM sources 
-      WHERE id = $1 AND organization_id = $2
+      WHERE id = $1 AND orgId = $2
     `;
-        const result = await this.postgresService.executeQuery(query, [sourceId, organizationId]);
+        const result = await this.postgresService.executeQuery(query, [sourceId, orgId]);
         return result.rows.length > 0 ? this.mapRowToSource(result.rows[0]) : null;
     }
-    async getSourcesByOrganization(organizationId) {
+    async getSourcesByOrganization(orgId) {
         const query = `
       SELECT * FROM sources 
-      WHERE organization_id = $1
+      WHERE orgId = $1
       ORDER BY created_at DESC
     `;
-        const result = await this.postgresService.executeQuery(query, [organizationId]);
+        const result = await this.postgresService.executeQuery(query, [orgId]);
         return result.rows.map(row => this.mapRowToSource(row));
     }
-    async updateSourceConfig(sourceId, organizationId, config) {
+    async updateSourceConfig(sourceId, orgId, config) {
         const query = `
       UPDATE sources 
       SET config = $3, updated_at = NOW()
-      WHERE id = $1 AND organization_id = $2
+      WHERE id = $1 AND orgId = $2
     `;
         const result = await this.postgresService.executeQuery(query, [
             sourceId,
-            organizationId,
+            orgId,
             JSON.stringify(config)
         ]);
         return (result.rowCount || 0) > 0;
     }
-    async updateSourceStatus(sourceId, organizationId, active) {
+    async updateSourceStatus(sourceId, orgId, active) {
         const query = `
       UPDATE sources 
       SET active = $3, updated_at = NOW()
-      WHERE id = $1 AND organization_id = $2
+      WHERE id = $1 AND orgId = $2
     `;
-        const result = await this.postgresService.executeQuery(query, [sourceId, organizationId, active]);
+        const result = await this.postgresService.executeQuery(query, [sourceId, orgId, active]);
         return (result.rowCount || 0) > 0;
     }
-    async deleteSource(sourceId, organizationId) {
+    async deleteSource(sourceId, orgId) {
         const query = `
       DELETE FROM sources 
-      WHERE id = $1 AND organization_id = $2
+      WHERE id = $1 AND orgId = $2
     `;
-        const result = await this.postgresService.executeQuery(query, [sourceId, organizationId]);
+        const result = await this.postgresService.executeQuery(query, [sourceId, orgId]);
         return (result.rowCount || 0) > 0;
     }
     async syncToGraph(sourceData) {
         const query = `
-      MERGE (s:Source {id: $sourceId, organizationId: $orgId})
+      MERGE (s:Source {id: $sourceId, orgId: $orgId})
       SET s.name = $name,
           s.type = $type,
           s.active = $active,
@@ -90,7 +90,7 @@ class SourceModel {
     `;
         const params = {
             sourceId: sourceData.id,
-            orgId: sourceData.organizationId,
+            orgId: sourceData.orgId,
             name: sourceData.name,
             type: sourceData.type,
             active: sourceData.active,
@@ -100,17 +100,17 @@ class SourceModel {
         };
         await this.neo4jService.executeQuery(query, params);
     }
-    async removeFromGraph(sourceId, organizationId) {
+    async removeFromGraph(sourceId, orgId) {
         const query = `
-      MATCH (s:Source {id: $sourceId, organizationId: $orgId})
+      MATCH (s:Source {id: $sourceId, orgId: $orgId})
       DETACH DELETE s
     `;
-        await this.neo4jService.executeQuery(query, { sourceId, orgId: organizationId });
+        await this.neo4jService.executeQuery(query, { sourceId, orgId: orgId });
     }
     mapRowToSource(row) {
         return {
             id: row.id,
-            organizationId: row.organization_id,
+            orgId: row.orgId,
             name: row.name,
             type: row.type,
             config: row.config,

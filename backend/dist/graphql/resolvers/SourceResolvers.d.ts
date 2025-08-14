@@ -7,13 +7,13 @@ export declare class SourceResolvers {
     private dropboxService;
     private googleDriveService;
     constructor();
-    getSources(organizationId: string): Promise<SourceMetadata[]>;
-    getSource(sourceId: string, organizationId: string): Promise<SourceMetadata | null>;
-    createSource(organizationId: string, name: string, type: 'dropbox' | 'google_drive' | 'onedrive' | 'local', config: SourceConfig): Promise<SourceMetadata>;
-    updateSourceConfig(sourceId: string, organizationId: string, config: SourceConfig): Promise<boolean>;
-    updateSourceStatus(sourceId: string, organizationId: string, active: boolean): Promise<boolean>;
-    deleteSource(sourceId: string, organizationId: string): Promise<boolean>;
-    getSourceStats(sourceId: string, organizationId: string): Promise<{
+    getSources(orgId: string): Promise<SourceMetadata[]>;
+    getSource(sourceId: string, orgId: string): Promise<SourceMetadata | null>;
+    createSource(orgId: string, name: string, type: 'dropbox' | 'google_drive' | 'onedrive' | 'local', config: SourceConfig): Promise<SourceMetadata>;
+    updateSourceConfig(sourceId: string, orgId: string, config: SourceConfig): Promise<boolean>;
+    updateSourceStatus(sourceId: string, orgId: string, active: boolean): Promise<boolean>;
+    deleteSource(sourceId: string, orgId: string): Promise<boolean>;
+    getSourceStats(sourceId: string, orgId: string): Promise<{
         fileCount: number;
         totalSize: number;
         lastSync: Date | null;
@@ -21,8 +21,8 @@ export declare class SourceResolvers {
             [status: string]: number;
         };
     }>;
-    triggerSourceResync(sourceId: string, organizationId: string): Promise<boolean>;
-    testSourceConnection(sourceId: string, organizationId: string): Promise<{
+    triggerSourceResync(sourceId: string, orgId: string): Promise<boolean>;
+    testSourceConnection(sourceId: string, orgId: string): Promise<{
         success: boolean;
         message: string;
         details?: any;

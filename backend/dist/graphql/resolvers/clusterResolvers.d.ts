@@ -15,12 +15,12 @@ export interface ClusterResolverContext {
 }
 export declare const clusterResolvers: {
     Query: {
-        getContentCluster(_: any, { clusterId, organizationId }: {
+        getContentCluster(_: any, { clusterId, orgId }: {
             clusterId: string;
-            organizationId: string;
+            orgId: string;
         }, context: ClusterResolverContext): Promise<{
             id: any;
-            organizationId: any;
+            orgId: any;
             fileId: any;
             fileName: any;
             projectId: any;
@@ -45,15 +45,15 @@ export declare const clusterResolvers: {
                 metadata: any;
             }[];
         } | null>;
-        getContentClusters(_: any, { organizationId, fileId, projectId, limit, offset }: {
-            organizationId: string;
+        getContentClusters(_: any, { orgId, fileId, projectId, limit, offset }: {
+            orgId: string;
             fileId?: string;
             projectId?: string;
             limit?: number;
             offset?: number;
         }, context: ClusterResolverContext): Promise<{
             id: any;
-            organizationId: any;
+            orgId: any;
             fileId: any;
             fileName: any;
             projectId: any;
@@ -66,12 +66,12 @@ export declare const clusterResolvers: {
             createdAt: any;
             updatedAt: any;
         }[]>;
-        getExtractionJob(_: any, { jobId, organizationId }: {
+        getExtractionJob(_: any, { jobId, orgId }: {
             jobId: string;
-            organizationId: string;
+            orgId: string;
         }, context: ClusterResolverContext): Promise<{
             id: any;
-            organizationId: any;
+            orgId: any;
             fileId: any;
             fileName: any;
             projectId: any;
@@ -111,15 +111,15 @@ export declare const clusterResolvers: {
                 timestamp: any;
             }[];
         } | null>;
-        getExtractionJobs(_: any, { organizationId, fileId, status, limit, offset }: {
-            organizationId: string;
+        getExtractionJobs(_: any, { orgId, fileId, status, limit, offset }: {
+            orgId: string;
             fileId?: string;
             status?: string;
             limit?: number;
             offset?: number;
         }, context: ClusterResolverContext): Promise<{
             id: any;
-            organizationId: any;
+            orgId: any;
             fileId: any;
             fileName: any;
             projectId: any;
@@ -135,11 +135,11 @@ export declare const clusterResolvers: {
             promotedAt: any;
             metadata: any;
         }[]>;
-        getParserRegistry(_: any, { organizationId }: {
-            organizationId: string;
+        getParserRegistry(_: any, { orgId }: {
+            orgId: string;
         }, context: ClusterResolverContext): Promise<{
             id: any;
-            organizationId: any;
+            orgId: any;
             slot: any;
             mimeType: any;
             extension: any;
@@ -153,9 +153,9 @@ export declare const clusterResolvers: {
         }[]>;
     };
     Mutation: {
-        requestExtraction(_: any, { fileId, organizationId, parserName, slot }: {
+        requestExtraction(_: any, { fileId, orgId, parserName, slot }: {
             fileId: string;
-            organizationId: string;
+            orgId: string;
             parserName?: string;
             slot?: string;
         }, context: ClusterResolverContext): Promise<{
@@ -163,31 +163,31 @@ export declare const clusterResolvers: {
             extractionJobs: string[];
             message: string;
         }>;
-        promoteExtraction(_: any, { jobId, organizationId, reviewNotes }: {
+        promoteExtraction(_: any, { jobId, orgId, reviewNotes }: {
             jobId: string;
-            organizationId: string;
+            orgId: string;
             reviewNotes?: string;
         }, context: ClusterResolverContext): Promise<{
             success: boolean;
             message: string;
         }>;
-        rollbackPromotion(_: any, { auditId, organizationId, reason }: {
+        rollbackPromotion(_: any, { auditId, orgId, reason }: {
             auditId: string;
-            organizationId: string;
+            orgId: string;
             reason: string;
         }, context: ClusterResolverContext): Promise<{
             success: boolean;
             message: string;
         }>;
-        updateParserRegistry(_: any, { id, organizationId, enabled, minConfidence, featureFlag }: {
+        updateParserRegistry(_: any, { id, orgId, enabled, minConfidence, featureFlag }: {
             id: string;
-            organizationId: string;
+            orgId: string;
             enabled?: boolean;
             minConfidence?: number;
             featureFlag?: boolean;
         }, context: ClusterResolverContext): Promise<{
             id: any;
-            organizationId: any;
+            orgId: any;
             slot: any;
             mimeType: any;
             extension: any;
@@ -199,9 +199,9 @@ export declare const clusterResolvers: {
             createdAt: any;
             updatedAt: any;
         }>;
-        startClusterWorkflow(_: any, { workflowName, organizationId, fileId, clusterId }: {
+        startClusterWorkflow(_: any, { workflowName, orgId, fileId, clusterId }: {
             workflowName: string;
-            organizationId: string;
+            orgId: string;
             fileId: string;
             clusterId: string;
         }, context: ClusterResolverContext): Promise<{

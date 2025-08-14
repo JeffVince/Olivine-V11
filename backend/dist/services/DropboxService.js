@@ -398,7 +398,7 @@ class DropboxService extends events_1.EventEmitter {
                metadata->>'dropbox_home_namespace_id' as home_namespace_id,
                metadata->>'dropbox_root_namespace_id' as root_namespace_id
         FROM sources 
-        WHERE organization_id = $1 AND id = $2 AND type = 'dropbox'
+        WHERE orgId = $1 AND id = $2 AND type = 'dropbox'
       `;
             const result = await this.getPostgresService().executeQuery(query, [orgId, sourceId]);
             if (result.rows.length === 0) {
@@ -427,7 +427,7 @@ class DropboxService extends events_1.EventEmitter {
         UPDATE sources 
         SET metadata = metadata || $1::jsonb,
             updated_at = NOW()
-        WHERE organization_id = $2 AND id = $3
+        WHERE orgId = $2 AND id = $3
       `;
             const metadata = {
                 dropbox_access_token: tokenData.access_token,

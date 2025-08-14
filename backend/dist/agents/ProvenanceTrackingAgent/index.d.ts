@@ -5,6 +5,13 @@ export declare class ProvenanceTrackingAgent extends BaseAgent {
     private provenanceService;
     private neo4jService;
     private cryptoService;
+    private commitRepo;
+    private actionRepo;
+    private versionRepo;
+    private commitHandler;
+    private actionHandler;
+    private versionHandler;
+    private legacyHandler;
     constructor(queueService: QueueService, config?: Partial<AgentConfig>);
     protected onStart(): Promise<void>;
     protected onStop(): Promise<void>;

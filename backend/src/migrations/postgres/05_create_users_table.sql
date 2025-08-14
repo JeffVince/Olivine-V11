@@ -2,7 +2,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 CREATE TABLE IF NOT EXISTS users (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  organization_id UUID NOT NULL,
+  orgId UUID NOT NULL,
   email VARCHAR(255) UNIQUE NOT NULL,
   password_hash TEXT NOT NULL,
   role VARCHAR(50) NOT NULL,
@@ -14,4 +14,4 @@ CREATE TABLE IF NOT EXISTS users (
   last_login TIMESTAMPTZ
 );
 
-CREATE INDEX IF NOT EXISTS idx_users_org ON users(organization_id);
+CREATE INDEX IF NOT EXISTS idx_users_org ON users(orgId);

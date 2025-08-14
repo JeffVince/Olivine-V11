@@ -23,15 +23,15 @@ export const clusterResolvers = {
      */
     async getContentCluster(
       _: any,
-      { clusterId, organizationId }: { clusterId: string; organizationId: string },
+      { clusterId, orgId }: { clusterId: string; orgId: string },
       context: ClusterResolverContext
     ) {
       // Get cluster from Neo4j
       const clusterResult = await context.neo4jService.run(`
-        MATCH (cc:ContentCluster {id: $clusterId, organizationId: $organizationId})
+        MATCH (cc:ContentCluster {id: $clusterId, orgId: $orgId})
         OPTIONAL MATCH (cc)<-[:HAS_CLUSTER]-(f:File)
         RETURN cc, f.id as fileId, f.name as fileName
-      `, { clusterId, organizationId });
+      `, { clusterId, orgId });
 
       if (clusterResult.records.length === 0) {
         return null;
@@ -46,14 +46,14 @@ export const clusterResolvers = {
         FROM extraction_job ej
         LEFT JOIN extracted_entity_temp eet ON ej.id = eet.job_id
         LEFT JOIN extracted_link_temp elt ON ej.id = elt.job_id
-        WHERE ej.organization_id = $1 AND ej.organization_id = $2
+        WHERE ej.orgId = $1 AND ej.orgId = $2
         GROUP BY ej.id
         ORDER BY ej.created_at DESC
-      `, [record.get('fileId'), organizationId]);
+      `, [record.get('fileId'), orgId]);
 
       return {
         id: cluster.id,
-        organizationId: cluster.organizationId,
+        orgId: cluster.orgId,
         fileId: record.get('fileId'),
         fileName: record.get('fileName'),
         projectId: cluster.projectId,
@@ -85,8 +85,8 @@ export const clusterResolvers = {
      */
     async getContentClusters(
       _: any,
-      { organizationId, fileId, projectId, limit = 50, offset = 0 }: {
-        organizationId: string;
+      { orgId, fileId, projectId, limit = 50, offset = 0 }: {
+        orgId: string;
         fileId?: string;
         projectId?: string;
         limit?: number;
@@ -95,8 +95,8 @@ export const clusterResolvers = {
       context: ClusterResolverContext
     ) {
       // Build Cypher with named parameters (Neo4j requires object params)
-      const conditions: string[] = ['cc.organizationId = $organizationId'];
-      const cypherParams: Record<string, unknown> = { organizationId, offset, limit };
+      const conditions: string[] = ['cc.orgId = $orgId'];
+      const cypherParams: Record<string, unknown> = { orgId, offset, limit };
 
       if (fileId) {
         conditions.push('f.id = $fileId');
@@ -122,7 +122,7 @@ export const clusterResolvers = {
         const cluster = record.get('cc').properties;
         return {
           id: cluster.id,
-          organizationId: cluster.organizationId,
+          orgId: cluster.orgId,
           fileId: record.get('fileId'),
           fileName: record.get('fileName'),
           projectId: cluster.projectId,
@@ -143,15 +143,15 @@ export const clusterResolvers = {
      */
     async getExtractionJob(
       _: any,
-      { jobId, organizationId }: { jobId: string; organizationId: string },
+      { jobId, orgId }: { jobId: string; orgId: string },
       context: ClusterResolverContext
     ) {
       const jobResult = await context.postgresService.query(`
         SELECT ej.*, f.name as file_name
         FROM extraction_job ej
         JOIN files f ON ej.file_id = f.id
-        WHERE ej.id = $1 AND ej.organization_id = $2
-      `, [jobId, organizationId]);
+        WHERE ej.id = $1 AND ej.orgId = $2
+      `, [jobId, orgId]);
 
       if (jobResult.rows.length === 0) {
         return null;
@@ -176,7 +176,7 @@ export const clusterResolvers = {
 
       return {
         id: job.id,
-        organizationId: job.organization_id,
+        orgId: job.orgId,
         fileId: job.file_id,
         fileName: job.file_name,
         projectId: job.project_id,
@@ -223,8 +223,8 @@ export const clusterResolvers = {
      */
     async getExtractionJobs(
       _: any,
-      { organizationId, fileId, status, limit = 50, offset = 0 }: {
-        organizationId: string;
+      { orgId, fileId, status, limit = 50, offset = 0 }: {
+        orgId: string;
         fileId?: string;
         status?: string;
         limit?: number;
@@ -232,8 +232,8 @@ export const clusterResolvers = {
       },
       context: ClusterResolverContext
     ) {
-      let whereClause = 'WHERE ej.organization_id = $1';
-      const params: any[] = [organizationId];
+      let whereClause = 'WHERE ej.orgId = $1';
+      const params: any[] = [orgId];
       let paramIndex = 2;
 
       if (fileId) {
@@ -268,7 +268,7 @@ export const clusterResolvers = {
 
       return result.rows.map(job => ({
         id: job.id,
-        organizationId: job.organization_id,
+        orgId: job.orgId,
         fileId: job.file_id,
         fileName: job.file_name,
         projectId: job.project_id,
@@ -291,18 +291,18 @@ export const clusterResolvers = {
      */
     async getParserRegistry(
       _: any,
-      { organizationId }: { organizationId: string },
+      { orgId }: { orgId: string },
       context: ClusterResolverContext
     ) {
       const result = await context.postgresService.query(`
         SELECT * FROM parser_registry 
-        WHERE organization_id = $1 
+        WHERE orgId = $1 
         ORDER BY slot, parser_name, parser_version DESC
-      `, [organizationId]);
+      `, [orgId]);
 
       return result.rows.map(parser => ({
         id: parser.id,
-        organizationId: parser.organization_id,
+        orgId: parser.orgId,
         slot: parser.slot,
         mimeType: parser.mime_type,
         extension: parser.extension,
@@ -323,9 +323,9 @@ export const clusterResolvers = {
      */
     async requestExtraction(
       _: any,
-      { fileId, organizationId, parserName, slot }: {
+      { fileId, orgId, parserName, slot }: {
         fileId: string;
-        organizationId: string;
+        orgId: string;
         parserName?: string;
         slot?: string;
       },
@@ -333,9 +333,9 @@ export const clusterResolvers = {
     ) {
       // Get file details
       const fileResult = await context.neo4jService.run(`
-        MATCH (f:File {id: $fileId, organization_id: $organizationId})
+        MATCH (f:File {id: $fileId, orgId: $orgId})
         RETURN f
-      `, { fileId, organizationId });
+      `, { fileId, orgId });
 
       if (fileResult.records.length === 0) {
         throw new Error('File not found');
@@ -348,17 +348,17 @@ export const clusterResolvers = {
       if (parserName) {
         parsers = await context.postgresService.query(`
           SELECT * FROM parser_registry 
-          WHERE organization_id = $1 AND parser_name = $2 AND enabled = true
-        `, [organizationId, parserName]);
+          WHERE orgId = $1 AND parser_name = $2 AND enabled = true
+        `, [orgId, parserName]);
       } else {
         parsers = await context.postgresService.query(`
           SELECT * FROM parser_registry 
-          WHERE organization_id = $1 
+          WHERE orgId = $1 
           AND (mime_type = $2 OR mime_type = '*/*')
           AND ($3::text IS NULL OR slot = $3)
           AND enabled = true
           ORDER BY min_confidence DESC
-        `, [organizationId, file.mime_type, slot]);
+        `, [orgId, file.mime_type, slot]);
       }
 
       if (parsers.rows.length === 0) {
@@ -373,7 +373,7 @@ export const clusterResolvers = {
         // Create extraction job
         await context.postgresService.query(`
           INSERT INTO extraction_job (
-            id, organization_id, file_id, parser_name, parser_version, 
+            id, orgId, file_id, parser_name, parser_version, 
             method, dedupe_key, status, created_at
           )
           VALUES ($1, $2, $3, $4, $5, $6, $7, 'queued', NOW())
@@ -381,12 +381,12 @@ export const clusterResolvers = {
             status = 'queued',
             created_at = NOW()
           RETURNING id
-        `, [jobId, organizationId, fileId, parser.parser_name, parser.parser_version, 'rule-based', dedupeKey]);
+        `, [jobId, orgId, fileId, parser.parser_name, parser.parser_version, 'rule-based', dedupeKey]);
 
         // Queue extraction job
         await context.queueService.addJob('content-extraction', 'extract-content', {
           jobId,
-          organizationId,
+          orgId,
           fileId,
           slot: parser.slot,
           parser: parser.parser_name,
@@ -409,9 +409,9 @@ export const clusterResolvers = {
      */
     async promoteExtraction(
       _: any,
-      { jobId, organizationId, reviewNotes }: {
+      { jobId, orgId, reviewNotes }: {
         jobId: string;
-        organizationId: string;
+        orgId: string;
         reviewNotes?: string;
       },
       context: ClusterResolverContext
@@ -419,8 +419,8 @@ export const clusterResolvers = {
       // Verify job exists and is ready for promotion
       const jobResult = await context.postgresService.query(`
         SELECT * FROM extraction_job 
-        WHERE id = $1 AND organization_id = $2 AND status = 'completed'
-      `, [jobId, organizationId]);
+        WHERE id = $1 AND orgId = $2 AND status = 'completed'
+      `, [jobId, orgId]);
 
       if (jobResult.rows.length === 0) {
         throw new Error('Extraction job not found or not ready for promotion');
@@ -429,7 +429,7 @@ export const clusterResolvers = {
       // Queue promotion job
       await context.queueService.addJob('content-promotion', 'promote-extraction', {
         jobId,
-        organizationId,
+        orgId,
         actor: context.user?.id || 'unknown',
         autoPromoted: false,
         reviewNotes
@@ -446,20 +446,20 @@ export const clusterResolvers = {
      */
     async rollbackPromotion(
       _: any,
-      { auditId, organizationId, reason }: {
+      { auditId, orgId, reason }: {
         auditId: string;
-        organizationId: string;
+        orgId: string;
         reason: string;
       },
       context: ClusterResolverContext
     ) {
       // Verify audit record exists
       const auditResult = await context.postgresService.query(`
-        SELECT pa.*, ej.organization_id 
+        SELECT pa.*, ej.orgId 
         FROM promotion_audit pa
         JOIN extraction_job ej ON pa.job_id = ej.id
-        WHERE pa.id = $1 AND ej.organization_id = $2 AND pa.action = 'promote'
-      `, [auditId, organizationId]);
+        WHERE pa.id = $1 AND ej.orgId = $2 AND pa.action = 'promote'
+      `, [auditId, orgId]);
 
       if (auditResult.rows.length === 0) {
         throw new Error('Promotion audit record not found');
@@ -468,7 +468,7 @@ export const clusterResolvers = {
       // Queue rollback job
       await context.queueService.addJob('content-rollback', 'rollback-promotion', {
         auditId,
-        organizationId,
+        orgId,
         actor: context.user?.id || 'unknown',
         reason
       });
@@ -486,13 +486,13 @@ export const clusterResolvers = {
       _: any,
       { 
         id, 
-        organizationId, 
+        orgId, 
         enabled, 
         minConfidence, 
         featureFlag 
       }: {
         id: string;
-        organizationId: string;
+        orgId: string;
         enabled?: boolean;
         minConfidence?: number;
         featureFlag?: boolean;
@@ -500,7 +500,7 @@ export const clusterResolvers = {
       context: ClusterResolverContext
     ) {
       const updateFields: string[] = [];
-      const values: unknown[] = [id, organizationId];
+      const values: unknown[] = [id, orgId];
       let paramIndex = 3;
 
       if (enabled !== undefined) {
@@ -530,7 +530,7 @@ export const clusterResolvers = {
       const result = await context.postgresService.query(`
         UPDATE parser_registry 
         SET ${updateFields.join(', ')}
-        WHERE id = $1 AND organization_id = $2
+        WHERE id = $1 AND orgId = $2
         RETURNING *
       `, values);
 
@@ -541,7 +541,7 @@ export const clusterResolvers = {
       const parser = result.rows[0];
       return {
         id: parser.id,
-        organizationId: parser.organization_id,
+        orgId: parser.orgId,
         slot: parser.slot,
         mimeType: parser.mime_type,
         extension: parser.extension,
@@ -562,19 +562,19 @@ export const clusterResolvers = {
       _: any,
       { 
         workflowName, 
-        organizationId, 
+        orgId, 
         fileId, 
         clusterId 
       }: {
         workflowName: string;
-        organizationId: string;
+        orgId: string;
         fileId: string;
         clusterId: string;
       },
       context: ClusterResolverContext
     ) {
       const workflowId = await context.clusterOrchestrator.startWorkflow(workflowName, {
-        organizationId,
+        orgId,
         fileId,
         clusterId,
         sessionId: uuidv4(),

@@ -106,8 +106,8 @@ const organizationStore = useOrganizationStore()
 
 // Use the GraphQL query within component context
 // Use organization ID from store, fallback to a default for development
-const organizationId = organizationStore.currentOrg?.id || '00000000-0000-0000-0000-000000000000'
-const { result } = useSourcesQuery(organizationId)
+const orgId = organizationStore.currentOrg?.id || '00000000-0000-0000-0000-000000000000'
+const { result } = useSourcesQuery(orgId)
 
 // Watch for changes in the query result and update integrations
 watch(result, (newResult) => {

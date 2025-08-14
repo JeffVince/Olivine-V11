@@ -4,8 +4,8 @@ import type { GetSourcesResult, CreateSourceResult, TriggerSyncResult } from './
 
 // GraphQL
 export const GET_SOURCES = gql`
-  query GetSources($organizationId: ID!) {
-    getSources(organizationId: $organizationId) {
+  query GetSources($orgId: ID!) {
+    getSources(orgId: $orgId) {
       id
       type
       name
@@ -39,14 +39,14 @@ export const TRIGGER_SYNC = gql`
 `
 
 // Export functions that create the queries when called within component context
-export const useSourcesQuery = (organizationId: string) => {
+export const useSourcesQuery = (orgId: string) => {
   return useQuery<GetSourcesResult>(
     GET_SOURCES,
     () => ({
-      organizationId
+      orgId
     }),
     () => ({
-      enabled: !!organizationId,
+      enabled: !!orgId,
       fetchPolicy: 'cache-and-network'
     })
   )

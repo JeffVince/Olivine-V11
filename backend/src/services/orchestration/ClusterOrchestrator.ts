@@ -8,7 +8,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { EventEmitter } from 'events';
 
 export interface WorkflowContext {
-  organizationId: string;
+  orgId: string;
   fileId: string;
   clusterId: string;
   sessionId: string;
@@ -105,7 +105,7 @@ export class ClusterOrchestrator extends BaseService {
     
     this.logger.info(`Starting cluster workflow: ${workflowName}`, { 
       workflowId, 
-      orgId: context.organizationId, 
+      orgId: context.orgId, 
       fileId: context.fileId 
     });
 
@@ -257,10 +257,10 @@ export class ClusterOrchestrator extends BaseService {
    * Execute content extraction step
    */
   private async executeExtractionStep(workflow: ClusterWorkflow, step: WorkflowStep): Promise<any> {
-    const { fileId, organizationId } = workflow.context;
+    const { fileId, orgId } = workflow.context;
     
     // Get applicable parsers for this file
-    const parsers = await this.getApplicableParsers(organizationId, fileId);
+    const parsers = await this.getApplicableParsers(orgId, fileId);
     
     const extractionJobs = [];
     for (const parser of parsers) {
@@ -270,12 +270,12 @@ export class ClusterOrchestrator extends BaseService {
       await this.postgresService.query(`
         INSERT INTO extraction_job (id, org_id, file_id, parser_name, parser_version, status, created_at)
         VALUES ($1, $2, $3, $4, $5, 'queued', NOW())
-      `, [jobId, organizationId, fileId, parser.parser_name, parser.parser_version]);
+      `, [jobId, orgId, fileId, parser.parser_name, parser.parser_version]);
 
       // Queue extraction
       await this.queueService.addJob('content-extraction', 'extract-content', {
         jobId,
-        organizationId,
+        orgId,
         fileId,
         slot: parser.slot,
         parser: parser.parser_name,
@@ -306,7 +306,7 @@ export class ClusterOrchestrator extends BaseService {
         // Queue promotion
         await this.queueService.addJob('content-promotion', 'promote-extraction', {
           jobId,
-          orgId: workflow.context.organizationId,
+          orgId: workflow.context.orgId,
           actor: 'cluster-orchestrator',
           autoPromoted: true
         });
@@ -322,14 +322,14 @@ export class ClusterOrchestrator extends BaseService {
    * Execute cross-layer link curation step
    */
   private async executeCrossLinkStep(workflow: ClusterWorkflow, step: WorkflowStep): Promise<any> {
-    const { fileId, organizationId, clusterId } = workflow.context;
+    const { fileId, orgId, clusterId } = workflow.context;
     
     // Find potential cross-layer links
-    const crossLinks = await this.findPotentialCrossLayerLinks(organizationId, fileId);
+    const crossLinks = await this.findPotentialCrossLayerLinks(orgId, fileId);
     
     let linksCreated = 0;
     for (const link of crossLinks) {
-      await this.createCrossLayerLink(link.fromId, link.toId, link.relType, organizationId);
+      await this.createCrossLayerLink(link.fromId, link.toId, link.relType, orgId);
       linksCreated++;
     }
 
@@ -343,10 +343,10 @@ export class ClusterOrchestrator extends BaseService {
    * Execute ontology curation step
    */
   private async executeOntologyCurationStep(workflow: ClusterWorkflow, step: WorkflowStep): Promise<any> {
-    const { organizationId, clusterId } = workflow.context;
+    const { orgId, clusterId } = workflow.context;
     
     // Validate ontology constraints for the cluster
-    const violations = await this.validateClusterOntology(organizationId, clusterId);
+    const violations = await this.validateClusterOntology(orgId, clusterId);
     
     if (violations.length > 0) {
       this.logger.warn(`Ontology violations detected in cluster: ${clusterId}`, { violations });
@@ -354,7 +354,7 @@ export class ClusterOrchestrator extends BaseService {
       // Queue for manual review
       await this.queueService.addJob('ontology-review', 'review-violations', {
         clusterId,
-        organizationId,
+        orgId,
         violations
       });
     }
@@ -480,12 +480,12 @@ export class ClusterOrchestrator extends BaseService {
    * Handle file processed event from FileStewardAgent
    */
   private async handleFileProcessed(event: any): Promise<void> {
-    const { organizationId, fileId, clusterId, slots, extractionTriggered } = event;
+    const { orgId, fileId, clusterId, slots, extractionTriggered } = event;
     
     if (extractionTriggered) {
       // Start full cluster processing workflow
       await this.startWorkflow('cluster-full-processing', {
-        organizationId,
+        orgId,
         fileId,
         clusterId,
         sessionId: uuidv4(),
@@ -542,12 +542,12 @@ export class ClusterOrchestrator extends BaseService {
   // HELPER METHODS
   // ========================================
 
-  private async getApplicableParsers(organizationId: string, fileId: string): Promise<any[]> {
+  private async getApplicableParsers(orgId: string, fileId: string): Promise<any[]> {
     const result = await this.postgresService.query(`
       SELECT pr.* FROM parser_registry pr
       JOIN files f ON f.mime_type = pr.mime_type OR pr.mime_type = '*/*'
       WHERE f.id = $1 AND pr.org_id = $2 AND pr.enabled = true
-    `, [fileId, organizationId]);
+    `, [fileId, orgId]);
 
     return result.rows;
   }
@@ -560,22 +560,22 @@ export class ClusterOrchestrator extends BaseService {
     return result.rows[0];
   }
 
-  private async findPotentialCrossLayerLinks(organizationId: string, fileId: string): Promise<any[]> {
+  private async findPotentialCrossLayerLinks(orgId: string, fileId: string): Promise<any[]> {
     // Mock implementation - in production this would use graph analysis
     return [];
   }
 
-  private async createCrossLayerLink(fromId: string, toId: string, relType: string, organizationId: string): Promise<void> {
+  private async createCrossLayerLink(fromId: string, toId: string, relType: string, orgId: string): Promise<void> {
     const query = `
       MATCH (from {id: $fromId}), (to {id: $toId})
       CREATE (from)-[r:${relType} {
-        org_id: $organizationId,
+        org_id: $orgId,
         created_at: datetime(),
         created_by: 'cluster-orchestrator'
       }]->(to)
     `;
 
-    await this.neo4jService.run(query, { fromId, toId, organizationId });
+    await this.neo4jService.run(query, { fromId, toId, orgId });
   }
 
   private async updateClusterCrossLayerStats(clusterId: string, linksCreated: number): Promise<void> {
@@ -587,7 +587,7 @@ export class ClusterOrchestrator extends BaseService {
     await this.neo4jService.run(query, { clusterId, linksCreated });
   }
 
-  private async validateClusterOntology(organizationId: string, clusterId: string): Promise<any[]> {
+  private async validateClusterOntology(orgId: string, clusterId: string): Promise<any[]> {
     // Mock implementation - would validate ontology rules
     return [];
   }

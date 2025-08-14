@@ -4,7 +4,7 @@ import { LogService } from '../../services/agent/LogService'
 
 interface AgentJob {
   id: string
-  organizationId: string
+  orgId: string
   type: string
   target: string
   status: 'waiting' | 'active' | 'completed' | 'failed' | 'delayed'
@@ -38,7 +38,7 @@ export const agentResolvers = {
     agentJobs: async (
       _: any,
       args: {
-        organizationId: string
+        orgId: string
         status?: string
         type?: string
         limit?: number
@@ -46,10 +46,10 @@ export const agentResolvers = {
       },
       context: any
     ): Promise<AgentJob[]> => {
-      const { organizationId, status, type, limit = 50, offset = 0 } = args
+      const { orgId, status, type, limit = 50, offset = 0 } = args
       
       // Validate organization access
-      if (context.user.organizationId !== organizationId) {
+      if (context.user.orgId !== orgId) {
         throw new Error('Unauthorized access to organization jobs')
       }
 
@@ -58,7 +58,7 @@ export const agentResolvers = {
       
       return jobs.map((job: any) => ({
         id: job.id,
-        organizationId: job.data.organizationId,
+        orgId: job.data.orgId,
         type: job.name,
         target: job.data.target || job.data.sceneId || job.data.characterId || job.data.projectId,
         status: job.status,
@@ -76,13 +76,13 @@ export const agentResolvers = {
     // Get agent health status
     agentHealth: async (
       _: any,
-      args: { organizationId: string },
+      args: { orgId: string },
       context: any
     ): Promise<AgentHealthStatus> => {
-      const { organizationId } = args
+      const { orgId } = args
       
       // Validate organization access
-      if (context.user.organizationId !== organizationId) {
+      if (context.user.orgId !== orgId) {
         throw new Error('Unauthorized access to organization health')
       }
       
@@ -93,13 +93,13 @@ export const agentResolvers = {
     // Get queue statistics
     queues: async (
       _: any,
-      args: { organizationId: string },
+      args: { orgId: string },
       context: any
     ): Promise<QueueStats[]> => {
-      const { organizationId } = args
+      const { orgId } = args
       
       // Validate organization access
-      if (context.user.organizationId !== organizationId) {
+      if (context.user.orgId !== orgId) {
         throw new Error('Unauthorized access to organization queues')
       }
       
@@ -114,7 +114,7 @@ export const agentResolvers = {
       _: any,
       args: {
         input: {
-          organizationId: string
+          orgId: string
           type: string
           target: string
           params: any
@@ -123,33 +123,33 @@ export const agentResolvers = {
       },
       context: any
     ) => {
-      const { organizationId, type, target, params, priority = 0 } = args.input
+      const { orgId, type, target, params, priority = 0 } = args.input
       
       // Validate organization access
-      if (context.user.organizationId !== organizationId) {
+      if (context.user.orgId !== orgId) {
         throw new Error('Unauthorized access to organization jobs')
       }
       
       const jobService = new JobService(new QueueService())
-      const job = await jobService.enqueueAgentJob({ orgId: organizationId, type, target, params, priority })
+      const job = await jobService.enqueueAgentJob({ orgId: orgId, type, target, params, priority })
       return { id: job.id, success: true }
     },
 
     // Cancel an agent job
     cancelAgentJob: async (
       _: any,
-      args: { organizationId: string; id: string },
+      args: { orgId: string; id: string },
       context: any
     ): Promise<boolean> => {
-      const { organizationId, id } = args
+      const { orgId, id } = args
       
       // Validate organization access
-      if (context.user.organizationId !== organizationId) {
+      if (context.user.orgId !== orgId) {
         throw new Error('Unauthorized access to organization jobs')
       }
       
       const jobService = new JobService(new QueueService())
-      console.log(`Cancelling job ${id} for org ${organizationId}`)
+      console.log(`Cancelling job ${id} for org ${orgId}`)
       return await jobService.cancelAgentJob(id)
     }
   },
@@ -157,16 +157,16 @@ export const agentResolvers = {
   Subscription: {
     // Subscribe to job updates for an organization
     jobUpdated: {
-      subscribe: async (_: any, args: { organizationId: string }, context: any) => {
-        const { organizationId } = args
+      subscribe: async (_: any, args: { orgId: string }, context: any) => {
+        const { orgId } = args
         
         // Validate organization access
-        if (context.user.organizationId !== organizationId) {
+        if (context.user.orgId !== orgId) {
           throw new Error('Unauthorized access to organization job updates')
         }
         
         const queueService = new QueueService()
-        return queueService.subscribeToJobUpdates(organizationId)
+        return queueService.subscribeToJobUpdates(orgId)
       }
     }
   }

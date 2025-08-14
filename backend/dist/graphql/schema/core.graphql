@@ -2,7 +2,7 @@ enum SourceType { dropbox google_drive onedrive local }
 
 type Source {
   id: ID!
-  organizationId: ID!
+  orgId: ID!
   name: String!
   type: SourceType!
   config: JSON
@@ -13,7 +13,7 @@ type Source {
 
 type FileMeta {
   id: ID!
-  organizationId: ID!
+  orgId: ID!
   sourceId: ID!
   path: String!
   name: String!
@@ -37,14 +37,14 @@ type FileStats {
 }
 
 type Query {
-  getSources(organizationId: ID!): [Source!]!
-  getSource(sourceId: ID!, organizationId: ID!): Source
-  getFiles(organizationId: ID!, sourceId: ID, limit: Int): [FileMeta!]!
-  getFile(fileId: ID!, organizationId: ID!): FileMeta
-  getFileStats(organizationId: ID!): FileStats!
-  getSourceStats(sourceId: ID!, organizationId: ID!): JSON!
-  budgetVsActualAnalysis(projectId: ID!, organizationId: ID!): [BudgetVsActualRow!]!
-  vendorPerformanceAnalysis(organizationId: ID!): [VendorPerformanceRow!]!
+  getSources(orgId: ID!): [Source!]!
+  getSource(sourceId: ID!, orgId: ID!): Source
+  getFiles(orgId: ID!, sourceId: ID, limit: Int): [FileMeta!]!
+  getFile(fileId: ID!, orgId: ID!): FileMeta
+  getFileStats(orgId: ID!): FileStats!
+  getSourceStats(sourceId: ID!, orgId: ID!): JSON!
+  budgetVsActualAnalysis(projectId: ID!, orgId: ID!): [BudgetVsActualRow!]!
+  vendorPerformanceAnalysis(orgId: ID!): [VendorPerformanceRow!]!
 }
 
 type BudgetVsActualRow {
@@ -67,12 +67,12 @@ type VendorPerformanceRow {
 }
 
 type Mutation {
-  createSource(organizationId: ID!, name: String!, type: SourceType!, config: JSON): Source!
-  updateSourceConfig(sourceId: ID!, organizationId: ID!, config: JSON!): Boolean!
-  updateSourceStatus(sourceId: ID!, organizationId: ID!, active: Boolean!): Boolean!
-  deleteSource(sourceId: ID!, organizationId: ID!): Boolean!
-  triggerSourceResync(sourceId: ID!, organizationId: ID!): Boolean!
-  reprocessFile(fileId: ID!, organizationId: ID!): Boolean!
+  createSource(orgId: ID!, name: String!, type: SourceType!, config: JSON): Source!
+  updateSourceConfig(sourceId: ID!, orgId: ID!, config: JSON!): Boolean!
+  updateSourceStatus(sourceId: ID!, orgId: ID!, active: Boolean!): Boolean!
+  deleteSource(sourceId: ID!, orgId: ID!): Boolean!
+  triggerSourceResync(sourceId: ID!, orgId: ID!): Boolean!
+  reprocessFile(fileId: ID!, orgId: ID!): Boolean!
 }
 
 # ===== CLUSTER-CENTRIC EXTENSIONS =====
@@ -84,7 +84,7 @@ scalar Upload
 
 type Vendor {
   id: ID!
-  organizationId: String!
+  orgId: String!
   name: String!
   category: String
   contact_name: String
@@ -130,7 +130,7 @@ enum ProjectStatus {
 }
 
 input TalentInput {
-  organizationId: ID!
+  orgId: ID!
   name: String!
   agent_contact: String
   union_status: String
@@ -140,7 +140,7 @@ input TalentInput {
 }
 
 input CommitFilter {
-  organizationId: ID
+  orgId: ID
   projectId: ID
   branchName: String
   author: String
@@ -154,7 +154,7 @@ input CommitFilter {
 # ContentCluster represents a cluster of extracted content nodes from a file
 type ContentCluster {
   id: ID!
-  organizationId: ID!
+  orgId: ID!
   fileId: ID!
   projectId: ID
   status: String!
@@ -179,7 +179,7 @@ type ContentCluster {
 # ExtractionJob tracks the staging and promotion of content extraction
 type ExtractionJob {
   id: ID!
-  organizationId: ID!
+  orgId: ID!
   fileId: ID!
   clusterId: ID
   status: String!
@@ -248,7 +248,7 @@ type PromotionAudit {
 # ParserRegistry configures which parsers are enabled for different file types
 type ParserRegistry {
   id: ID!
-  organizationId: ID!
+  orgId: ID!
   slot: String!
   mimeType: String
   extension: String
@@ -259,6 +259,18 @@ type ParserRegistry {
   enabled: Boolean!
   createdAt: DateTime!
   updatedAt: DateTime!
+}
+
+input SaveParserConfigInput {
+  id: ID
+  slot: String!
+  mimeType: String
+  extension: String
+  parserName: String!
+  parserVersion: String!
+  minConfidence: Float!
+  featureFlag: Boolean!
+  enabled: Boolean!
 }
 
 # ===== CROSS-LAYER ONTOLOGY ENTITIES =====
@@ -276,7 +288,7 @@ type Content {
 # Scene entity (Idea layer)
 type Scene {
   id: ID!
-  organizationId: String!
+  orgId: String!
   project_id: String!
   number: String!
   title: String!
@@ -300,7 +312,7 @@ type Scene {
 # Character entity (Idea layer)
 type Character {
   id: ID!
-  organizationId: String!
+  orgId: String!
   project_id: String!
   name: String!
   role_type: String!
@@ -319,7 +331,7 @@ type Character {
 # Talent entity (IRL layer)
 type Talent {
   id: ID!
-  organizationId: ID!
+  orgId: ID!
   name: String!
   agent_contact: String
   union_status: String
@@ -338,7 +350,7 @@ type Talent {
 # Crew entity (IRL layer)
 type Crew {
   id: ID!
-  organizationId: ID!
+  orgId: ID!
   name: String!
   role: String!
   department: String!
@@ -354,7 +366,7 @@ type Crew {
 }
 
 input CrewInput {
-  organizationId: ID!
+  orgId: ID!
   name: String!
   role: String!
   department: String!
@@ -366,7 +378,7 @@ input CrewInput {
 # Invoice entity (Ops layer)
 type Invoice {
   id: ID!
-  organizationId: ID!
+  orgId: ID!
   vendor_id: ID!
   project_id: ID
   invoice_number: String!
@@ -393,7 +405,7 @@ type Invoice {
 }
 
 input InvoiceInput {
-  organizationId: ID!
+  orgId: ID!
   vendor_id: ID!
   project_id: ID
   invoice_number: String!
@@ -415,7 +427,7 @@ input InvoiceInput {
 # ComplianceRule entity (Ops layer)
 type ComplianceRule {
   id: ID!
-  organizationId: ID!
+  orgId: ID!
   name: String!
   category: String!
   description: String!
@@ -431,7 +443,7 @@ type ComplianceRule {
 }
 
 input ComplianceRuleInput {
-  organizationId: ID!
+  orgId: ID!
   name: String!
   category: String!
   description: String!
@@ -447,7 +459,7 @@ input ComplianceRuleInput {
 # ShootDay entity (IRL layer)
 type ShootDay {
   id: ID!
-  organizationId: String!
+  orgId: String!
   project_id: String!
   date: DateTime!
   call_time: String
@@ -468,7 +480,7 @@ type ShootDay {
 # Location entity (IRL layer)
 type Location {
   id: ID!
-  organizationId: String!
+  orgId: String!
   name: String!
   address: String
   type: String!
@@ -487,7 +499,7 @@ type Location {
 # Budget entity (Ops layer)
 type Budget {
   id: ID!
-  organizationId: String!
+  orgId: String!
   project_id: String!
   category: String!
   line_item: String!
@@ -510,7 +522,7 @@ type Budget {
 # PurchaseOrder entity (Ops layer)
 type PurchaseOrder {
   id: ID!
-  organizationId: ID!
+  orgId: ID!
   project_id: String!
   vendor: String!
   po_number: String!
@@ -557,7 +569,7 @@ type EntityVersion {
 # Project entity (updated with cluster support)
 type Project {
   id: ID!
-  organizationId: ID!
+  orgId: ID!
   name: String!
   status: ProjectStatus!
   settings: JSON
@@ -576,7 +588,7 @@ type Project {
 # User entity
 type User {
   id: ID!
-  organizationId: ID!
+  orgId: ID!
   email: String!
   name: String!
   role: String!
@@ -589,53 +601,53 @@ type User {
 
 extend type Query {
   # Project queries
-  project(id: ID!, organizationId: ID!): Project
-  projects(organizationId: ID!): [Project!]!
+  project(id: ID!, orgId: ID!): Project
+  projects(orgId: ID!): [Project!]!
   
   # Scene and breakdown queries
-  sceneBreakdown(shootDayDate: DateTime!, organizationId: ID!): JSON
+  sceneBreakdown(shootDayDate: DateTime!, orgId: ID!): JSON
   
   # Provenance and versioning queries
-  entityHistory(entityId: ID!, entityType: String!, organizationId: ID!): [EntityVersion!]!
-  entityAtTime(entityId: ID!, timestamp: DateTime!, organizationId: ID!): EntityVersion
+  entityHistory(entityId: ID!, entityType: String!, orgId: ID!): [EntityVersion!]!
+  entityAtTime(entityId: ID!, timestamp: DateTime!, orgId: ID!): EntityVersion
   
   # Cluster-centric queries
-  getContentCluster(clusterId: ID!, organizationId: ID!): ContentCluster
-  getContentClusters(organizationId: ID!, fileId: ID, projectId: ID): [ContentCluster!]!
-  getExtractionJob(jobId: ID!, organizationId: ID!): ExtractionJob
-  getExtractionJobs(organizationId: ID!, status: String): [ExtractionJob!]!
+  getContentCluster(clusterId: ID!, orgId: ID!): ContentCluster
+  getContentClusters(orgId: ID!, fileId: ID, projectId: ID): [ContentCluster!]!
+  getExtractionJob(jobId: ID!, orgId: ID!): ExtractionJob
+  getExtractionJobs(orgId: ID!, status: String): [ExtractionJob!]!
   
   # Cross-layer entity queries
-  getScenes(organizationId: ID!, projectId: ID): [Scene!]!
-  getCharacters(organizationId: ID!, projectId: ID): [Character!]!
-  getTalent(organizationId: ID!): [Talent!]!
-  getCrew(organizationId: ID!): [Crew!]!
-  getShootDays(organizationId: ID!, projectId: ID): [ShootDay!]!
-  getLocations(organizationId: ID!): [Location!]!
-  getBudgets(organizationId: ID!, projectId: ID): [Budget!]!
-  getPurchaseOrders(organizationId: ID!, projectId: ID): [PurchaseOrder!]!
+  getScenes(orgId: ID!, projectId: ID): [Scene!]!
+  getCharacters(orgId: ID!, projectId: ID): [Character!]!
+  getTalent(orgId: ID!): [Talent!]!
+  getCrew(orgId: ID!): [Crew!]!
+  getShootDays(orgId: ID!, projectId: ID): [ShootDay!]!
+  getLocations(orgId: ID!): [Location!]!
+  getBudgets(orgId: ID!, projectId: ID): [Budget!]!
+  getPurchaseOrders(orgId: ID!, projectId: ID): [PurchaseOrder!]!
   
   # Cross-layer validation queries
-  validateCrossLayerLinks(organizationId: ID!): JSON!
-  getCrossLayerStatistics(organizationId: ID!): JSON!
+  validateCrossLayerLinks(orgId: ID!): JSON!
+  getCrossLayerStatistics(orgId: ID!): JSON!
 
   # Provenance & Versioning
-  commit(id: ID!, organizationId: ID!): Commit
+  commit(id: ID!, orgId: ID!): Commit
   commits(filter: CommitFilter, limit: Int = 50, offset: Int = 0): [Commit!]!
-  commitHistory(organizationId: ID!, branchName: String!, limit: Int = 50): [Commit!]!
-  entityVersions(organizationId: ID!, entityId: ID!, entityType: String!): [Version!]!
-  branches(organizationId: ID!): [Branch!]!
+  commitHistory(orgId: ID!, branchName: String!, limit: Int = 50): [Commit!]!
+  entityVersions(orgId: ID!, entityId: ID!, entityType: String!): [Version!]!
+  branches(orgId: ID!): [Branch!]!
 }
 
 extend type Mutation {
   # Cluster processing mutations
-  triggerClusterExtraction(fileId: ID!, organizationId: ID!, parserName: String): ExtractionJob!
-  promoteExtractionJob(jobId: ID!, organizationId: ID!): Boolean!
-  rollbackExtractionJob(jobId: ID!, organizationId: ID!): Boolean!
+  triggerClusterExtraction(fileId: ID!, orgId: ID!, parserName: String): ExtractionJob!
+  promoteExtractionJob(jobId: ID!, orgId: ID!): Boolean!
+  rollbackExtractionJob(jobId: ID!, orgId: ID!): Boolean!
   
   # Cross-layer link mutations
-  createCrossLayerLink(organizationId: ID!, fromEntityId: ID!, toEntityId: ID!, relationshipType: String!): Boolean!
-  validateAndRepairLinks(organizationId: ID!): JSON!
+  createCrossLayerLink(orgId: ID!, fromEntityId: ID!, toEntityId: ID!, relationshipType: String!): Boolean!
+  validateAndRepairLinks(orgId: ID!): JSON!
 
   # Content entity mutations
   createTalent(input: TalentInput!, userId: ID!): Talent!
@@ -644,18 +656,18 @@ extend type Mutation {
   createComplianceRule(input: ComplianceRuleInput!, userId: ID!): ComplianceRule!
 
   # Provenance operations
-  createBranch(name: String!, organizationId: ID!, projectId: ID, description: String!, userId: ID!, fromCommit: String): Branch!
-  createEdgeFact(type: String!, fromId: ID!, toId: ID!, organizationId: ID!, userId: ID!, props: JSON, fromType: String, toType: String): JSON!
-  endEdgeFact(edgeFactId: ID!, organizationId: ID!, userId: ID!): JSON!
+  createBranch(name: String!, orgId: ID!, projectId: ID, description: String!, userId: ID!, fromCommit: String): Branch!
+  createEdgeFact(type: String!, fromId: ID!, toId: ID!, orgId: ID!, userId: ID!, props: JSON, fromType: String, toType: String): JSON!
+  endEdgeFact(edgeFactId: ID!, orgId: ID!, userId: ID!): JSON!
   
   # Cross-layer linking
-  linkSceneToCharacter(sceneId: ID!, characterId: ID!, organizationId: ID!, userId: String!): LinkResult!
-  linkEntityToScene(entityId: ID!, entityType: String!, sceneId: ID!, organizationId: ID!, userId: String!): LinkResult!
+  linkSceneToCharacter(sceneId: ID!, characterId: ID!, orgId: ID!, userId: String!): LinkResult!
+  linkEntityToScene(entityId: ID!, entityType: String!, sceneId: ID!, orgId: ID!, userId: String!): LinkResult!
   
   # Parser configuration mutations
-  saveParserConfig(organizationId: ID!, input: SaveParserConfigInput!): ParserRegistry!
-  enableParser(organizationId: ID!, id: ID!): ParserRegistry!
-  disableParser(organizationId: ID!, id: ID!): ParserRegistry!
+  saveParserConfig(orgId: ID!, input: SaveParserConfigInput!): ParserRegistry!
+  enableParser(orgId: ID!, id: ID!): ParserRegistry!
+  disableParser(orgId: ID!, id: ID!): ParserRegistry!
 }
 
 type LinkResult { success: Boolean! }
@@ -664,7 +676,7 @@ type LinkResult { success: Boolean! }
 
 type Commit {
   id: ID!
-  organizationId: ID!
+  orgId: ID!
   message: String!
   author: String!
   authorType: String!
@@ -692,7 +704,7 @@ type Action {
 
 type Version {
   id: ID!
-  organizationId: ID!
+  orgId: ID!
   entityId: String!
   entityType: String!
   properties: JSON!
@@ -704,7 +716,7 @@ type Version {
 
 type Branch {
   name: String!
-  organizationId: String!
+  orgId: String!
   project_id: String
   description: String!
   created_from_commit: String

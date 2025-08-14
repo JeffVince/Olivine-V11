@@ -11,13 +11,13 @@ class FileModel {
     async upsertFile(fileData) {
         const query = `
       INSERT INTO files (
-        id, organization_id, source_id, path, name, extension, mime_type, size,
+        id, orgId, source_id, path, name, extension, mime_type, size,
         created_at, updated_at, modified_at, version_id, metadata, classification_status
       ) VALUES (
         COALESCE($1, gen_random_uuid()), $2, $3, $4, $5, $6, $7, $8,
         COALESCE($9, NOW()), NOW(), $10, $11, $12, COALESCE($13, 'pending')
       )
-      ON CONFLICT (organization_id, source_id, path)
+      ON CONFLICT (orgId, source_id, path)
       DO UPDATE SET
         name = EXCLUDED.name,
         extension = EXCLUDED.extension,
@@ -32,7 +32,7 @@ class FileModel {
     `;
         const values = [
             fileData.id,
-            fileData.organizationId,
+            fileData.orgId,
             fileData.sourceId,
             fileData.path,
             fileData.name,
@@ -48,41 +48,41 @@ class FileModel {
         const result = await this.postgresService.executeQuery(query, values);
         return this.mapRowToFile(result.rows[0]);
     }
-    async getFile(fileId, organizationId) {
+    async getFile(fileId, orgId) {
         const query = `
       SELECT * FROM files 
-      WHERE id = $1 AND organization_id = $2 AND deleted_at IS NULL
+      WHERE id = $1 AND orgId = $2 AND deleted_at IS NULL
     `;
-        const result = await this.postgresService.executeQuery(query, [fileId, organizationId]);
+        const result = await this.postgresService.executeQuery(query, [fileId, orgId]);
         return result.rows.length > 0 ? this.mapRowToFile(result.rows[0]) : null;
     }
-    async getFilesBySource(sourceId, organizationId, limit = 100) {
+    async getFilesBySource(sourceId, orgId, limit = 100) {
         const query = `
       SELECT * FROM files 
-      WHERE source_id = $1 AND organization_id = $2 AND deleted_at IS NULL
+      WHERE source_id = $1 AND orgId = $2 AND deleted_at IS NULL
       ORDER BY updated_at DESC
       LIMIT $3
     `;
-        const result = await this.postgresService.executeQuery(query, [sourceId, organizationId, limit]);
+        const result = await this.postgresService.executeQuery(query, [sourceId, orgId, limit]);
         return result.rows.map(row => this.mapRowToFile(row));
     }
-    async deleteFile(fileId, organizationId) {
+    async deleteFile(fileId, orgId) {
         const query = `
       UPDATE files 
       SET deleted_at = NOW(), updated_at = NOW()
-      WHERE id = $1 AND organization_id = $2
+      WHERE id = $1 AND orgId = $2
     `;
-        const result = await this.postgresService.executeQuery(query, [fileId, organizationId]);
+        const result = await this.postgresService.executeQuery(query, [fileId, orgId]);
         return (result.rowCount || 0) > 0;
     }
-    async updateClassification(fileId, organizationId, classification, status = 'completed') {
+    async updateClassification(fileId, orgId, classification, status = 'completed') {
         const query = `
       UPDATE files 
       SET 
         classification_status = $3,
         metadata = COALESCE(metadata, '{}'::jsonb) || $4::jsonb,
         updated_at = NOW()
-      WHERE id = $1 AND organization_id = $2
+      WHERE id = $1 AND orgId = $2
     `;
         const classificationData = {
             classification: {
@@ -92,26 +92,26 @@ class FileModel {
         };
         const result = await this.postgresService.executeQuery(query, [
             fileId,
-            organizationId,
+            orgId,
             status,
             JSON.stringify(classificationData)
         ]);
         return (result.rowCount || 0) > 0;
     }
-    async updateExtractedContent(fileId, organizationId, extractedText) {
+    async updateExtractedContent(fileId, orgId, extractedText) {
         const query = `
       UPDATE files 
       SET 
         extracted_text = $3,
         updated_at = NOW()
-      WHERE id = $1 AND organization_id = $2
+      WHERE id = $1 AND orgId = $2
     `;
-        const result = await this.postgresService.executeQuery(query, [fileId, organizationId, extractedText]);
+        const result = await this.postgresService.executeQuery(query, [fileId, orgId, extractedText]);
         return (result.rowCount || 0) > 0;
     }
     async syncToGraph(fileData) {
         const query = `
-      MERGE (f:File {id: $fileId, organizationId: $orgId})
+      MERGE (f:File {id: $fileId, orgId: $orgId})
       SET f.path = $path,
           f.name = $name,
           f.extension = $extension,
@@ -125,14 +125,14 @@ class FileModel {
       
       // Create relationship to source
       WITH f
-      MATCH (s:Source {id: $sourceId, organizationId: $orgId})
+      MATCH (s:Source {id: $sourceId, orgId: $orgId})
       MERGE (f)-[:STORED_IN]->(s)
       
       RETURN f
     `;
         const params = {
             fileId: fileData.id,
-            orgId: fileData.organizationId,
+            orgId: fileData.orgId,
             sourceId: fileData.sourceId,
             path: fileData.path,
             name: fileData.name,
@@ -147,17 +147,17 @@ class FileModel {
         };
         await this.neo4jService.executeQuery(query, params);
     }
-    async removeFromGraph(fileId, organizationId) {
+    async removeFromGraph(fileId, orgId) {
         const query = `
-      MATCH (f:File {id: $fileId, organizationId: $orgId})
+      MATCH (f:File {id: $fileId, orgId: $orgId})
       DETACH DELETE f
     `;
-        await this.neo4jService.executeQuery(query, { fileId, orgId: organizationId });
+        await this.neo4jService.executeQuery(query, { fileId, orgId: orgId });
     }
     mapRowToFile(row) {
         return {
             id: row.id,
-            organizationId: row.organization_id,
+            orgId: row.orgId,
             sourceId: row.source_id,
             path: row.path,
             name: row.name,

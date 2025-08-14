@@ -2,7 +2,7 @@ enum SourceType { dropbox google_drive onedrive local }
 
 type Source {
   id: ID!
-  organizationId: ID!
+  orgId: ID!
   name: String!
   type: SourceType!
   config: JSON
@@ -13,7 +13,7 @@ type Source {
 
 type FileMeta {
   id: ID!
-  organizationId: ID!
+  orgId: ID!
   sourceId: ID!
   path: String!
   name: String!
@@ -37,12 +37,12 @@ type FileStats {
 }
 
 type Query {
-  getSources(organizationId: ID!): [Source!]!
-  getSource(sourceId: ID!, organizationId: ID!): Source
-  getFiles(organizationId: ID!, sourceId: ID, limit: Int): [FileMeta!]!
-  getFile(fileId: ID!, organizationId: ID!): FileMeta
-  getFileStats(organizationId: ID!): FileStats!
-  getSourceStats(sourceId: ID!, organizationId: ID!): JSON!
+  getSources(orgId: ID!): [Source!]!
+  getSource(sourceId: ID!, orgId: ID!): Source
+  getFiles(orgId: ID!, sourceId: ID, limit: Int): [FileMeta!]!
+  getFile(fileId: ID!, orgId: ID!): FileMeta
+  getFileStats(orgId: ID!): FileStats!
+  getSourceStats(sourceId: ID!, orgId: ID!): JSON!
   budgetVsActualAnalysis(projectId: ID!, orgId: ID!): [BudgetVsActualRow!]!
   vendorPerformanceAnalysis(orgId: ID!): [VendorPerformanceRow!]!
 }
@@ -67,12 +67,12 @@ type VendorPerformanceRow {
 }
 
 type Mutation {
-  createSource(organizationId: ID!, name: String!, type: SourceType!, config: JSON): Source!
-  updateSourceConfig(sourceId: ID!, organizationId: ID!, config: JSON!): Boolean!
-  updateSourceStatus(sourceId: ID!, organizationId: ID!, active: Boolean!): Boolean!
-  deleteSource(sourceId: ID!, organizationId: ID!): Boolean!
-  triggerSourceResync(sourceId: ID!, organizationId: ID!): Boolean!
-  reprocessFile(fileId: ID!, organizationId: ID!): Boolean!
+  createSource(orgId: ID!, name: String!, type: SourceType!, config: JSON): Source!
+  updateSourceConfig(sourceId: ID!, orgId: ID!, config: JSON!): Boolean!
+  updateSourceStatus(sourceId: ID!, orgId: ID!, active: Boolean!): Boolean!
+  deleteSource(sourceId: ID!, orgId: ID!): Boolean!
+  triggerSourceResync(sourceId: ID!, orgId: ID!): Boolean!
+  reprocessFile(fileId: ID!, orgId: ID!): Boolean!
 }
 
 # ===== CLUSTER-CENTRIC EXTENSIONS =====
@@ -409,7 +409,7 @@ type Organization {
 # Project entity (updated with cluster support)
 type Project {
   id: ID!
-  organizationId: ID!
+  orgId: ID!
   name: String!
   status: ProjectStatus!
   settings: JSON
@@ -428,7 +428,7 @@ type Project {
 # User entity
 type User {
   id: ID!
-  organizationId: ID!
+  orgId: ID!
   email: String!
   name: String!
   role: String!
@@ -441,35 +441,35 @@ type User {
 
 extend type Query {
   # Cluster-centric queries
-  getContentCluster(clusterId: ID!, organizationId: ID!): ContentCluster
-  getContentClusters(organizationId: ID!, fileId: ID, projectId: ID): [ContentCluster!]!
-  getExtractionJob(jobId: ID!, organizationId: ID!): ExtractionJob
-  getExtractionJobs(organizationId: ID!, status: String): [ExtractionJob!]!
+  getContentCluster(clusterId: ID!, orgId: ID!): ContentCluster
+  getContentClusters(orgId: ID!, fileId: ID, projectId: ID): [ContentCluster!]!
+  getExtractionJob(jobId: ID!, orgId: ID!): ExtractionJob
+  getExtractionJobs(orgId: ID!, status: String): [ExtractionJob!]!
   
   # Cross-layer entity queries
-  getScenes(organizationId: ID!, projectId: ID): [Scene!]!
-  getCharacters(organizationId: ID!, projectId: ID): [Character!]!
-  getTalent(organizationId: ID!): [Talent!]!
-  getCrew(organizationId: ID!): [Crew!]!
-  getShootDays(organizationId: ID!, projectId: ID): [ShootDay!]!
-  getLocations(organizationId: ID!): [Location!]!
-  getBudgets(organizationId: ID!, projectId: ID): [Budget!]!
-  getPurchaseOrders(organizationId: ID!, projectId: ID): [PurchaseOrder!]!
+  getScenes(orgId: ID!, projectId: ID): [Scene!]!
+  getCharacters(orgId: ID!, projectId: ID): [Character!]!
+  getTalent(orgId: ID!): [Talent!]!
+  getCrew(orgId: ID!): [Crew!]!
+  getShootDays(orgId: ID!, projectId: ID): [ShootDay!]!
+  getLocations(orgId: ID!): [Location!]!
+  getBudgets(orgId: ID!, projectId: ID): [Budget!]!
+  getPurchaseOrders(orgId: ID!, projectId: ID): [PurchaseOrder!]!
   
   # Cross-layer validation queries
-  validateCrossLayerLinks(organizationId: ID!): JSON!
-  getCrossLayerStatistics(organizationId: ID!): JSON!
+  validateCrossLayerLinks(orgId: ID!): JSON!
+  getCrossLayerStatistics(orgId: ID!): JSON!
 }
 
 extend type Mutation {
   # Cluster processing mutations
-  triggerClusterExtraction(fileId: ID!, organizationId: ID!, parserName: String): ExtractionJob!
-  promoteExtractionJob(jobId: ID!, organizationId: ID!): Boolean!
-  rollbackExtractionJob(jobId: ID!, organizationId: ID!): Boolean!
+  triggerClusterExtraction(fileId: ID!, orgId: ID!, parserName: String): ExtractionJob!
+  promoteExtractionJob(jobId: ID!, orgId: ID!): Boolean!
+  rollbackExtractionJob(jobId: ID!, orgId: ID!): Boolean!
   
   # Cross-layer link mutations
-  createCrossLayerLink(organizationId: ID!, fromEntityId: ID!, toEntityId: ID!, relationshipType: String!): Boolean!
-  validateAndRepairLinks(organizationId: ID!): JSON!
+  createCrossLayerLink(orgId: ID!, fromEntityId: ID!, toEntityId: ID!, relationshipType: String!): Boolean!
+  validateAndRepairLinks(orgId: ID!): JSON!
 }
 
 type LinkResult { success: Boolean! }

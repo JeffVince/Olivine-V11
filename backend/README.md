@@ -47,7 +47,7 @@ The PostgresService provides a centralized interface for interacting with the Po
 ```typescript
 const postgresService = new PostgresService();
 const result = await postgresService.executeQuery(
-  'SELECT * FROM files WHERE organization_id = $1',
+  'SELECT * FROM files WHERE orgId = $1',
   ['123e4567-e89b-12d3-a456-426614174000']
 );
 ```
@@ -184,12 +184,12 @@ The Olivine knowledge graph consists of four core ontologies:
 
 **Core Tables:**
 1. `organizations` - Organization entities with ID, name, slug
-2. `users` - User entities with ID, email, password_hash, organization_id, role
-3. `sources` - Source entities with ID, organization_id, name, type, config
-4. `files` - File entities with ID, organization_id, source_id, path, name, extension, mime_type, size, timestamps
+2. `users` - User entities with ID, email, password_hash, orgId, role
+3. `sources` - Source entities with ID, orgId, name, type, config
+4. `files` - File entities with ID, orgId, source_id, path, name, extension, mime_type, size, timestamps
 
 **Row Level Security (RLS) Policies:**
-All tables have RLS enabled with policies that filter data by `organization_id`:
+All tables have RLS enabled with policies that filter data by `orgId`:
 - Users can only access data from their own organization
 - Files can only be accessed by users from the same organization
 - Sources can only be accessed by users from the same organization
@@ -223,7 +223,7 @@ Execute these to create `runbooks` and `taxonomy_rules` tables used by the front
    ```sql
    CREATE TABLE new_table (
      id UUID PRIMARY KEY,
-     organization_id UUID NOT NULL REFERENCES organizations(id),
+     orgId UUID NOT NULL REFERENCES organizations(id),
      name VARCHAR(255) NOT NULL
    );
    
@@ -232,7 +232,7 @@ Execute these to create `runbooks` and `taxonomy_rules` tables used by the front
    CREATE POLICY new_table_org_isolation 
    ON new_table 
    FOR ALL 
-   USING (organization_id = current_setting('app.organization_id')::UUID);
+   USING (orgId = current_setting('app.orgId')::UUID);
    ```
 3. Run migrations with `npm run migrate`
 
@@ -264,7 +264,7 @@ Execute these to create `runbooks` and `taxonomy_rules` tables used by the front
 
 2. **RLS Policy Issues**
    - Verify RLS is enabled on tables: `SELECT tablename, relrowsecurity FROM pg_tables JOIN pg_class ON tablename = relname WHERE schemaname = 'public'`
-   - Check that `app.organization_id` is set in session context
+   - Check that `app.orgId` is set in session context
    - Test queries with different organization contexts
 
 3. **Foreign Key Constraint Violations**

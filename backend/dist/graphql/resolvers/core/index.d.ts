@@ -13,23 +13,23 @@ export declare function buildCoreResolvers(): {
     };
     Query: {
         getSources: (_: any, args: {
-            organizationId: string;
+            orgId: string;
         }) => Promise<import("../../../models/Source").SourceMetadata[]>;
         getSource: (_: any, args: {
             sourceId: string;
-            organizationId: string;
+            orgId: string;
         }) => Promise<import("../../../models/Source").SourceMetadata | null>;
         getFiles: (_: any, args: {
-            organizationId: string;
+            orgId: string;
             sourceId?: string;
             limit?: number;
         }) => Promise<import("../../../models/File").FileMetadata[]>;
         getFile: (_: any, args: {
             fileId: string;
-            organizationId: string;
+            orgId: string;
         }) => Promise<import("../../../models/File").FileMetadata | null>;
         getFileStats: (_: any, args: {
-            organizationId: string;
+            orgId: string;
         }) => Promise<{
             total: number;
             byStatus: {
@@ -41,7 +41,7 @@ export declare function buildCoreResolvers(): {
         }>;
         getSourceStats: (_: any, args: {
             sourceId: string;
-            organizationId: string;
+            orgId: string;
         }) => Promise<{
             fileCount: number;
             totalSize: number;
@@ -53,32 +53,32 @@ export declare function buildCoreResolvers(): {
     };
     Mutation: {
         createSource: (_: any, args: {
-            organizationId: string;
+            orgId: string;
             name: string;
             type: "dropbox" | "google_drive" | "onedrive" | "local";
             config?: any;
         }) => Promise<import("../../../models/Source").SourceMetadata>;
         updateSourceConfig: (_: any, args: {
             sourceId: string;
-            organizationId: string;
+            orgId: string;
             config: any;
         }) => Promise<boolean>;
         updateSourceStatus: (_: any, args: {
             sourceId: string;
-            organizationId: string;
+            orgId: string;
             active: boolean;
         }) => Promise<boolean>;
         deleteSource: (_: any, args: {
             sourceId: string;
-            organizationId: string;
+            orgId: string;
         }) => Promise<boolean>;
         triggerSourceResync: (_: any, args: {
             sourceId: string;
-            organizationId: string;
+            orgId: string;
         }) => Promise<boolean>;
         reprocessFile: (_: any, args: {
             fileId: string;
-            organizationId: string;
+            orgId: string;
         }) => Promise<boolean>;
     };
 };

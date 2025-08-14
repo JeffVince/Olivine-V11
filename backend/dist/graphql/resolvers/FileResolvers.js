@@ -15,47 +15,47 @@ class FileResolvers {
         eventProcessingService.fileProcessingService = this.fileProcessingService;
         this.eventProcessingService = eventProcessingService;
     }
-    async getFiles(organizationId, sourceId, limit = 100) {
-        if (!organizationId || organizationId.trim() === '') {
+    async getFiles(orgId, sourceId, limit = 100) {
+        if (!orgId || orgId.trim() === '') {
             throw new Error('Organization ID is required');
         }
         if (sourceId) {
-            return await this.fileModel.getFilesBySource(sourceId, organizationId, limit);
+            return await this.fileModel.getFilesBySource(sourceId, orgId, limit);
         }
-        const sources = await this.sourceModel.getSourcesByOrganization(organizationId);
+        const sources = await this.sourceModel.getSourcesByOrganization(orgId);
         const allFiles = [];
         for (const source of sources) {
-            const sourceFiles = await this.fileModel.getFilesBySource(source.id, organizationId, limit);
+            const sourceFiles = await this.fileModel.getFilesBySource(source.id, orgId, limit);
             allFiles.push(...sourceFiles);
         }
         return allFiles
             .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())
             .slice(0, limit);
     }
-    async getFile(fileId, organizationId) {
+    async getFile(fileId, orgId) {
         if (!fileId || fileId.trim() === '') {
             throw new Error('File ID is required');
         }
-        if (!organizationId || organizationId.trim() === '') {
+        if (!orgId || orgId.trim() === '') {
             throw new Error('Organization ID is required');
         }
-        return await this.fileModel.getFile(fileId, organizationId);
+        return await this.fileModel.getFile(fileId, orgId);
     }
-    async reprocessFile(fileId, organizationId) {
+    async reprocessFile(fileId, orgId) {
         if (!fileId || fileId.trim() === '') {
             throw new Error('File ID is required');
         }
-        if (!organizationId || organizationId.trim() === '') {
+        if (!orgId || orgId.trim() === '') {
             throw new Error('Organization ID is required');
         }
         try {
-            const file = await this.fileModel.getFile(fileId, organizationId);
+            const file = await this.fileModel.getFile(fileId, orgId);
             if (!file) {
                 throw new Error('File not found');
             }
             await this.fileProcessingService.processFileChange({
                 fileId: file.id,
-                organizationId: file.organizationId,
+                orgId: file.orgId,
                 sourceId: file.sourceId,
                 filePath: file.path,
                 action: 'update',
@@ -68,19 +68,19 @@ class FileResolvers {
             return false;
         }
     }
-    async getFileClassificationStatus(fileId, organizationId) {
-        const file = await this.fileModel.getFile(fileId, organizationId);
+    async getFileClassificationStatus(fileId, orgId) {
+        const file = await this.fileModel.getFile(fileId, orgId);
         return file?.classificationStatus || null;
     }
-    async searchFiles(organizationId, query, sourceId, mimeType, limit = 50) {
+    async searchFiles(orgId, query, sourceId, mimeType, limit = 50) {
         const sources = sourceId
-            ? [await this.sourceModel.getSource(sourceId, organizationId)].filter(Boolean)
-            : await this.sourceModel.getSourcesByOrganization(organizationId);
+            ? [await this.sourceModel.getSource(sourceId, orgId)].filter(Boolean)
+            : await this.sourceModel.getSourcesByOrganization(orgId);
         const searchResults = [];
         for (const source of sources) {
             if (!source)
                 continue;
-            const files = await this.fileModel.getFilesBySource(source.id, organizationId, 1000);
+            const files = await this.fileModel.getFilesBySource(source.id, orgId, 1000);
             const filteredFiles = files.filter(file => {
                 if (mimeType && file.mimeType !== mimeType) {
                     return false;
@@ -100,15 +100,15 @@ class FileResolvers {
         })
             .slice(0, limit);
     }
-    async getFileStats(organizationId) {
-        const sources = await this.sourceModel.getSourcesByOrganization(organizationId);
+    async getFileStats(orgId) {
+        const sources = await this.sourceModel.getSourcesByOrganization(orgId);
         const stats = {
             total: 0,
             byStatus: {},
             byMimeType: {}
         };
         for (const source of sources) {
-            const files = await this.fileModel.getFilesBySource(source.id, organizationId, 10000);
+            const files = await this.fileModel.getFilesBySource(source.id, orgId, 10000);
             stats.total += files.length;
             files.forEach(file => {
                 const status = file.classificationStatus;

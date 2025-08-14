@@ -17,7 +17,7 @@ async function setupPostgresTables() {
         await postgresService.executeQuery(`
       CREATE TABLE IF NOT EXISTS users (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        organization_id UUID NOT NULL REFERENCES organizations(id),
+        orgId UUID NOT NULL REFERENCES organizations(id),
         email VARCHAR(255) UNIQUE NOT NULL,
         password_hash VARCHAR(255) NOT NULL,
         first_name VARCHAR(100),
@@ -31,7 +31,7 @@ async function setupPostgresTables() {
         await postgresService.executeQuery(`
       CREATE TABLE IF NOT EXISTS sources (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        organization_id UUID NOT NULL REFERENCES organizations(id),
+        orgId UUID NOT NULL REFERENCES organizations(id),
         name VARCHAR(255) NOT NULL,
         type VARCHAR(50) NOT NULL,
         config JSONB NOT NULL,
@@ -43,7 +43,7 @@ async function setupPostgresTables() {
         await postgresService.executeQuery(`
       CREATE TABLE IF NOT EXISTS files (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        organization_id UUID NOT NULL REFERENCES organizations(id),
+        orgId UUID NOT NULL REFERENCES organizations(id),
         source_id UUID NOT NULL REFERENCES sources(id),
         path VARCHAR(1000) NOT NULL,
         name VARCHAR(255) NOT NULL,

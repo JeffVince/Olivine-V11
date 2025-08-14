@@ -67,7 +67,7 @@ class GoogleDriveService {
                metadata->>'gdrive_expires_at' as expires_at,
                metadata->>'gdrive_token_type' as token_type
         FROM sources 
-        WHERE organization_id = $1 AND id = $2 AND type = 'google_drive'
+        WHERE orgId = $1 AND id = $2 AND type = 'google_drive'
       `;
             const sources = await this.postgresService.executeQuery(query, [orgId, sourceId]);
             if (sources.rows.length === 0) {
@@ -92,7 +92,7 @@ class GoogleDriveService {
         UPDATE sources 
         SET metadata = metadata || $1::jsonb,
             updated_at = NOW()
-        WHERE organization_id = $2 AND id = $3
+        WHERE orgId = $2 AND id = $3
       `;
             const metadata = {
                 gdrive_access_token: tokenData.access_token,

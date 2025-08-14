@@ -8,7 +8,7 @@ CREATE CONSTRAINT org_id IF NOT EXISTS FOR (o:Organization) REQUIRE o.id IS UNIQ
 CREATE CONSTRAINT source_id IF NOT EXISTS FOR (s:Source) REQUIRE s.id IS UNIQUE;
 
 /* Create indexes for performance */
-CREATE INDEX file_org_id IF NOT EXISTS FOR (f:File) ON (f.organizationId);
+CREATE INDEX file_org_id IF NOT EXISTS FOR (f:File) ON (f.orgId);
 
 CREATE INDEX file_source_id IF NOT EXISTS FOR (f:File) ON (f.sourceId);
 

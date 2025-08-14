@@ -20,6 +20,13 @@ const ProvenanceService_1 = require("../../services/provenance/ProvenanceService
 const Neo4jService_1 = require("../../services/Neo4jService");
 const CryptoService_1 = require("../../services/crypto/CryptoService");
 const uuid_1 = require("uuid");
+const CommitRepository_1 = require("./graph/CommitRepository");
+const ActionRepository_1 = require("./graph/ActionRepository");
+const VersionRepository_1 = require("./graph/VersionRepository");
+const CommitHandler_1 = require("./handlers/CommitHandler");
+const ActionHandler_1 = require("./handlers/ActionHandler");
+const VersionHandler_1 = require("./handlers/VersionHandler");
+const LegacyProvenanceHandler_1 = require("./handlers/LegacyProvenanceHandler");
 class ProvenanceTrackingAgent extends BaseAgent_1.BaseAgent {
     constructor(queueService, config) {
         super('provenance-tracking-agent', queueService, {
@@ -33,6 +40,13 @@ class ProvenanceTrackingAgent extends BaseAgent_1.BaseAgent {
         this.provenanceService = new ProvenanceService_1.ProvenanceService();
         this.neo4jService = new Neo4jService_1.Neo4jService();
         this.cryptoService = new CryptoService_1.CryptoService();
+        this.commitRepo = new CommitRepository_1.CommitRepository(this.neo4jService);
+        this.actionRepo = new ActionRepository_1.ActionRepository(this.neo4jService);
+        this.versionRepo = new VersionRepository_1.VersionRepository(this.neo4jService);
+        this.commitHandler = new CommitHandler_1.CommitHandler(this.cryptoService, this.commitRepo);
+        this.actionHandler = new ActionHandler_1.ActionHandler(this.actionRepo, this.commitRepo);
+        this.versionHandler = new VersionHandler_1.VersionHandler(this.cryptoService, this.versionRepo);
+        this.legacyHandler = new LegacyProvenanceHandler_1.LegacyProvenanceHandler(this.commitHandler, this.actionHandler);
     }
     async onStart() {
         this.logger.info('Starting ProvenanceTrackingAgent...');
