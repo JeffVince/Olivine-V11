@@ -192,7 +192,9 @@ class TaxonomyService {
         valid_to: null,
         created_by_commit: $commit_id,
         org_id: $org_id,
-        props: $props
+        confidence: $confidence,
+        method: $method,
+        rule_id: $rule_id
       })
       
       // Link EdgeFact to file and slot
@@ -212,21 +214,18 @@ class TaxonomyService {
             org_id: orgId,
             user_id: userId,
             slot: classification.slot,
-            inputs: {
+            inputs: JSON.stringify({
                 file_id: fileId,
                 classification_method: classification.method,
                 rule_id: classification.rule_id
-            },
-            outputs: {
+            }),
+            outputs: JSON.stringify({
                 slot: classification.slot,
                 confidence: classification.confidence
-            },
-            props: {
-                confidence: classification.confidence,
-                method: classification.method,
-                rule_id: classification.rule_id,
-                metadata: classification.metadata || {}
-            }
+            }),
+            confidence: classification.confidence,
+            method: classification.method,
+            rule_id: classification.rule_id
         }, orgId);
     }
     async getCanonicalSlots(orgId) {

@@ -225,10 +225,16 @@ class AgentRegistry {
         };
         for (const [name, agent] of this.agents) {
             try {
-                const healthCheck = await agent.getHealthCheck();
-                result.agents[name] = { healthy: healthCheck.healthy };
-                if (!healthCheck.healthy) {
-                    result.healthy = false;
+                const isRunning = typeof agent.isRunning === 'function' ? agent.isRunning() : false;
+                if (isRunning) {
+                    result.agents[name] = { healthy: true };
+                }
+                else {
+                    const healthCheck = await agent.getHealthCheck();
+                    result.agents[name] = { healthy: !!healthCheck.healthy };
+                    if (!healthCheck.healthy) {
+                        result.healthy = false;
+                    }
                 }
             }
             catch (error) {

@@ -15,7 +15,7 @@ export class PostgresService {
       ? (process.env.POSTGRES_DATABASE || process.env.POSTGRES_TEST_DATABASE || process.env.POSTGRES_DB || 'olivine_test')
       : (process.env.POSTGRES_DB || process.env.POSTGRES_DATABASE || 'olivine');
 
-    const poolConfig: PoolConfig = {
+    const poolConfig: PoolConfig & { allowExitOnIdle?: boolean } = {
       host: process.env.POSTGRES_HOST || 'localhost',
       port: parseInt(process.env.POSTGRES_PORT || '5432'),
       database: dbName,
@@ -25,6 +25,13 @@ export class PostgresService {
       idleTimeoutMillis: parseInt(process.env.POSTGRES_IDLE_TIMEOUT || '30000'),
       connectionTimeoutMillis: parseInt(process.env.POSTGRES_CONNECTION_TIMEOUT || '2000')
     };
+
+    // Reduce open handle warnings in tests by allowing process exit on idle
+    if (isTest) {
+      poolConfig.allowExitOnIdle = true;
+      poolConfig.idleTimeoutMillis = Math.min(poolConfig.idleTimeoutMillis ?? 30000, 1000);
+      poolConfig.max = Math.min(poolConfig.max ?? 20, 1);
+    }
 
     this.pool = new Pool(poolConfig);
   }

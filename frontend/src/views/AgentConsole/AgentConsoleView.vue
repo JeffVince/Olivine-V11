@@ -134,7 +134,7 @@
             </div>
             <div class="d-flex align-center gap-2">
               <v-text-field
-                v-model="searchQuery"
+                v-model="agentSearch"
                 prepend-inner-icon="mdi-magnify"
                 label="Search agents..."
                 variant="outlined"
@@ -144,7 +144,7 @@
                 style="width: 250px;"
               />
               <v-select
-                v-model="statusFilter"
+                v-model="agentStatusFilter"
                 :items="statusOptions"
                 label="Filter by status"
                 variant="outlined"
@@ -211,7 +211,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useNotificationStore } from '@/stores/notificationStore'
 import { useAgentJobs } from '@/composables/useAgentJobs'
 import { useAgentHealth } from '@/composables/useAgentHealth'
@@ -279,8 +279,8 @@ const {
 // Logs dialog state
 const showLogDialog = ref(false)
 const toggling = ref<string | null>(null)
-const searchQuery = ref('')
-const statusFilter = ref('')
+// const searchQuery = ref('') // Not currently used
+// const statusFilter = ref('') // Not currently used
 
 // Wrapper function for cancelJob to match JobsTable expected signature
 function handleCancelJob(job: Job) {
@@ -293,7 +293,7 @@ function handleCancelJob(job: Job) {
 const activeAgents = computed(() => agents.value.filter(a => a.status === 'active').length)
 const runningTasks = computed(() => agents.value.reduce((sum, a) => sum + a.tasksRunning, 0))
 const completedTasks = computed(() => agents.value.reduce((sum, a) => sum + a.tasksCompleted, 0))
-const failedTasks = computed(() => 0)
+// const failedTasks = computed(() => 0) // Not currently used
 
 // Options
 const statusOptions = [
@@ -348,7 +348,7 @@ const jobHeaders = [
 
 
 
-const loading = ref(false)
+// const loading = ref(false) // Not currently used
 
 function saveAgent(agent: Agent) {
   // This is a placeholder implementation
@@ -362,6 +362,49 @@ async function onCancelJob(item: any) {
   await cancelJob(orgIdRef.value, item.id)
 }
 
+// Expose properties to template
+defineExpose({
+  searchQuery: agentSearch,
+  statusFilter: agentStatusFilter,
+  loading: jobLoading,
+  activeAgents,
+  runningTasks,
+  completedTasks,
+  totalActive,
+  totalWaiting,
+  totalFailed,
+  statusOptions,
+  agentTypes,
+  jobStatusOptions,
+  jobTypeOptions,
+  jobHeaders,
+  agents,
+  filteredAgents,
+  filteredJobs,
+  showCreateDialog,
+  editingAgent,
+  saving,
+  showLogDialog,
+  selectedLogs,
+  handleCancelJob,
+  getAgentColor,
+  getAgentIcon,
+  getStatusColor,
+  formatDateTime,
+  getJobStatusColor,
+  formatDuration,
+  formatDate,
+  refetchJobs,
+  openLogs,
+  createAgent,
+  updateAgent,
+  deleteAgent,
+  toggleAgentStatus,
+  duplicateAgent,
+  viewAgent,
+  editAgent,
+  openCreateDialog
+})
 
 </script>
 

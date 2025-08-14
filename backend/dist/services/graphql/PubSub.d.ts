@@ -1,5 +1,5 @@
-import { PubSub } from 'graphql-subscriptions';
-export declare const pubsub: PubSub;
+export declare const createPubSub: () => any;
+export declare const pubsub: any;
 export declare const TOPICS: {
     JobUpdated: string;
     JobLogAppended: string;

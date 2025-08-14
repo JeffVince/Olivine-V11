@@ -6,16 +6,25 @@ const dotenv_1 = require("dotenv");
 (0, dotenv_1.config)();
 class PostgresService {
     constructor() {
+        const isTest = process.env.NODE_ENV === 'test' || process.env.TEST_MODE === 'true';
+        const dbName = isTest
+            ? (process.env.POSTGRES_DATABASE || process.env.POSTGRES_TEST_DATABASE || process.env.POSTGRES_DB || 'olivine_test')
+            : (process.env.POSTGRES_DB || process.env.POSTGRES_DATABASE || 'olivine');
         const poolConfig = {
             host: process.env.POSTGRES_HOST || 'localhost',
             port: parseInt(process.env.POSTGRES_PORT || '5432'),
-            database: process.env.POSTGRES_DATABASE || process.env.POSTGRES_DB || 'olivine',
+            database: dbName,
             user: process.env.POSTGRES_USER || 'postgres',
             password: process.env.POSTGRES_PASSWORD || 'password',
             max: parseInt(process.env.POSTGRES_MAX_CONNECTIONS || '20'),
             idleTimeoutMillis: parseInt(process.env.POSTGRES_IDLE_TIMEOUT || '30000'),
             connectionTimeoutMillis: parseInt(process.env.POSTGRES_CONNECTION_TIMEOUT || '2000')
         };
+        if (isTest) {
+            poolConfig.allowExitOnIdle = true;
+            poolConfig.idleTimeoutMillis = Math.min(poolConfig.idleTimeoutMillis ?? 30000, 1000);
+            poolConfig.max = Math.min(poolConfig.max ?? 20, 1);
+        }
         this.pool = new pg_1.Pool(poolConfig);
     }
     async executeQuery(query, params = []) {

@@ -81,10 +81,10 @@ export declare function buildAgentJobResolvers(queueService: QueueService): {
     };
     Subscription: {
         jobUpdated: {
-            subscribe: () => AsyncIterator<unknown, any, any>;
+            subscribe: () => any;
         };
         jobLogAppended: {
-            subscribe: () => AsyncIterator<unknown, any, any>;
+            subscribe: () => any;
         };
     };
 };

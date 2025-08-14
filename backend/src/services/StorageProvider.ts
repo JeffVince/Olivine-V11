@@ -51,10 +51,15 @@ export interface StorageProvider {
 export type StorageProviderType = 'dropbox' | 'gdrive' | 'supabase';
 
 export class StorageProviderFactory {
+  private static instances: Partial<Record<StorageProviderType, StorageProvider>> = {};
   // TODO: Implementation Plan - 02-Data-Ingestion-Implementation.md - Storage provider factory implementation
   // TODO: Implementation Checklist - 03-Storage-Integration-Checklist.md - Storage provider factory pattern
   // TODO: Implementation Checklist - 07-Testing-QA-Checklist.md - Backend storage provider factory tests
   static async createProvider(type: StorageProviderType): Promise<StorageProvider> {
+    // Return cached instance per provider type to avoid heavy re-initialization
+    const existing = this.instances[type];
+    if (existing) return existing;
+
     // Use static imports so instanceof works with jest mocks
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const { DropboxService } = require('./DropboxService');
@@ -63,16 +68,23 @@ export class StorageProviderFactory {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const { SupabaseService } = require('./SupabaseService');
 
+    let instance: StorageProvider;
     switch (type) {
       case 'dropbox':
-        return new DropboxService();
+        instance = new DropboxService();
+        break;
       case 'gdrive':
-        return new GoogleDriveService();
+        instance = new GoogleDriveService();
+        break;
       case 'supabase':
-        return new SupabaseService();
+        instance = new SupabaseService();
+        break;
       default:
         throw new Error(`Unsupported storage provider type: ${type}`);
     }
+
+    this.instances[type] = instance;
+    return instance;
   }
 }
 

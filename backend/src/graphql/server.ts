@@ -189,17 +189,8 @@ export class GraphQLServer {
         join(schemaPath, 'enhanced.graphql'),
         'utf8'
       );
-      // Normalize conflicting signatures to match tests
-      // 1) Force linkSceneToCharacter to return LinkResult! and use String! for orgId/userId
-      enhancedTypeDefs = enhancedTypeDefs
-        .replace(
-          /linkSceneToCharacter\([^)]*\):\s*JSON!/g,
-          'linkSceneToCharacter(sceneId: ID!, characterId: ID!, orgId: String!, userId: String!): LinkResult!'
-        )
-        // 2) Coerce common arg types to String! to avoid ID! conflicts in tests
-        .replace(/userId:\s*ID!/g, 'userId: String!')
-        .replace(/orgId:\s*ID!/g, 'orgId: String!')
-        .replace(/organizationId:\s*ID!/g, 'organizationId: String!');
+      // Schema types are now consistent, no need for runtime modifications
+      // Remove conflicting signature normalization that was forcing String! types
     } catch {
       enhancedTypeDefs = '';
     }
@@ -208,11 +199,8 @@ export class GraphQLServer {
       join(schemaPath, 'core.graphql'),
       'utf8'
     );
-    // Normalize arg types in core schema for tests expecting String! instead of ID!
-    coreTypeDefs = coreTypeDefs
-      .replace(/userId:\s*ID!/g, 'userId: String!')
-      .replace(/orgId:\s*ID!/g, 'orgId: String!')
-      .replace(/organizationId:\s*ID!/g, 'organizationId: String!');
+    // Schema types are now consistent, no need for runtime modifications
+    // Remove conflicting signature normalization that was forcing String! types
 
     // Minimal extensions required by E2E tests
     const e2eExtensions = `
@@ -300,7 +288,7 @@ export class GraphQLServer {
         createVendor(input: VendorInput!, userId: String!): Vendor!
         createBudget(input: BudgetInput!, userId: String!): Budget!
         createPurchaseOrder(input: PurchaseOrderInput!, userId: String!): PurchaseOrder!
-        linkSceneToCharacter(sceneId: ID!, characterId: ID!, orgId: String!, userId: String!): LinkResult!
+        linkSceneToCharacter(sceneId: ID!, characterId: ID!, orgId: ID!, userId: String!): LinkResult!
       }
     `;
 
@@ -425,6 +413,10 @@ export class GraphQLServer {
   private async createApolloServer(schema: any): Promise<void> {
     this.logger.info('Creating Apollo Server...');
 
+    // Capture logger and env for plugin closures
+    const logger = this.logger;
+    const isTestEnv = process.env.TEST_MODE === 'true' || process.env.NODE_ENV === 'test';
+
     this.apolloServer = new ApolloServer<BaseContext>({
       schema,
       plugins: [
@@ -439,17 +431,25 @@ export class GraphQLServer {
         // Custom plugin for request logging
         {
           async requestDidStart() {
-            const logger = (this as any).logger || (global as any).logger || console;
             return {
               async didResolveOperation(requestContext: any) {
+                const opName = requestContext.request?.operationName
+                  ?? requestContext.operationName
+                  ?? requestContext.operation?.name?.value
+                  ?? 'anonymous';
+                // Only log debug when logger level permits; avoid console fallback
                 logger?.debug?.('GraphQL operation resolved', {
-                  operationName: requestContext.request.operationName,
-                  query: requestContext.request.query
+                  operationName: opName,
+                  query: requestContext.request?.query
                 });
               },
               async didEncounterErrors(requestContext: any) {
+                const opName = requestContext.request?.operationName
+                  ?? requestContext.operationName
+                  ?? requestContext.operation?.name?.value
+                  ?? 'anonymous';
                 logger?.error?.('GraphQL errors encountered', {
-                  operationName: requestContext.request.operationName,
+                  operationName: opName,
                   errors: requestContext.errors
                 });
               }
@@ -461,12 +461,15 @@ export class GraphQLServer {
         {
           async requestDidStart() {
             const startTime = Date.now();
-            const logger = (this as any).logger || (global as any).logger || console;
             return {
               async willSendResponse(requestContext: any) {
                 const duration = Date.now() - startTime;
+                const opName = requestContext.request?.operationName
+                  ?? requestContext.operationName
+                  ?? requestContext.operation?.name?.value
+                  ?? 'anonymous';
                 logger?.info?.('GraphQL request completed', {
-                  operationName: requestContext.request.operationName,
+                  operationName: opName,
                   duration: `${duration}ms`,
                   success: !requestContext.errors?.length
                 });

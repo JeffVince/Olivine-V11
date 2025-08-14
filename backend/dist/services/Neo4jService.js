@@ -44,13 +44,13 @@ class Neo4jService {
                     sanitizedParams[k] = null;
                     continue;
                 }
-                if (v && typeof v === 'object' && !(v instanceof Date) && !Array.isArray(v)) {
-                    if (/(_json|metadata|inputs|outputs|properties|props)$/i.test(k)) {
-                        sanitizedParams[k] = JSON.stringify(v);
-                    }
-                    else {
-                        sanitizedParams[k] = v;
-                    }
+                if (v instanceof Date) {
+                    sanitizedParams[k] = v.toISOString();
+                    continue;
+                }
+                if (v && typeof v === 'object' && !Array.isArray(v)) {
+                    const likelyUsedAsProperty = true;
+                    sanitizedParams[k] = likelyUsedAsProperty ? JSON.stringify(v) : v;
                 }
                 else {
                     sanitizedParams[k] = v;

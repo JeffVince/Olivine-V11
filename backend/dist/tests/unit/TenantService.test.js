@@ -50,7 +50,7 @@ describe('TenantService', () => {
     let mockFs;
     beforeEach(() => {
         jest.clearAllMocks();
-        tenantService = new TenantService_1.TenantService();
+        tenantService = new TenantService_1.TenantService(mockNeo4jService);
         mockFs = fs;
     });
     afterEach(() => {
@@ -562,11 +562,10 @@ describe('TenantService', () => {
     });
     describe('applyMigrations', () => {
         beforeEach(() => {
-            mockFs.existsSync = jest.fn().mockReturnValue(true);
-            mockFs.promises = {
-                readdir: jest.fn().mockResolvedValue(['001_initial.json', '002_update.json']),
-                readFile: jest.fn()
-            };
+            jest.spyOn(fs, 'existsSync').mockReturnValue(true);
+            fs.promises = fs.promises || {};
+            fs.promises.readdir = jest.fn().mockResolvedValue(['001_initial.json', '002_update.json']);
+            fs.promises.readFile = jest.fn().mockResolvedValue('');
         });
         test('should apply pending migrations', async () => {
             const orgId = 'test-org';
@@ -586,9 +585,9 @@ describe('TenantService', () => {
                     ]
                 }
             ];
-            mockFs.promises.readFile
-                .mockResolvedValueOnce(JSON.stringify(mockMigrations[0]))
-                .mockResolvedValueOnce(JSON.stringify(mockMigrations[1]));
+            jest
+                .spyOn(tenantService, 'loadMigrationFiles')
+                .mockResolvedValue(mockMigrations);
             mockNeo4jService.executeQuery
                 .mockResolvedValueOnce({ records: [] })
                 .mockResolvedValue({ records: [] });

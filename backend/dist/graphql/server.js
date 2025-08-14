@@ -153,20 +153,11 @@ class GraphQLServer {
         let enhancedTypeDefs = '';
         try {
             enhancedTypeDefs = (0, fs_1.readFileSync)((0, path_1.join)(schemaPath, 'enhanced.graphql'), 'utf8');
-            enhancedTypeDefs = enhancedTypeDefs
-                .replace(/linkSceneToCharacter\([^)]*\):\s*JSON!/g, 'linkSceneToCharacter(sceneId: ID!, characterId: ID!, orgId: String!, userId: String!): LinkResult!')
-                .replace(/userId:\s*ID!/g, 'userId: String!')
-                .replace(/orgId:\s*ID!/g, 'orgId: String!')
-                .replace(/organizationId:\s*ID!/g, 'organizationId: String!');
         }
         catch {
             enhancedTypeDefs = '';
         }
         let coreTypeDefs = (0, fs_1.readFileSync)((0, path_1.join)(schemaPath, 'core.graphql'), 'utf8');
-        coreTypeDefs = coreTypeDefs
-            .replace(/userId:\s*ID!/g, 'userId: String!')
-            .replace(/orgId:\s*ID!/g, 'orgId: String!')
-            .replace(/organizationId:\s*ID!/g, 'organizationId: String!');
         const e2eExtensions = `
       scalar DateTime
       scalar JSON
@@ -252,7 +243,7 @@ class GraphQLServer {
         createVendor(input: VendorInput!, userId: String!): Vendor!
         createBudget(input: BudgetInput!, userId: String!): Budget!
         createPurchaseOrder(input: PurchaseOrderInput!, userId: String!): PurchaseOrder!
-        linkSceneToCharacter(sceneId: ID!, characterId: ID!, orgId: String!, userId: String!): LinkResult!
+        linkSceneToCharacter(sceneId: ID!, characterId: ID!, orgId: ID!, userId: String!): LinkResult!
       }
     `;
         const sanitizedEnhanced = enhancedTypeDefs
@@ -347,6 +338,8 @@ class GraphQLServer {
     }
     async createApolloServer(schema) {
         this.logger.info('Creating Apollo Server...');
+        const logger = this.logger;
+        const isTestEnv = process.env.TEST_MODE === 'true' || process.env.NODE_ENV === 'test';
         this.apolloServer = new server_1.ApolloServer({
             schema,
             plugins: [
@@ -356,17 +349,24 @@ class GraphQLServer {
                     : (0, default_1.ApolloServerPluginLandingPageLocalDefault)(),
                 {
                     async requestDidStart() {
-                        const logger = this.logger || global.logger || console;
                         return {
                             async didResolveOperation(requestContext) {
+                                const opName = requestContext.request?.operationName
+                                    ?? requestContext.operationName
+                                    ?? requestContext.operation?.name?.value
+                                    ?? 'anonymous';
                                 logger?.debug?.('GraphQL operation resolved', {
-                                    operationName: requestContext.request.operationName,
-                                    query: requestContext.request.query
+                                    operationName: opName,
+                                    query: requestContext.request?.query
                                 });
                             },
                             async didEncounterErrors(requestContext) {
+                                const opName = requestContext.request?.operationName
+                                    ?? requestContext.operationName
+                                    ?? requestContext.operation?.name?.value
+                                    ?? 'anonymous';
                                 logger?.error?.('GraphQL errors encountered', {
-                                    operationName: requestContext.request.operationName,
+                                    operationName: opName,
                                     errors: requestContext.errors
                                 });
                             }
@@ -376,12 +376,15 @@ class GraphQLServer {
                 {
                     async requestDidStart() {
                         const startTime = Date.now();
-                        const logger = this.logger || global.logger || console;
                         return {
                             async willSendResponse(requestContext) {
                                 const duration = Date.now() - startTime;
+                                const opName = requestContext.request?.operationName
+                                    ?? requestContext.operationName
+                                    ?? requestContext.operation?.name?.value
+                                    ?? 'anonymous';
                                 logger?.info?.('GraphQL request completed', {
-                                    operationName: requestContext.request.operationName,
+                                    operationName: opName,
                                     duration: `${duration}ms`,
                                     success: !requestContext.errors?.length
                                 });

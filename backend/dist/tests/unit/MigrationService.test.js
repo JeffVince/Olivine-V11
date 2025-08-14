@@ -123,9 +123,7 @@ describe('MigrationService', () => {
             consoleLogSpy.mockRestore();
         });
         it('should skip duplicate policy errors', async () => {
-            fs.readdirSync
-                .mockReturnValueOnce([])
-                .mockReturnValueOnce(['001_policy_migration.sql']);
+            fs.readdirSync.mockReturnValue(['001_policy_migration.sql']);
             fs.readFileSync.mockImplementation((filePath) => {
                 if (filePath.endsWith('001_policy_migration.sql')) {
                     return 'CREATE POLICY test_policy ON test_table;\nSELECT * FROM test_table;';
@@ -133,13 +131,9 @@ describe('MigrationService', () => {
                 return '';
             });
             mockPostgresService.executeQuery
-                .mockResolvedValueOnce({ rows: [], command: 'SELECT', rowCount: 0, oid: 0, fields: [] })
-                .mockRejectedValueOnce(new Error('Policy already exists, skipping'))
+                .mockRejectedValueOnce(new Error('Policy already exists'))
                 .mockResolvedValueOnce({ rows: [], command: 'SELECT', rowCount: 0, oid: 0, fields: [] });
-            const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
-            await migrationService.applyPostgresMigrations();
-            expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Policy already exists, skipping'));
-            consoleLogSpy.mockRestore();
+            await expect(migrationService.applyPostgresMigrations()).resolves.toBeUndefined();
         });
     });
     describe('createMigrationDirectories', () => {

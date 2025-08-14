@@ -536,13 +536,29 @@ class FileStewardAgent extends BaseAgent_1.BaseAgent {
     async performMultiSlotClassification(orgId, fileId, resourcePath, fileMetadata) {
         const slots = [];
         try {
-            const rules = await this.getApplicableTaxonomyRules(orgId, fileMetadata);
-            for (const rule of rules) {
-                const confidence = this.calculateRuleConfidence(rule, fileMetadata, resourcePath);
-                if (confidence >= rule.minConfidence) {
-                    slots.push(rule.slot);
-                    await this.createSlotEdgeFact(fileId, rule.slot, confidence, rule.id, orgId);
+            try {
+                const classifications = await this.taxonomyService.classifyFile(fileId, orgId);
+                for (const c of classifications) {
+                    if (!slots.includes(c.slot))
+                        slots.push(c.slot);
+                    await this.createSlotEdgeFact(fileId, c.slot, c.confidence ?? 0.7, c.rule_id || 'taxonomy', orgId);
                 }
+            }
+            catch { }
+            if (slots.length === 0) {
+                const rules = await this.getApplicableTaxonomyRules(orgId, fileMetadata);
+                for (const rule of rules) {
+                    const confidence = this.calculateRuleConfidence(rule, fileMetadata, resourcePath);
+                    if (confidence >= (rule.min_confidence ?? (rule.minConfidence ?? 0))) {
+                        slots.push(rule.slot);
+                        await this.createSlotEdgeFact(fileId, rule.slot, confidence, rule.id, orgId);
+                    }
+                }
+            }
+            const fileName = path_1.default.basename(resourcePath).toLowerCase();
+            if ((fileName.endsWith('.fdx') || fileName.includes('script')) && !slots.includes('SCRIPT_PRIMARY')) {
+                slots.push('SCRIPT_PRIMARY');
+                await this.createSlotEdgeFact(fileId, 'SCRIPT_PRIMARY', 0.9, 'filename_heuristic', orgId);
             }
             if (slots.length === 0) {
                 const fallbackSlot = this.getFallbackSlot(fileMetadata.mimeType);
@@ -590,12 +606,10 @@ class FileStewardAgent extends BaseAgent_1.BaseAgent {
       CREATE (ef:EdgeFact {
         id: $edgeFactId,
         type: 'FILLS_SLOT',
-        props: {
-          slot: $slot,
-          confidence: $confidence,
-          ruleId: $ruleId,
-          method: 'taxonomy_rule'
-        },
+        slot: $slot,
+        confidence: $confidence,
+        ruleId: $ruleId,
+        method: 'taxonomy_rule',
         orgId: $orgId,
         createdAt: datetime(),
         validFrom: datetime(),
@@ -631,9 +645,9 @@ class FileStewardAgent extends BaseAgent_1.BaseAgent {
             for (const parser of parsers) {
                 const jobId = (0, uuid_1.v4)();
                 await this.postgresService.query(`
-          INSERT INTO extraction_job (id, org_id, file_id, slot, parser_name, parser_version, status, created_at)
-          VALUES ($1, $2, $3, $4, $5, $6, 'queued', NOW())
-        `, [jobId, orgId, fileId, slot, parser.parser_name, parser.parser_version]);
+          INSERT INTO extraction_job (id, org_id, file_id, parser_name, parser_version, status, created_at)
+          VALUES ($1, $2, $3, $4, $5, 'queued', NOW())
+        `, [jobId, orgId, fileId, parser.parser_name, parser.parser_version]);
                 await this.queueService.addJob('content-extraction', 'extract-content', {
                     jobId,
                     orgId,
@@ -741,6 +755,23 @@ class FileStewardAgent extends BaseAgent_1.BaseAgent {
             provider: fileEventData.provider,
             extra: fileEventData.extra || {}
         };
+        await this.neo4jService.run(`
+      MERGE (f:File {id: $fileId})
+      ON CREATE SET f.orgId = $orgId,
+                    f.path = $resourcePath,
+                    f.name = $name,
+                    f.mimeType = $mimeType,
+                    f.current = true,
+                    f.deleted = false,
+                    f.createdAt = datetime(),
+                    f.updatedAt = datetime()
+      `, {
+            fileId: fileEventData.id,
+            orgId,
+            resourcePath,
+            name: fileMetadata.name,
+            mimeType: fileMetadata.mimeType,
+        });
         const result = await this.processFileWithCluster(orgId, sourceId, fileEventData.id, resourcePath, fileMetadata, commitId);
         if (this.clusterMode) {
             this.eventBus.emit('file.cluster.processed', {

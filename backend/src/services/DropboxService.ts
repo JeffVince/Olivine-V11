@@ -56,10 +56,9 @@ export interface RetryOptions {
 }
 
 export class DropboxService extends EventEmitter implements StorageProvider {
-  private dropboxClient: Dropbox;
-  private dropboxAuth: DropboxAuth;
-  private postgresService: PostgresService;
-  private configService: ConfigService;
+  private dropboxAuth?: DropboxAuth;
+  private postgresService?: PostgresService;
+  private configService?: ConfigService;
   private appKey: string;
   private appSecret: string;
   private redirectUri: string;
@@ -71,8 +70,7 @@ export class DropboxService extends EventEmitter implements StorageProvider {
 
   constructor() {
     super();
-    this.configService = new ConfigService();
-    this.postgresService = new PostgresService();
+    // Lazy init heavy dependencies to speed up construction
     this.appKey = process.env.DROPBOX_APP_KEY || '';
     this.appSecret = process.env.DROPBOX_APP_SECRET || '';
     this.redirectUri = process.env.DROPBOX_REDIRECT_URI || '';
@@ -102,17 +100,24 @@ export class DropboxService extends EventEmitter implements StorageProvider {
     this.logs = [];
     this.maxLogEntries = parseInt(process.env.DROPBOX_MAX_LOG_ENTRIES || '1000');
     
-    // Initialize with empty client, will be updated with tokens
-    this.dropboxClient = new Dropbox({
-      clientId: this.appKey,
-      clientSecret: this.appSecret
-    });
-    
-    // Initialize auth client for OAuth operations
-    this.dropboxAuth = new DropboxAuth({
-      clientId: this.appKey,
-      clientSecret: this.appSecret
-    });
+    // Defer DropboxAuth/client creation until used
+  }
+
+  private getPostgresService(): PostgresService {
+    if (!this.postgresService) {
+      this.postgresService = new PostgresService();
+    }
+    return this.postgresService;
+  }
+
+  private getDropboxAuth(): DropboxAuth {
+    if (!this.dropboxAuth) {
+      this.dropboxAuth = new DropboxAuth({
+        clientId: this.appKey,
+        clientSecret: this.appSecret
+      });
+    }
+    return this.dropboxAuth;
   }
 
   /**
@@ -596,7 +601,7 @@ export class DropboxService extends EventEmitter implements StorageProvider {
         'sharing.write'
       ];
 
-      const authUrl = await this.dropboxAuth.getAuthenticationUrl(
+      const authUrl = await this.getDropboxAuth().getAuthenticationUrl(
         this.redirectUri,
         state || undefined, // Pass the state parameter if provided
         'code',
@@ -613,7 +618,7 @@ export class DropboxService extends EventEmitter implements StorageProvider {
    */
   async exchangeCodeForTokens(code: string): Promise<DropboxTokenData> {
     return this.executeWithRetry(async () => {
-      const tokenResponse = await this.dropboxAuth.getAccessTokenFromCode(
+      const tokenResponse = await this.getDropboxAuth().getAccessTokenFromCode(
         this.redirectUri,
         code
       );
@@ -663,19 +668,14 @@ export class DropboxService extends EventEmitter implements StorageProvider {
   async refreshAccessToken(refreshToken: string): Promise<DropboxTokenData> {
     return this.executeWithRetry(async () => {
       // Create a new auth client with the refresh token
-      const authClient = new DropboxAuth({
-        clientId: this.appKey,
-        clientSecret: this.appSecret,
-        refreshToken: refreshToken
-      });
-      
-      this.dropboxAuth.setRefreshToken(refreshToken);
-      await this.dropboxAuth.refreshAccessToken();
+      const auth = this.getDropboxAuth();
+      auth.setRefreshToken(refreshToken);
+      await auth.refreshAccessToken();
       
       return {
-        access_token: this.dropboxAuth.getAccessToken(),
+        access_token: auth.getAccessToken(),
         refresh_token: refreshToken,
-        expires_at: (this.dropboxAuth.getAccessTokenExpiresAt() as Date).getTime(),
+        expires_at: (auth.getAccessTokenExpiresAt() as Date).getTime(),
         account_id: '' // This will be updated when we fetch account info
       };
     }, 'refreshAccessToken');
@@ -699,7 +699,7 @@ export class DropboxService extends EventEmitter implements StorageProvider {
         WHERE organization_id = $1 AND id = $2 AND type = 'dropbox'
       `;
       
-      const result = await this.postgresService.executeQuery(query, [orgId, sourceId]);
+      const result = await this.getPostgresService().executeQuery(query, [orgId, sourceId]);
       
       if (result.rows.length === 0) {
         return null;
@@ -746,7 +746,7 @@ export class DropboxService extends EventEmitter implements StorageProvider {
         dropbox_root_namespace_id: tokenData.root_namespace_id
       };
       
-      await this.postgresService.executeQuery(query, [JSON.stringify(metadata), orgId, sourceId]);
+      await this.getPostgresService().executeQuery(query, [JSON.stringify(metadata), orgId, sourceId]);
     } catch (error) {
       console.error('Error storing tokens:', error);
       throw error;

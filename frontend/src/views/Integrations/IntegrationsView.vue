@@ -88,14 +88,18 @@ import {
 import { useSourcesQuery } from '@/views/Integrations/Composables/graphql'
 import { updateIntegrationsFromResult } from '@/views/Integrations/Composables/state'
 import { useRoute } from 'vue-router'
+import { useOrganizationStore } from '@/stores/organizationStore'
 import { watch } from 'vue'
 
-// Get organization ID from route
+// Get organization ID from store
 const route = useRoute()
+const organizationStore = useOrganizationStore()
 const projectId = route.params.id as string
 
 // Use the GraphQL query within component context
-const { result, loading: queryLoading, error } = useSourcesQuery(projectId)
+// Use organization ID from store, fallback to a default for development
+const organizationId = organizationStore.currentOrg?.id || '00000000-0000-0000-0000-000000000000'
+const { result, loading: queryLoading, error } = useSourcesQuery(organizationId)
 
 // Watch for changes in the query result and update integrations
 watch(result, (newResult: any) => {

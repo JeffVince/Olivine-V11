@@ -15,8 +15,11 @@ describe('PubSub', () => {
     });
     describe('pubsub instance', () => {
         it('should create a new PubSub instance', () => {
+            const instance = (0, PubSub_1.createPubSub)();
             expect(graphql_subscriptions_1.PubSub).toHaveBeenCalled();
-            expect(PubSub_1.pubsub).toBeInstanceOf(graphql_subscriptions_1.PubSub);
+            const { PubSub: ActualPubSub } = jest.requireActual('graphql-subscriptions');
+            expect(instance).toBeInstanceOf(ActualPubSub);
+            expect(PubSub_1.pubsub).toBeTruthy();
         });
     });
     describe('TOPICS', () => {

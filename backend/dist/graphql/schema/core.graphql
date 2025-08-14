@@ -43,8 +43,8 @@ type Query {
   getFile(fileId: ID!, organizationId: ID!): FileMeta
   getFileStats(organizationId: ID!): FileStats!
   getSourceStats(sourceId: ID!, organizationId: ID!): JSON!
-  budgetVsActualAnalysis(projectId: ID!, orgId: String!): [BudgetVsActualRow!]!
-  vendorPerformanceAnalysis(orgId: String!): [VendorPerformanceRow!]!
+  budgetVsActualAnalysis(projectId: ID!, orgId: ID!): [BudgetVsActualRow!]!
+  vendorPerformanceAnalysis(orgId: ID!): [VendorPerformanceRow!]!
 }
 
 type BudgetVsActualRow {
@@ -475,5 +475,5 @@ extend type Mutation {
 type LinkResult { success: Boolean! }
 
 extend type Mutation {
-  linkSceneToCharacter(sceneId: ID!, characterId: ID!, orgId: String!, userId: String!): LinkResult!
+  linkSceneToCharacter(sceneId: ID!, characterId: ID!, orgId: ID!, userId: String!): LinkResult!
 }

@@ -8975,3 +8975,686 @@
 {"label":"graphql-server","level":"info","message":"🚀 GraphQL Subscriptions ready at ws://localhost:4001/graphql","timestamp":"2025-08-14T00:58:49.364Z"}
 {"label":"graphql-server","level":"info","message":"Shutting down GraphQL server...","timestamp":"2025-08-14T00:58:52.996Z"}
 {"label":"graphql-server","level":"info","message":"GraphQL server stopped successfully","timestamp":"2025-08-14T00:58:53.003Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T01:00:18.579Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T01:00:18.583Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T01:00:18.583Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T01:00:18.586Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T01:00:18.593Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T01:00:18.673Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T01:00:18.673Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T01:00:18.674Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T01:00:18.675Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T01:00:18.678Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T01:00:18.697Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T01:00:18.697Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T01:00:18.697Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T01:00:18.697Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T01:00:18.698Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T01:00:18.698Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T01:00:18.698Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T01:00:18.698Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T01:00:18.699Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T01:00:18.701Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T01:00:18.698Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T01:00:18.698Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T01:00:18.698Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T01:00:18.698Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T01:00:18.701Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T01:00:18.761Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T01:00:18.764Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T01:00:18.766Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T01:00:18.768Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T01:00:18.783Z"}
+{"label":"graphql-server","level":"info","message":"Creating GraphQL schema...","timestamp":"2025-08-14T01:00:18.766Z"}
+{"label":"graphql-server","level":"info","message":"Setting up WebSocket server...","timestamp":"2025-08-14T01:00:18.792Z"}
+{"label":"graphql-server","level":"info","message":"Creating Apollo Server...","timestamp":"2025-08-14T01:00:18.792Z"}
+{"label":"graphql-server","level":"info","message":"Setting up Express middleware...","timestamp":"2025-08-14T01:00:18.807Z"}
+{"label":"graphql-server","level":"info","message":"Creating GraphQL schema...","timestamp":"2025-08-14T01:00:18.768Z"}
+{"label":"graphql-server","level":"info","message":"Setting up WebSocket server...","timestamp":"2025-08-14T01:00:18.792Z"}
+{"label":"graphql-server","level":"info","message":"Creating Apollo Server...","timestamp":"2025-08-14T01:00:18.793Z"}
+{"label":"graphql-server","level":"info","message":"Setting up Express middleware...","timestamp":"2025-08-14T01:00:18.808Z"}
+{"label":"graphql-server","level":"info","message":"Creating GraphQL schema...","timestamp":"2025-08-14T01:00:18.765Z"}
+{"label":"graphql-server","level":"info","message":"Setting up WebSocket server...","timestamp":"2025-08-14T01:00:18.788Z"}
+{"label":"graphql-server","level":"info","message":"Creating Apollo Server...","timestamp":"2025-08-14T01:00:18.788Z"}
+{"label":"graphql-server","level":"info","message":"Setting up Express middleware...","timestamp":"2025-08-14T01:00:18.808Z"}
+{"label":"graphql-server","level":"info","message":"Creating GraphQL schema...","timestamp":"2025-08-14T01:00:18.762Z"}
+{"label":"graphql-server","level":"info","message":"Setting up WebSocket server...","timestamp":"2025-08-14T01:00:18.789Z"}
+{"label":"graphql-server","level":"info","message":"Creating Apollo Server...","timestamp":"2025-08-14T01:00:18.790Z"}
+{"label":"graphql-server","level":"info","message":"Setting up Express middleware...","timestamp":"2025-08-14T01:00:18.808Z"}
+{"label":"graphql-server","level":"info","message":"🚀 GraphQL Server ready at http://localhost:8080/graphql","timestamp":"2025-08-14T01:00:18.809Z"}
+{"label":"graphql-server","level":"info","message":"🚀 GraphQL Subscriptions ready at ws://localhost:8080/graphql","timestamp":"2025-08-14T01:00:18.809Z"}
+{"label":"graphql-server","level":"info","message":"Creating GraphQL schema...","timestamp":"2025-08-14T01:00:18.783Z"}
+{"label":"graphql-server","level":"info","message":"Setting up WebSocket server...","timestamp":"2025-08-14T01:00:18.805Z"}
+{"label":"graphql-server","level":"info","message":"Creating Apollo Server...","timestamp":"2025-08-14T01:00:18.805Z"}
+{"label":"graphql-server","level":"info","message":"Setting up Express middleware...","timestamp":"2025-08-14T01:00:18.819Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T01:00:39.315Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T01:00:39.328Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T01:00:39.349Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T01:00:39.352Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T01:00:39.353Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T01:00:39.389Z"}
+{"label":"graphql-server","level":"info","message":"Creating GraphQL schema...","timestamp":"2025-08-14T01:00:39.391Z"}
+{"label":"graphql-server","level":"info","message":"Setting up WebSocket server...","timestamp":"2025-08-14T01:00:39.420Z"}
+{"label":"graphql-server","level":"info","message":"Creating Apollo Server...","timestamp":"2025-08-14T01:00:39.421Z"}
+{"label":"graphql-server","level":"info","message":"Setting up Express middleware...","timestamp":"2025-08-14T01:00:39.447Z"}
+{"label":"graphql-server","level":"info","message":"🚀 GraphQL Server ready at http://localhost:4001/graphql","timestamp":"2025-08-14T01:00:39.449Z"}
+{"label":"graphql-server","level":"info","message":"🚀 GraphQL Subscriptions ready at ws://localhost:4001/graphql","timestamp":"2025-08-14T01:00:39.450Z"}
+{"label":"graphql-server","level":"info","message":"Shutting down GraphQL server...","timestamp":"2025-08-14T01:00:42.762Z"}
+{"label":"graphql-server","level":"info","message":"GraphQL server stopped successfully","timestamp":"2025-08-14T01:00:42.774Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T01:01:04.881Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T01:01:04.882Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T01:01:04.886Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T01:01:04.887Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T01:01:04.895Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T01:01:05.016Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T01:01:05.016Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T01:01:05.017Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T01:01:05.016Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T01:01:05.020Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T01:01:05.055Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T01:01:05.055Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T01:01:05.055Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T01:01:05.055Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T01:01:05.055Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T01:01:05.056Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T01:01:05.056Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T01:01:05.056Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T01:01:05.056Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T01:01:05.056Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T01:01:05.056Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T01:01:05.056Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T01:01:05.056Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T01:01:05.056Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T01:01:05.056Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T01:01:05.127Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T01:01:05.127Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T01:01:05.128Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T01:01:05.128Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T01:01:05.128Z"}
+{"label":"graphql-server","level":"info","message":"Creating GraphQL schema...","timestamp":"2025-08-14T01:01:05.128Z"}
+{"label":"graphql-server","level":"info","message":"Setting up WebSocket server...","timestamp":"2025-08-14T01:01:05.161Z"}
+{"label":"graphql-server","level":"info","message":"Creating Apollo Server...","timestamp":"2025-08-14T01:01:05.162Z"}
+{"label":"graphql-server","level":"info","message":"Setting up Express middleware...","timestamp":"2025-08-14T01:01:05.184Z"}
+{"label":"graphql-server","level":"info","message":"Creating GraphQL schema...","timestamp":"2025-08-14T01:01:05.129Z"}
+{"label":"graphql-server","level":"info","message":"Setting up WebSocket server...","timestamp":"2025-08-14T01:01:05.163Z"}
+{"label":"graphql-server","level":"info","message":"Creating Apollo Server...","timestamp":"2025-08-14T01:01:05.163Z"}
+{"label":"graphql-server","level":"info","message":"Setting up Express middleware...","timestamp":"2025-08-14T01:01:05.184Z"}
+{"label":"graphql-server","level":"info","message":"Creating GraphQL schema...","timestamp":"2025-08-14T01:01:05.128Z"}
+{"label":"graphql-server","level":"info","message":"Setting up WebSocket server...","timestamp":"2025-08-14T01:01:05.161Z"}
+{"label":"graphql-server","level":"info","message":"Creating Apollo Server...","timestamp":"2025-08-14T01:01:05.161Z"}
+{"label":"graphql-server","level":"info","message":"Setting up Express middleware...","timestamp":"2025-08-14T01:01:05.184Z"}
+{"label":"graphql-server","level":"info","message":"Creating GraphQL schema...","timestamp":"2025-08-14T01:01:05.128Z"}
+{"label":"graphql-server","level":"info","message":"Setting up WebSocket server...","timestamp":"2025-08-14T01:01:05.158Z"}
+{"label":"graphql-server","level":"info","message":"Creating Apollo Server...","timestamp":"2025-08-14T01:01:05.158Z"}
+{"label":"graphql-server","level":"info","message":"Setting up Express middleware...","timestamp":"2025-08-14T01:01:05.184Z"}
+{"label":"graphql-server","level":"info","message":"Creating GraphQL schema...","timestamp":"2025-08-14T01:01:05.128Z"}
+{"label":"graphql-server","level":"info","message":"Setting up WebSocket server...","timestamp":"2025-08-14T01:01:05.164Z"}
+{"label":"graphql-server","level":"info","message":"Creating Apollo Server...","timestamp":"2025-08-14T01:01:05.164Z"}
+{"label":"graphql-server","level":"info","message":"Setting up Express middleware...","timestamp":"2025-08-14T01:01:05.184Z"}
+{"label":"graphql-server","level":"info","message":"🚀 GraphQL Server ready at http://localhost:8080/graphql","timestamp":"2025-08-14T01:01:05.185Z"}
+{"label":"graphql-server","level":"info","message":"🚀 GraphQL Subscriptions ready at ws://localhost:8080/graphql","timestamp":"2025-08-14T01:01:05.185Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T01:02:33.484Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T01:02:33.486Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T01:02:33.511Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T01:02:33.463Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T01:02:33.644Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T01:02:33.644Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T01:02:33.644Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T01:02:33.645Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T01:02:33.656Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T01:02:33.686Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T01:02:33.686Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T01:02:33.686Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T01:02:33.686Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T01:02:33.686Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T01:02:33.687Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T01:02:33.687Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T01:02:33.687Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T01:02:33.687Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T01:02:33.687Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T01:02:33.687Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T01:02:33.687Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T01:02:33.687Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T01:02:33.701Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T01:02:33.702Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T01:02:33.703Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T01:02:33.729Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T01:02:33.730Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T01:02:33.729Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T01:02:33.730Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T01:02:33.744Z"}
+{"label":"graphql-server","level":"info","message":"Creating GraphQL schema...","timestamp":"2025-08-14T01:02:33.729Z"}
+{"label":"graphql-server","level":"info","message":"Setting up WebSocket server...","timestamp":"2025-08-14T01:02:33.753Z"}
+{"label":"graphql-server","level":"info","message":"Creating Apollo Server...","timestamp":"2025-08-14T01:02:33.753Z"}
+{"label":"graphql-server","level":"info","message":"Setting up Express middleware...","timestamp":"2025-08-14T01:02:33.782Z"}
+{"label":"graphql-server","level":"info","message":"Creating GraphQL schema...","timestamp":"2025-08-14T01:02:33.731Z"}
+{"label":"graphql-server","level":"info","message":"Setting up WebSocket server...","timestamp":"2025-08-14T01:02:33.765Z"}
+{"label":"graphql-server","level":"info","message":"Creating Apollo Server...","timestamp":"2025-08-14T01:02:33.765Z"}
+{"label":"graphql-server","level":"info","message":"Setting up Express middleware...","timestamp":"2025-08-14T01:02:33.782Z"}
+{"label":"graphql-server","level":"info","message":"Creating GraphQL schema...","timestamp":"2025-08-14T01:02:33.730Z"}
+{"label":"graphql-server","level":"info","message":"Setting up WebSocket server...","timestamp":"2025-08-14T01:02:33.762Z"}
+{"label":"graphql-server","level":"info","message":"Creating Apollo Server...","timestamp":"2025-08-14T01:02:33.762Z"}
+{"label":"graphql-server","level":"info","message":"Setting up Express middleware...","timestamp":"2025-08-14T01:02:33.782Z"}
+{"label":"graphql-server","level":"info","message":"Creating GraphQL schema...","timestamp":"2025-08-14T01:02:33.730Z"}
+{"label":"graphql-server","level":"info","message":"Setting up WebSocket server...","timestamp":"2025-08-14T01:02:33.763Z"}
+{"label":"graphql-server","level":"info","message":"Creating Apollo Server...","timestamp":"2025-08-14T01:02:33.763Z"}
+{"label":"graphql-server","level":"info","message":"Setting up Express middleware...","timestamp":"2025-08-14T01:02:33.782Z"}
+{"label":"graphql-server","level":"info","message":"🚀 GraphQL Server ready at http://localhost:8080/graphql","timestamp":"2025-08-14T01:02:33.783Z"}
+{"label":"graphql-server","level":"info","message":"🚀 GraphQL Subscriptions ready at ws://localhost:8080/graphql","timestamp":"2025-08-14T01:02:33.783Z"}
+{"label":"graphql-server","level":"info","message":"Creating GraphQL schema...","timestamp":"2025-08-14T01:02:33.744Z"}
+{"label":"graphql-server","level":"info","message":"Setting up WebSocket server...","timestamp":"2025-08-14T01:02:33.781Z"}
+{"label":"graphql-server","level":"info","message":"Creating Apollo Server...","timestamp":"2025-08-14T01:02:33.781Z"}
+{"label":"graphql-server","level":"info","message":"Setting up Express middleware...","timestamp":"2025-08-14T01:02:33.793Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T01:02:48.963Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T01:02:49.000Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T01:02:49.012Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T01:02:49.012Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T01:02:49.013Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T01:02:49.041Z"}
+{"label":"graphql-server","level":"info","message":"Creating GraphQL schema...","timestamp":"2025-08-14T01:02:49.041Z"}
+{"label":"graphql-server","level":"info","message":"Setting up WebSocket server...","timestamp":"2025-08-14T01:02:49.059Z"}
+{"label":"graphql-server","level":"info","message":"Creating Apollo Server...","timestamp":"2025-08-14T01:02:49.059Z"}
+{"label":"graphql-server","level":"info","message":"Setting up Express middleware...","timestamp":"2025-08-14T01:02:49.073Z"}
+{"label":"graphql-server","level":"info","message":"🚀 GraphQL Server ready at http://localhost:8080/graphql","timestamp":"2025-08-14T01:02:49.074Z"}
+{"label":"graphql-server","level":"info","message":"🚀 GraphQL Subscriptions ready at ws://localhost:8080/graphql","timestamp":"2025-08-14T01:02:49.074Z"}
+{"error":{"extensions":{"code":"GRAPHQL_VALIDATION_FAILED","stacktrace":["GraphQLError: Variable \"$organizationId\" of type \"ID!\" used in position expecting type \"String!\".","    at Object.leave (/Users/jeffhaskell/Documents/Olivine Projects/Blueprint/Olivine-V11/node_modules/graphql/validation/rules/VariablesInAllowedPositionRule.js:64:17)","    at Object.leave (/Users/jeffhaskell/Documents/Olivine Projects/Blueprint/Olivine-V11/node_modules/graphql/language/visitor.js:321:32)","    at Object.leave (/Users/jeffhaskell/Documents/Olivine Projects/Blueprint/Olivine-V11/node_modules/graphql/utilities/TypeInfo.js:411:21)","    at visit (/Users/jeffhaskell/Documents/Olivine Projects/Blueprint/Olivine-V11/node_modules/graphql/language/visitor.js:194:21)","    at validate (/Users/jeffhaskell/Documents/Olivine Projects/Blueprint/Olivine-V11/node_modules/graphql/validation/validate.js:91:24)","    at processGraphQLRequest (/Users/jeffhaskell/Documents/Olivine Projects/Blueprint/Olivine-V11/backend/node_modules/@apollo/server/src/requestPipeline.ts:254:38)","    at processTicksAndRejections (node:internal/process/task_queues:105:5)","    at async internalExecuteOperation (/Users/jeffhaskell/Documents/Olivine Projects/Blueprint/Olivine-V11/backend/node_modules/@apollo/server/src/ApolloServer.ts:1352:12)","    at async runHttpQuery (/Users/jeffhaskell/Documents/Olivine Projects/Blueprint/Olivine-V11/backend/node_modules/@apollo/server/src/runHttpQuery.ts:232:27)","    at async runPotentiallyBatchedHttpQuery (/Users/jeffhaskell/Documents/Olivine Projects/Blueprint/Olivine-V11/backend/node_modules/@apollo/server/src/httpBatching.ts:85:12)"]},"locations":[{"column":18,"line":1},{"column":30,"line":2}],"message":"Variable \"$organizationId\" of type \"ID!\" used in position expecting type \"String!\"."},"label":"graphql-server","level":"error","message":"GraphQL Error:","timestamp":"2025-08-14T01:02:51.523Z"}
+{"error":{"extensions":{"code":"INTERNAL_SERVER_ERROR","stacktrace":["error: invalid input syntax for type uuid: \"demo-project-1\"","    at /Users/jeffhaskell/Documents/Olivine Projects/Blueprint/Olivine-V11/backend/node_modules/pg-pool/index.js:45:11","    at processTicksAndRejections (node:internal/process/task_queues:105:5)","    at async PostgresService.executeQuery (/Users/jeffhaskell/Documents/Olivine Projects/Blueprint/Olivine-V11/backend/src/services/PostgresService.ts:41:22)","    at async SourceModel.getSourcesByOrganization (/Users/jeffhaskell/Documents/Olivine Projects/Blueprint/Olivine-V11/backend/src/models/Source.ts:95:20)","    at async SourceResolvers.getSources (/Users/jeffhaskell/Documents/Olivine Projects/Blueprint/Olivine-V11/backend/src/graphql/resolvers/SourceResolvers.ts:37:12)"]},"locations":[{"column":3,"line":2}],"message":"invalid input syntax for type uuid: \"demo-project-1\"","path":["getSources"]},"label":"graphql-server","level":"error","message":"GraphQL Error:","timestamp":"2025-08-14T01:03:44.197Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T01:04:18.644Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T01:04:18.644Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T01:04:18.650Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T01:04:18.649Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T01:04:18.647Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T01:04:18.700Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T01:04:18.700Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T01:04:18.701Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T01:04:18.702Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T01:04:18.702Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T01:04:18.712Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T01:04:18.712Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T01:04:18.713Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T01:04:18.713Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T01:04:18.713Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T01:04:18.713Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T01:04:18.715Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T01:04:18.715Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T01:04:18.715Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T01:04:18.715Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T01:04:18.713Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T01:04:18.713Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T01:04:18.714Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T01:04:18.715Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T01:04:18.716Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T01:04:18.746Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T01:04:18.746Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T01:04:18.747Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T01:04:18.760Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T01:04:18.760Z"}
+{"label":"graphql-server","level":"info","message":"Creating GraphQL schema...","timestamp":"2025-08-14T01:04:18.747Z"}
+{"label":"graphql-server","level":"info","message":"Setting up WebSocket server...","timestamp":"2025-08-14T01:04:18.767Z"}
+{"label":"graphql-server","level":"info","message":"Creating Apollo Server...","timestamp":"2025-08-14T01:04:18.767Z"}
+{"label":"graphql-server","level":"info","message":"Setting up Express middleware...","timestamp":"2025-08-14T01:04:18.784Z"}
+{"label":"graphql-server","level":"info","message":"Creating GraphQL schema...","timestamp":"2025-08-14T01:04:18.746Z"}
+{"label":"graphql-server","level":"info","message":"Setting up WebSocket server...","timestamp":"2025-08-14T01:04:18.768Z"}
+{"label":"graphql-server","level":"info","message":"Creating Apollo Server...","timestamp":"2025-08-14T01:04:18.768Z"}
+{"label":"graphql-server","level":"info","message":"Setting up Express middleware...","timestamp":"2025-08-14T01:04:18.784Z"}
+{"label":"graphql-server","level":"info","message":"Creating GraphQL schema...","timestamp":"2025-08-14T01:04:18.747Z"}
+{"label":"graphql-server","level":"info","message":"Setting up WebSocket server...","timestamp":"2025-08-14T01:04:18.766Z"}
+{"label":"graphql-server","level":"info","message":"Creating Apollo Server...","timestamp":"2025-08-14T01:04:18.766Z"}
+{"label":"graphql-server","level":"info","message":"Setting up Express middleware...","timestamp":"2025-08-14T01:04:18.784Z"}
+{"label":"graphql-server","level":"info","message":"🚀 GraphQL Server ready at http://localhost:8080/graphql","timestamp":"2025-08-14T01:04:18.785Z"}
+{"label":"graphql-server","level":"info","message":"🚀 GraphQL Subscriptions ready at ws://localhost:8080/graphql","timestamp":"2025-08-14T01:04:18.785Z"}
+{"label":"graphql-server","level":"info","message":"Creating GraphQL schema...","timestamp":"2025-08-14T01:04:18.760Z"}
+{"label":"graphql-server","level":"info","message":"Setting up WebSocket server...","timestamp":"2025-08-14T01:04:18.780Z"}
+{"label":"graphql-server","level":"info","message":"Creating Apollo Server...","timestamp":"2025-08-14T01:04:18.780Z"}
+{"label":"graphql-server","level":"info","message":"Setting up Express middleware...","timestamp":"2025-08-14T01:04:18.793Z"}
+{"label":"graphql-server","level":"info","message":"Creating GraphQL schema...","timestamp":"2025-08-14T01:04:18.761Z"}
+{"label":"graphql-server","level":"info","message":"Setting up WebSocket server...","timestamp":"2025-08-14T01:04:18.781Z"}
+{"label":"graphql-server","level":"info","message":"Creating Apollo Server...","timestamp":"2025-08-14T01:04:18.782Z"}
+{"label":"graphql-server","level":"info","message":"Setting up Express middleware...","timestamp":"2025-08-14T01:04:18.795Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T01:04:42.245Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T01:04:42.257Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T01:04:42.268Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T01:04:42.270Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T01:04:42.271Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T01:04:42.306Z"}
+{"label":"graphql-server","level":"info","message":"Creating GraphQL schema...","timestamp":"2025-08-14T01:04:42.307Z"}
+{"label":"graphql-server","level":"info","message":"Setting up WebSocket server...","timestamp":"2025-08-14T01:04:42.335Z"}
+{"label":"graphql-server","level":"info","message":"Creating Apollo Server...","timestamp":"2025-08-14T01:04:42.335Z"}
+{"label":"graphql-server","level":"info","message":"Setting up Express middleware...","timestamp":"2025-08-14T01:04:42.356Z"}
+{"label":"graphql-server","level":"info","message":"🚀 GraphQL Server ready at http://localhost:4001/graphql","timestamp":"2025-08-14T01:04:42.358Z"}
+{"label":"graphql-server","level":"info","message":"🚀 GraphQL Subscriptions ready at ws://localhost:4001/graphql","timestamp":"2025-08-14T01:04:42.359Z"}
+{"label":"graphql-server","level":"info","message":"Shutting down GraphQL server...","timestamp":"2025-08-14T01:04:45.770Z"}
+{"label":"graphql-server","level":"info","message":"GraphQL server stopped successfully","timestamp":"2025-08-14T01:04:45.776Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T01:05:02.619Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T01:05:02.620Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T01:05:02.621Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T01:05:02.622Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T01:05:02.623Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T01:05:02.678Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T01:05:02.678Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T01:05:02.678Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T01:05:02.678Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T01:05:02.678Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T01:05:02.708Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T01:05:02.708Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T01:05:02.708Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T01:05:02.708Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T01:05:02.708Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T01:05:02.708Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T01:05:02.708Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T01:05:02.708Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T01:05:02.708Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T01:05:02.708Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T01:05:02.708Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T01:05:02.708Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T01:05:02.708Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T01:05:02.709Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T01:05:02.708Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T01:05:02.923Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T01:05:02.929Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T01:05:02.933Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T01:05:02.945Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T01:05:02.953Z"}
+{"label":"graphql-server","level":"info","message":"Creating GraphQL schema...","timestamp":"2025-08-14T01:05:02.934Z"}
+{"label":"graphql-server","level":"info","message":"Setting up WebSocket server...","timestamp":"2025-08-14T01:05:02.991Z"}
+{"label":"graphql-server","level":"info","message":"Creating Apollo Server...","timestamp":"2025-08-14T01:05:02.992Z"}
+{"label":"graphql-server","level":"info","message":"Setting up Express middleware...","timestamp":"2025-08-14T01:05:03.007Z"}
+{"label":"graphql-server","level":"info","message":"Creating GraphQL schema...","timestamp":"2025-08-14T01:05:02.924Z"}
+{"label":"graphql-server","level":"info","message":"Setting up WebSocket server...","timestamp":"2025-08-14T01:05:02.993Z"}
+{"label":"graphql-server","level":"info","message":"Creating Apollo Server...","timestamp":"2025-08-14T01:05:02.994Z"}
+{"label":"graphql-server","level":"info","message":"Setting up Express middleware...","timestamp":"2025-08-14T01:05:03.009Z"}
+{"label":"graphql-server","level":"info","message":"Creating GraphQL schema...","timestamp":"2025-08-14T01:05:02.946Z"}
+{"label":"graphql-server","level":"info","message":"Setting up WebSocket server...","timestamp":"2025-08-14T01:05:03.000Z"}
+{"label":"graphql-server","level":"info","message":"Creating Apollo Server...","timestamp":"2025-08-14T01:05:03.001Z"}
+{"label":"graphql-server","level":"info","message":"Setting up Express middleware...","timestamp":"2025-08-14T01:05:03.011Z"}
+{"label":"graphql-server","level":"info","message":"Creating GraphQL schema...","timestamp":"2025-08-14T01:05:02.929Z"}
+{"label":"graphql-server","level":"info","message":"Setting up WebSocket server...","timestamp":"2025-08-14T01:05:02.986Z"}
+{"label":"graphql-server","level":"info","message":"Creating Apollo Server...","timestamp":"2025-08-14T01:05:02.986Z"}
+{"label":"graphql-server","level":"info","message":"Setting up Express middleware...","timestamp":"2025-08-14T01:05:03.007Z"}
+{"label":"graphql-server","level":"info","message":"🚀 GraphQL Server ready at http://localhost:8080/graphql","timestamp":"2025-08-14T01:05:03.008Z"}
+{"label":"graphql-server","level":"info","message":"🚀 GraphQL Subscriptions ready at ws://localhost:8080/graphql","timestamp":"2025-08-14T01:05:03.008Z"}
+{"label":"graphql-server","level":"info","message":"Creating GraphQL schema...","timestamp":"2025-08-14T01:05:02.955Z"}
+{"label":"graphql-server","level":"info","message":"Setting up WebSocket server...","timestamp":"2025-08-14T01:05:03.013Z"}
+{"label":"graphql-server","level":"info","message":"Creating Apollo Server...","timestamp":"2025-08-14T01:05:03.015Z"}
+{"label":"graphql-server","level":"info","message":"Setting up Express middleware...","timestamp":"2025-08-14T01:05:03.027Z"}
+{"error":{"extensions":{"code":"GRAPHQL_VALIDATION_FAILED","stacktrace":["GraphQLError: Variable \"$organizationId\" of type \"ID!\" used in position expecting type \"String!\".","    at Object.leave (/Users/jeffhaskell/Documents/Olivine Projects/Blueprint/Olivine-V11/node_modules/graphql/validation/rules/VariablesInAllowedPositionRule.js:64:17)","    at Object.leave (/Users/jeffhaskell/Documents/Olivine Projects/Blueprint/Olivine-V11/node_modules/graphql/language/visitor.js:321:32)","    at Object.leave (/Users/jeffhaskell/Documents/Olivine Projects/Blueprint/Olivine-V11/node_modules/graphql/utilities/TypeInfo.js:411:21)","    at visit (/Users/jeffhaskell/Documents/Olivine Projects/Blueprint/Olivine-V11/node_modules/graphql/language/visitor.js:194:21)","    at validate (/Users/jeffhaskell/Documents/Olivine Projects/Blueprint/Olivine-V11/node_modules/graphql/validation/validate.js:91:24)","    at processGraphQLRequest (/Users/jeffhaskell/Documents/Olivine Projects/Blueprint/Olivine-V11/backend/node_modules/@apollo/server/src/requestPipeline.ts:254:38)","    at processTicksAndRejections (node:internal/process/task_queues:105:5)","    at async internalExecuteOperation (/Users/jeffhaskell/Documents/Olivine Projects/Blueprint/Olivine-V11/backend/node_modules/@apollo/server/src/ApolloServer.ts:1352:12)","    at async runHttpQuery (/Users/jeffhaskell/Documents/Olivine Projects/Blueprint/Olivine-V11/backend/node_modules/@apollo/server/src/runHttpQuery.ts:232:27)","    at async runPotentiallyBatchedHttpQuery (/Users/jeffhaskell/Documents/Olivine Projects/Blueprint/Olivine-V11/backend/node_modules/@apollo/server/src/httpBatching.ts:85:12)"]},"locations":[{"column":18,"line":1},{"column":30,"line":2}],"message":"Variable \"$organizationId\" of type \"ID!\" used in position expecting type \"String!\"."},"label":"graphql-server","level":"error","message":"GraphQL Error:","timestamp":"2025-08-14T01:05:07.834Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T01:05:45.487Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T01:05:45.516Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T01:05:45.525Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T01:05:45.526Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T01:05:45.526Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T01:05:45.548Z"}
+{"label":"graphql-server","level":"info","message":"Creating GraphQL schema...","timestamp":"2025-08-14T01:05:45.548Z"}
+{"label":"graphql-server","level":"info","message":"Setting up WebSocket server...","timestamp":"2025-08-14T01:05:45.564Z"}
+{"label":"graphql-server","level":"info","message":"Creating Apollo Server...","timestamp":"2025-08-14T01:05:45.564Z"}
+{"label":"graphql-server","level":"info","message":"Setting up Express middleware...","timestamp":"2025-08-14T01:05:45.578Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T01:07:51.387Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T01:07:51.392Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T01:07:51.393Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T01:07:51.399Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T01:07:51.384Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T01:07:51.452Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T01:07:51.453Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T01:07:51.459Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T01:07:51.460Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T01:07:51.462Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T01:07:51.487Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T01:07:51.487Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T01:07:51.487Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T01:07:51.487Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T01:07:51.487Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T01:07:51.487Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T01:07:51.487Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T01:07:51.487Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T01:07:51.487Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T01:07:51.487Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T01:07:51.488Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T01:07:51.488Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T01:07:51.487Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T01:07:51.488Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T01:07:51.488Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T01:07:51.522Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T01:07:51.523Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T01:07:51.524Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T01:07:51.528Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T01:07:51.537Z"}
+{"label":"graphql-server","level":"info","message":"Creating GraphQL schema...","timestamp":"2025-08-14T01:07:51.525Z"}
+{"label":"graphql-server","level":"info","message":"Setting up WebSocket server...","timestamp":"2025-08-14T01:07:51.578Z"}
+{"label":"graphql-server","level":"info","message":"Creating Apollo Server...","timestamp":"2025-08-14T01:07:51.579Z"}
+{"label":"graphql-server","level":"info","message":"Setting up Express middleware...","timestamp":"2025-08-14T01:07:51.605Z"}
+{"label":"graphql-server","level":"info","message":"Creating GraphQL schema...","timestamp":"2025-08-14T01:07:51.523Z"}
+{"label":"graphql-server","level":"info","message":"Setting up WebSocket server...","timestamp":"2025-08-14T01:07:51.571Z"}
+{"label":"graphql-server","level":"info","message":"Creating Apollo Server...","timestamp":"2025-08-14T01:07:51.571Z"}
+{"label":"graphql-server","level":"info","message":"Setting up Express middleware...","timestamp":"2025-08-14T01:07:51.605Z"}
+{"label":"graphql-server","level":"info","message":"Creating GraphQL schema...","timestamp":"2025-08-14T01:07:51.522Z"}
+{"label":"graphql-server","level":"info","message":"Setting up WebSocket server...","timestamp":"2025-08-14T01:07:51.571Z"}
+{"label":"graphql-server","level":"info","message":"Creating Apollo Server...","timestamp":"2025-08-14T01:07:51.571Z"}
+{"label":"graphql-server","level":"info","message":"Setting up Express middleware...","timestamp":"2025-08-14T01:07:51.604Z"}
+{"label":"graphql-server","level":"info","message":"Creating GraphQL schema...","timestamp":"2025-08-14T01:07:51.538Z"}
+{"label":"graphql-server","level":"info","message":"Setting up WebSocket server...","timestamp":"2025-08-14T01:07:51.588Z"}
+{"label":"graphql-server","level":"info","message":"Creating Apollo Server...","timestamp":"2025-08-14T01:07:51.590Z"}
+{"label":"graphql-server","level":"info","message":"Setting up Express middleware...","timestamp":"2025-08-14T01:07:51.608Z"}
+{"label":"graphql-server","level":"info","message":"Creating GraphQL schema...","timestamp":"2025-08-14T01:07:51.529Z"}
+{"label":"graphql-server","level":"info","message":"Setting up WebSocket server...","timestamp":"2025-08-14T01:07:51.580Z"}
+{"label":"graphql-server","level":"info","message":"Creating Apollo Server...","timestamp":"2025-08-14T01:07:51.580Z"}
+{"label":"graphql-server","level":"info","message":"Setting up Express middleware...","timestamp":"2025-08-14T01:07:51.604Z"}
+{"label":"graphql-server","level":"info","message":"🚀 GraphQL Server ready at http://localhost:8080/graphql","timestamp":"2025-08-14T01:07:51.605Z"}
+{"label":"graphql-server","level":"info","message":"🚀 GraphQL Subscriptions ready at ws://localhost:8080/graphql","timestamp":"2025-08-14T01:07:51.605Z"}
+{"errors":[{"extensions":{"code":"GRAPHQL_VALIDATION_FAILED","http":{"headers":{},"status":400}},"locations":[{"column":18,"line":1},{"column":30,"line":2}],"message":"Variable \"$organizationId\" of type \"ID!\" used in position expecting type \"String!\"."}],"label":"graphql-server","level":"error","message":"GraphQL errors encountered","operationName":"GetSources","timestamp":"2025-08-14T01:07:55.461Z"}
+{"error":{"extensions":{"code":"GRAPHQL_VALIDATION_FAILED","stacktrace":["GraphQLError: Variable \"$organizationId\" of type \"ID!\" used in position expecting type \"String!\".","    at Object.leave (/Users/jeffhaskell/Documents/Olivine Projects/Blueprint/Olivine-V11/node_modules/graphql/validation/rules/VariablesInAllowedPositionRule.js:64:17)","    at Object.leave (/Users/jeffhaskell/Documents/Olivine Projects/Blueprint/Olivine-V11/node_modules/graphql/language/visitor.js:321:32)","    at Object.leave (/Users/jeffhaskell/Documents/Olivine Projects/Blueprint/Olivine-V11/node_modules/graphql/utilities/TypeInfo.js:411:21)","    at visit (/Users/jeffhaskell/Documents/Olivine Projects/Blueprint/Olivine-V11/node_modules/graphql/language/visitor.js:194:21)","    at validate (/Users/jeffhaskell/Documents/Olivine Projects/Blueprint/Olivine-V11/node_modules/graphql/validation/validate.js:91:24)","    at processGraphQLRequest (/Users/jeffhaskell/Documents/Olivine Projects/Blueprint/Olivine-V11/backend/node_modules/@apollo/server/src/requestPipeline.ts:254:38)","    at processTicksAndRejections (node:internal/process/task_queues:105:5)","    at async internalExecuteOperation (/Users/jeffhaskell/Documents/Olivine Projects/Blueprint/Olivine-V11/backend/node_modules/@apollo/server/src/ApolloServer.ts:1352:12)","    at async runHttpQuery (/Users/jeffhaskell/Documents/Olivine Projects/Blueprint/Olivine-V11/backend/node_modules/@apollo/server/src/runHttpQuery.ts:232:27)","    at async runPotentiallyBatchedHttpQuery (/Users/jeffhaskell/Documents/Olivine Projects/Blueprint/Olivine-V11/backend/node_modules/@apollo/server/src/httpBatching.ts:85:12)"]},"locations":[{"column":18,"line":1},{"column":30,"line":2}],"message":"Variable \"$organizationId\" of type \"ID!\" used in position expecting type \"String!\"."},"label":"graphql-server","level":"error","message":"GraphQL Error:","timestamp":"2025-08-14T01:07:55.461Z"}
+{"duration":"11ms","label":"graphql-server","level":"info","message":"GraphQL request completed","operationName":"GetSources","success":false,"timestamp":"2025-08-14T01:07:55.462Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T01:08:14.940Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T01:08:14.949Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T01:08:14.960Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T01:08:14.963Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T01:08:14.964Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T01:08:15.005Z"}
+{"label":"graphql-server","level":"info","message":"Creating GraphQL schema...","timestamp":"2025-08-14T01:08:15.006Z"}
+{"label":"graphql-server","level":"info","message":"Setting up WebSocket server...","timestamp":"2025-08-14T01:08:15.035Z"}
+{"label":"graphql-server","level":"info","message":"Creating Apollo Server...","timestamp":"2025-08-14T01:08:15.035Z"}
+{"label":"graphql-server","level":"info","message":"Setting up Express middleware...","timestamp":"2025-08-14T01:08:15.071Z"}
+{"label":"graphql-server","level":"info","message":"🚀 GraphQL Server ready at http://localhost:4001/graphql","timestamp":"2025-08-14T01:08:15.073Z"}
+{"label":"graphql-server","level":"info","message":"🚀 GraphQL Subscriptions ready at ws://localhost:4001/graphql","timestamp":"2025-08-14T01:08:15.074Z"}
+{"duration":"28ms","label":"graphql-server","level":"info","message":"GraphQL request completed","operationName":"CreateProject","success":true,"timestamp":"2025-08-14T01:08:15.129Z"}
+{"duration":"40ms","label":"graphql-server","level":"info","message":"GraphQL request completed","operationName":"CreateCharacter","success":true,"timestamp":"2025-08-14T01:08:15.180Z"}
+{"duration":"5ms","label":"graphql-server","level":"info","message":"GraphQL request completed","operationName":"CreateCharacter","success":true,"timestamp":"2025-08-14T01:08:15.190Z"}
+{"duration":"29ms","label":"graphql-server","level":"info","message":"GraphQL request completed","operationName":"CreateScene","success":true,"timestamp":"2025-08-14T01:08:15.224Z"}
+{"duration":"4ms","label":"graphql-server","level":"info","message":"GraphQL request completed","operationName":"LinkSceneToCharacter","success":true,"timestamp":"2025-08-14T01:08:15.233Z"}
+{"duration":"3ms","label":"graphql-server","level":"info","message":"GraphQL request completed","operationName":"LinkSceneToCharacter","success":true,"timestamp":"2025-08-14T01:08:15.241Z"}
+{"duration":"15ms","label":"graphql-server","level":"info","message":"GraphQL request completed","operationName":"CreateVendor","success":true,"timestamp":"2025-08-14T01:08:15.261Z"}
+{"duration":"5ms","label":"graphql-server","level":"info","message":"GraphQL request completed","operationName":"CreateBudget","success":true,"timestamp":"2025-08-14T01:08:15.274Z"}
+{"duration":"47ms","label":"graphql-server","level":"info","message":"GraphQL request completed","operationName":"CreatePurchaseOrder","success":true,"timestamp":"2025-08-14T01:08:15.325Z"}
+{"duration":"4ms","label":"graphql-server","level":"info","message":"GraphQL request completed","operationName":"CreateProject","success":true,"timestamp":"2025-08-14T01:08:18.375Z"}
+{"duration":"7ms","label":"graphql-server","level":"info","message":"GraphQL request completed","operationName":"CreateBudget","success":true,"timestamp":"2025-08-14T01:08:18.387Z"}
+{"duration":"5ms","label":"graphql-server","level":"info","message":"GraphQL request completed","operationName":"CreateVendor","success":true,"timestamp":"2025-08-14T01:08:18.397Z"}
+{"duration":"5ms","label":"graphql-server","level":"info","message":"GraphQL request completed","operationName":"CreatePurchaseOrder","success":true,"timestamp":"2025-08-14T01:08:18.406Z"}
+{"duration":"6ms","label":"graphql-server","level":"info","message":"GraphQL request completed","operationName":"CreatePurchaseOrder","success":true,"timestamp":"2025-08-14T01:08:18.423Z"}
+{"duration":"5ms","label":"graphql-server","level":"info","message":"GraphQL request completed","operationName":"BudgetVsActualAnalysis","success":true,"timestamp":"2025-08-14T01:08:18.439Z"}
+{"duration":"14ms","label":"graphql-server","level":"info","message":"GraphQL request completed","operationName":"CreateVendor","success":true,"timestamp":"2025-08-14T01:08:18.466Z"}
+{"duration":"57ms","label":"graphql-server","level":"info","message":"GraphQL request completed","operationName":"CreateVendor","success":true,"timestamp":"2025-08-14T01:08:18.556Z"}
+{"duration":"19ms","label":"graphql-server","level":"info","message":"GraphQL request completed","operationName":"CreateProject","success":true,"timestamp":"2025-08-14T01:08:18.598Z"}
+{"duration":"24ms","label":"graphql-server","level":"info","message":"GraphQL request completed","operationName":"CreatePurchaseOrder","success":true,"timestamp":"2025-08-14T01:08:18.640Z"}
+{"duration":"11ms","label":"graphql-server","level":"info","message":"GraphQL request completed","operationName":"CreatePurchaseOrder","success":true,"timestamp":"2025-08-14T01:08:18.670Z"}
+{"duration":"116ms","label":"graphql-server","level":"info","message":"GraphQL request completed","operationName":"VendorPerformanceAnalysis","success":true,"timestamp":"2025-08-14T01:08:18.793Z"}
+{"label":"graphql-server","level":"info","message":"Shutting down GraphQL server...","timestamp":"2025-08-14T01:08:18.809Z"}
+{"label":"graphql-server","level":"info","message":"GraphQL server stopped successfully","timestamp":"2025-08-14T01:08:18.844Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T01:09:12.265Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T01:09:12.265Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T01:09:12.263Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T01:09:12.265Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T01:09:12.264Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T01:09:12.335Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T01:09:12.335Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T01:09:12.335Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T01:09:12.336Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T01:09:12.340Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T01:09:12.367Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T01:09:12.368Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T01:09:12.368Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T01:09:12.368Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T01:09:12.368Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T01:09:12.369Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T01:09:12.369Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T01:09:12.371Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T01:09:12.369Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T01:09:12.370Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T01:09:12.369Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T01:09:12.369Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T01:09:12.370Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T01:09:12.369Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T01:09:12.369Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T01:09:12.454Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T01:09:12.454Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T01:09:12.457Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T01:09:12.542Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T01:09:12.549Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T01:09:32.519Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T01:09:32.635Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T01:09:32.757Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T01:09:32.758Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T01:09:32.758Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T01:09:32.849Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T01:09:40.955Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T01:09:41.083Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T01:09:41.129Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T01:09:41.134Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T01:09:41.142Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T01:09:41.225Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T01:09:41.643Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T01:09:41.699Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T01:09:41.697Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T01:09:41.698Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T01:09:41.695Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T01:09:41.744Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T01:09:41.747Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T01:09:41.747Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T01:09:41.786Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T01:09:41.795Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T01:09:41.807Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T01:09:41.808Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T01:09:41.811Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T01:09:41.808Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T01:09:41.805Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T01:09:41.836Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T01:09:41.837Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T01:09:41.838Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T01:09:41.839Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T01:09:41.865Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T01:09:41.867Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T01:09:41.871Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T01:09:41.873Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T01:09:41.906Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T01:09:41.912Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T01:09:41.934Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T01:09:41.935Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T01:09:41.936Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T01:09:41.960Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T01:09:42.019Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T01:10:25.372Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T01:10:25.702Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T01:10:25.789Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T01:10:25.795Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T01:10:25.798Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T01:10:26.036Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T01:10:48.259Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T01:10:48.282Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T01:10:48.390Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T01:10:48.475Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T01:10:48.476Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T01:10:48.466Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T01:10:48.470Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T01:10:48.520Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T01:10:48.566Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T01:10:48.573Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T01:10:48.573Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T01:10:48.573Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T01:10:48.575Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T01:10:48.575Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T01:10:48.576Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T01:10:48.578Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T01:10:48.576Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T01:10:48.577Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T01:10:48.577Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T01:10:48.614Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T01:10:48.616Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T01:10:48.624Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T01:10:48.616Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T01:10:48.627Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T01:10:48.627Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T01:10:48.671Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T01:10:48.671Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T01:10:48.672Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T01:10:48.697Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T01:10:48.697Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T01:10:53.898Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T01:10:53.930Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T01:10:53.943Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T01:10:53.943Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T01:10:53.943Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T01:10:53.963Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T01:11:06.776Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T01:11:06.815Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T01:11:06.838Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T01:11:06.838Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T01:11:06.838Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T01:11:06.865Z"}
+{"label":"graphql-server","level":"info","message":"Creating GraphQL schema...","timestamp":"2025-08-14T01:11:06.865Z"}
+{"label":"graphql-server","level":"info","message":"Setting up WebSocket server...","timestamp":"2025-08-14T01:11:06.891Z"}
+{"label":"graphql-server","level":"info","message":"Creating Apollo Server...","timestamp":"2025-08-14T01:11:06.892Z"}
+{"label":"graphql-server","level":"info","message":"Setting up Express middleware...","timestamp":"2025-08-14T01:11:06.914Z"}
+{"label":"graphql-server","level":"info","message":"🚀 GraphQL Server ready at http://localhost:8080/graphql","timestamp":"2025-08-14T01:11:06.916Z"}
+{"label":"graphql-server","level":"info","message":"🚀 GraphQL Subscriptions ready at ws://localhost:8080/graphql","timestamp":"2025-08-14T01:11:06.916Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T01:12:15.034Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T01:12:15.042Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T01:12:15.030Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T01:12:15.093Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T01:12:15.092Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T01:12:15.268Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T01:12:15.268Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T01:12:15.268Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T01:12:15.275Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T01:12:15.283Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T01:12:15.307Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T01:12:15.307Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T01:12:15.308Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T01:12:15.307Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T01:12:15.308Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T01:12:15.308Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T01:12:15.308Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T01:12:15.309Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T01:12:15.309Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T01:12:15.309Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T01:12:15.309Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T01:12:15.309Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T01:12:15.309Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T01:12:15.310Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T01:12:15.310Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T01:12:15.361Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T01:12:15.361Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T01:12:15.361Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T01:12:15.361Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T01:12:15.362Z"}
+{"label":"graphql-server","level":"info","message":"Creating GraphQL schema...","timestamp":"2025-08-14T01:12:15.362Z"}
+{"label":"graphql-server","level":"info","message":"Setting up WebSocket server...","timestamp":"2025-08-14T01:12:15.410Z"}
+{"label":"graphql-server","level":"info","message":"Creating Apollo Server...","timestamp":"2025-08-14T01:12:15.411Z"}
+{"label":"graphql-server","level":"info","message":"Setting up Express middleware...","timestamp":"2025-08-14T01:12:15.439Z"}
+{"label":"graphql-server","level":"info","message":"Creating GraphQL schema...","timestamp":"2025-08-14T01:12:15.363Z"}
+{"label":"graphql-server","level":"info","message":"Setting up WebSocket server...","timestamp":"2025-08-14T01:12:15.413Z"}
+{"label":"graphql-server","level":"info","message":"Creating Apollo Server...","timestamp":"2025-08-14T01:12:15.413Z"}
+{"label":"graphql-server","level":"info","message":"Setting up Express middleware...","timestamp":"2025-08-14T01:12:15.440Z"}
+{"label":"graphql-server","level":"info","message":"Creating GraphQL schema...","timestamp":"2025-08-14T01:12:15.362Z"}
+{"label":"graphql-server","level":"info","message":"Setting up WebSocket server...","timestamp":"2025-08-14T01:12:15.405Z"}
+{"label":"graphql-server","level":"info","message":"Creating Apollo Server...","timestamp":"2025-08-14T01:12:15.406Z"}
+{"label":"graphql-server","level":"info","message":"Setting up Express middleware...","timestamp":"2025-08-14T01:12:15.440Z"}
+{"label":"graphql-server","level":"info","message":"Creating GraphQL schema...","timestamp":"2025-08-14T01:12:15.361Z"}
+{"label":"graphql-server","level":"info","message":"Setting up WebSocket server...","timestamp":"2025-08-14T01:12:15.407Z"}
+{"label":"graphql-server","level":"info","message":"Creating Apollo Server...","timestamp":"2025-08-14T01:12:15.408Z"}
+{"label":"graphql-server","level":"info","message":"Setting up Express middleware...","timestamp":"2025-08-14T01:12:15.441Z"}
+{"label":"graphql-server","level":"info","message":"Creating GraphQL schema...","timestamp":"2025-08-14T01:12:15.361Z"}
+{"label":"graphql-server","level":"info","message":"Setting up WebSocket server...","timestamp":"2025-08-14T01:12:15.410Z"}
+{"label":"graphql-server","level":"info","message":"Creating Apollo Server...","timestamp":"2025-08-14T01:12:15.411Z"}
+{"label":"graphql-server","level":"info","message":"Setting up Express middleware...","timestamp":"2025-08-14T01:12:15.440Z"}
+{"errors":[{"locations":[{"column":3,"line":2}],"message":"invalid input syntax for type uuid: \"demo-project-1\"","path":["getSources"]}],"label":"graphql-server","level":"error","message":"GraphQL errors encountered","operationName":"GetSources","timestamp":"2025-08-14T01:12:52.594Z"}
+{"error":{"extensions":{"code":"INTERNAL_SERVER_ERROR","stacktrace":["error: invalid input syntax for type uuid: \"demo-project-1\"","    at /Users/jeffhaskell/Documents/Olivine Projects/Blueprint/Olivine-V11/backend/node_modules/pg-pool/index.js:45:11","    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)","    at async PostgresService.executeQuery (/Users/jeffhaskell/Documents/Olivine Projects/Blueprint/Olivine-V11/backend/dist/services/PostgresService.js:32:28)","    at async SourceModel.getSourcesByOrganization (/Users/jeffhaskell/Documents/Olivine Projects/Blueprint/Olivine-V11/backend/dist/models/Source.js:41:24)","    at async SourceResolvers.getSources (/Users/jeffhaskell/Documents/Olivine Projects/Blueprint/Olivine-V11/backend/dist/graphql/resolvers/SourceResolvers.js:26:16)"]},"locations":[{"column":3,"line":2}],"message":"invalid input syntax for type uuid: \"demo-project-1\"","path":["getSources"]},"label":"graphql-server","level":"error","message":"GraphQL Error:","timestamp":"2025-08-14T01:12:52.595Z"}
+{"duration":"72ms","label":"graphql-server","level":"info","message":"GraphQL request completed","operationName":"GetSources","success":false,"timestamp":"2025-08-14T01:12:52.595Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T01:13:15.993Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T01:13:15.969Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T01:13:16.017Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T01:13:16.103Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T01:13:16.111Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T01:13:15.970Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T01:13:16.185Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T01:13:16.192Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T01:13:16.195Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T01:13:16.200Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T01:13:16.197Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T01:13:16.200Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T01:13:16.198Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T01:13:16.201Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T01:13:16.241Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T01:13:16.181Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T01:13:16.246Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T01:13:16.256Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T01:13:16.248Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T01:13:16.261Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T01:13:16.261Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T01:13:16.301Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T01:13:16.318Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T01:13:16.355Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T01:13:16.357Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T01:13:16.359Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T01:13:16.361Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T01:13:16.357Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T01:13:16.384Z"}
+{"label":"graphql-server","level":"info","message":"Creating GraphQL schema...","timestamp":"2025-08-14T01:13:16.318Z"}
+{"label":"graphql-server","level":"info","message":"Setting up WebSocket server...","timestamp":"2025-08-14T01:13:16.371Z"}
+{"label":"graphql-server","level":"info","message":"Creating Apollo Server...","timestamp":"2025-08-14T01:13:16.372Z"}
+{"label":"graphql-server","level":"info","message":"Setting up Express middleware...","timestamp":"2025-08-14T01:13:16.429Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T01:13:16.452Z"}
+{"label":"graphql-server","level":"info","message":"Creating GraphQL schema...","timestamp":"2025-08-14T01:13:16.361Z"}
+{"label":"graphql-server","level":"info","message":"Setting up WebSocket server...","timestamp":"2025-08-14T01:13:16.416Z"}
+{"label":"graphql-server","level":"info","message":"Creating Apollo Server...","timestamp":"2025-08-14T01:13:16.417Z"}
+{"label":"graphql-server","level":"info","message":"Setting up Express middleware...","timestamp":"2025-08-14T01:13:16.454Z"}
+{"label":"graphql-server","level":"info","message":"Creating GraphQL schema...","timestamp":"2025-08-14T01:13:16.360Z"}
+{"label":"graphql-server","level":"info","message":"Setting up WebSocket server...","timestamp":"2025-08-14T01:13:16.424Z"}
+{"label":"graphql-server","level":"info","message":"Creating Apollo Server...","timestamp":"2025-08-14T01:13:16.425Z"}
+{"label":"graphql-server","level":"info","message":"Setting up Express middleware...","timestamp":"2025-08-14T01:13:16.461Z"}
+{"label":"graphql-server","level":"info","message":"Creating GraphQL schema...","timestamp":"2025-08-14T01:13:16.385Z"}
+{"label":"graphql-server","level":"info","message":"Setting up WebSocket server...","timestamp":"2025-08-14T01:13:16.440Z"}
+{"label":"graphql-server","level":"info","message":"Creating Apollo Server...","timestamp":"2025-08-14T01:13:16.441Z"}
+{"label":"graphql-server","level":"info","message":"Setting up Express middleware...","timestamp":"2025-08-14T01:13:16.478Z"}
+{"label":"graphql-server","level":"info","message":"Creating GraphQL schema...","timestamp":"2025-08-14T01:13:16.453Z"}
+{"label":"graphql-server","level":"info","message":"Setting up WebSocket server...","timestamp":"2025-08-14T01:13:16.514Z"}
+{"label":"graphql-server","level":"info","message":"Creating Apollo Server...","timestamp":"2025-08-14T01:13:16.515Z"}
+{"label":"graphql-server","level":"info","message":"Setting up Express middleware...","timestamp":"2025-08-14T01:13:16.533Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T01:13:52.216Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T01:13:52.297Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T01:13:52.283Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T01:13:52.396Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T01:13:52.719Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T01:13:52.725Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T01:13:52.811Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T01:13:52.915Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T01:13:52.916Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T01:13:52.930Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T01:13:52.949Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T01:13:52.929Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T01:13:52.930Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T01:13:52.935Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T01:13:52.936Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T01:13:52.935Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T01:13:52.940Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T01:13:53.190Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T01:13:53.192Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T01:13:53.194Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T01:13:53.478Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T01:13:53.640Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T01:13:53.709Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T01:13:53.781Z"}
+{"label":"graphql-server","level":"info","message":"Initializing services...","timestamp":"2025-08-14T01:13:53.765Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j connected","timestamp":"2025-08-14T01:13:54.166Z"}
+{"label":"graphql-server","level":"info","message":"Creating GraphQL schema...","timestamp":"2025-08-14T01:13:53.731Z"}
+{"label":"graphql-server","level":"info","message":"Setting up WebSocket server...","timestamp":"2025-08-14T01:13:54.018Z"}
+{"label":"graphql-server","level":"info","message":"Creating Apollo Server...","timestamp":"2025-08-14T01:13:54.055Z"}
+{"label":"graphql-server","level":"info","message":"Setting up Express middleware...","timestamp":"2025-08-14T01:13:54.237Z"}
+{"label":"graphql-server","level":"info","message":"Creating GraphQL schema...","timestamp":"2025-08-14T01:13:53.796Z"}
+{"label":"graphql-server","level":"info","message":"Setting up WebSocket server...","timestamp":"2025-08-14T01:13:54.175Z"}
+{"label":"graphql-server","level":"info","message":"Creating Apollo Server...","timestamp":"2025-08-14T01:13:54.176Z"}
+{"label":"graphql-server","level":"info","message":"Setting up Express middleware...","timestamp":"2025-08-14T01:13:54.237Z"}
+{"label":"graphql-server","level":"info","message":"Creating GraphQL schema...","timestamp":"2025-08-14T01:13:53.643Z"}
+{"label":"graphql-server","level":"info","message":"Setting up WebSocket server...","timestamp":"2025-08-14T01:13:54.078Z"}
+{"label":"graphql-server","level":"info","message":"Creating Apollo Server...","timestamp":"2025-08-14T01:13:54.082Z"}
+{"label":"graphql-server","level":"info","message":"Setting up Express middleware...","timestamp":"2025-08-14T01:13:54.239Z"}
+{"label":"graphql-server","level":"info","message":"Creating GraphQL schema...","timestamp":"2025-08-14T01:13:53.482Z"}
+{"label":"graphql-server","level":"info","message":"Setting up WebSocket server...","timestamp":"2025-08-14T01:13:54.062Z"}
+{"label":"graphql-server","level":"info","message":"Creating Apollo Server...","timestamp":"2025-08-14T01:13:54.090Z"}
+{"label":"graphql-server","level":"info","message":"Setting up Express middleware...","timestamp":"2025-08-14T01:13:54.241Z"}
+{"label":"graphql-server","level":"info","message":"PostgreSQL connected","timestamp":"2025-08-14T01:13:54.295Z"}
+{"label":"graphql-server","level":"info","message":"Queue service connected","timestamp":"2025-08-14T01:13:54.297Z"}
+{"label":"graphql-server","level":"info","message":"Creating Neo4j indexes and constraints...","timestamp":"2025-08-14T01:13:54.297Z"}
+{"label":"graphql-server","level":"info","message":"Neo4j indexes and constraints created successfully","timestamp":"2025-08-14T01:13:54.620Z"}
+{"label":"graphql-server","level":"info","message":"Creating GraphQL schema...","timestamp":"2025-08-14T01:13:54.621Z"}
+{"label":"graphql-server","level":"info","message":"Setting up WebSocket server...","timestamp":"2025-08-14T01:13:54.734Z"}
+{"label":"graphql-server","level":"info","message":"Creating Apollo Server...","timestamp":"2025-08-14T01:13:54.735Z"}
+{"label":"graphql-server","level":"info","message":"Setting up Express middleware...","timestamp":"2025-08-14T01:13:54.755Z"}
+{"duration":"213ms","label":"graphql-server","level":"info","message":"GraphQL request completed","operationName":"GetSources","success":true,"timestamp":"2025-08-14T01:14:19.428Z"}

@@ -306,8 +306,8 @@
               </div>
             </template>
 
-            <!-- Entity View -->
-            <template v-else-if="viewMode === 'entity'">
+            <!-- Canonical View -->
+            <template v-else-if="viewMode === 'canonical'">
               <div class="pa-4">
                 <v-tabs
                   v-model="entityGroupBy"
@@ -411,6 +411,7 @@ import { useFileExplorerData } from './Composables/data'
 import { useFileExplorerUtils } from './Composables/utils'
 import { useFileExplorerMutations } from './Composables/graphql'
 import { useFileExplorerActions } from './Composables/actions'
+import { FolderItem } from './Composables/Interface'
 
 // Import external dependencies
 // import { useRoute, useRouter } from 'vue-router' // Not currently used
@@ -455,7 +456,7 @@ const {
   // promptRename, // Not currently used
   // promptMove // Not currently used
 } = useFileExplorerActions(
-  state,
+  selectedFile,
   items,
   variables,
   refetch,
@@ -523,7 +524,7 @@ const entityGroups = computed(() => {
   // Group files by project or source based on entityGroupBy value
   if (entityGroupBy.value === 'project' && items.value) {
     const groups: { key: string; label: string; items: any[] }[] = []
-    const projectMap: Record<string, any[]> = {}
+    const projectMap: Record<string, FileItem[]> = {}
     
     // Group files by project
     items.value.forEach(file => {
@@ -547,7 +548,7 @@ const entityGroups = computed(() => {
     return groups
   } else if (entityGroupBy.value === 'source' && items.value) {
     const groups: { key: string; label: string; items: any[] }[] = []
-    const sourceMap: Record<string, any[]> = {}
+    const sourceMap: Record<string, FileItem[]> = {}
     
     // Group files by source
     items.value.forEach(file => {
@@ -582,7 +583,7 @@ const form = ref({
 })
 
 // Missing functions that are referenced in the template
-function onFolderSelect(selected: any) {
+function onFolderSelect(selected: (string | { id: string })[]) {
   // Vuetify treeview emits an array of selected items
   // We need to extract the IDs from the selected items
   if (Array.isArray(selected)) {
@@ -593,7 +594,7 @@ function onFolderSelect(selected: any) {
   }
 }
 
-function onFileSelect(file: any) {
+function onFileSelect(file: FileItem) {
   selectedFile.value = file
 }
 
@@ -610,5 +611,44 @@ watch(searchQuery, (q) => {
   variables.value.filter.name = q || undefined
   variables.value.filter.path = q || undefined
   refetch()
+})
+
+// Expose properties to template
+defineExpose({
+  searchQuery,
+  folderTree,
+  selectedFolders,
+  openedFolders,
+  onFolderSelect,
+  fileViewMode,
+  filteredFiles,
+  loading,
+  renameFile,
+  moveFile,
+  entityGroups,
+  selectedFilters,
+  fileFilters,
+  classificationOptions,
+  applyClassificationFilter,
+  downloadFile,
+  openInProvider,
+  selectedFile,
+  onFileSelect,
+  entityGroupBy,
+  actionLoading,
+  showClassify,
+  canonicalSlots,
+  triggerReprocess,
+  submitClassification,
+  openMappingStudio,
+  form,
+  applyMimeFilter,
+  syncStatus,
+  triggerSync,
+  showUploadDialog,
+  viewMode,
+  getProviderColor,
+  currentProvider,
+  getProviderIcon
 })
 </script>

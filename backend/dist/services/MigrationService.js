@@ -70,10 +70,17 @@ class MigrationService {
                         await this.postgresService.executeQuery(statement);
                     }
                     catch (error) {
-                        if (statement.trim().toUpperCase().startsWith('CREATE POLICY') &&
-                            ((typeof error === 'object' && error !== null && 'message' in error && error.message.toLowerCase().includes('already exists')) ||
-                                (typeof error === 'object' && error !== null && 'message' in error && error.message.toLowerCase().includes('duplicate')) ||
-                                (typeof error === 'object' && error !== null && 'code' in error && String(error.code) === '42710'))) {
+                        const message = (typeof error === 'object' && error !== null && 'message' in error)
+                            ? String(error.message).toLowerCase()
+                            : '';
+                        const code = (typeof error === 'object' && error !== null && 'code' in error)
+                            ? String(error.code)
+                            : '';
+                        const isDuplicatePolicy = message.includes('policy already exists') ||
+                            message.includes('already exists') ||
+                            message.includes('duplicate') ||
+                            code === '42710';
+                        if (isDuplicatePolicy) {
                             console.log('Policy already exists, skipping');
                         }
                         else {

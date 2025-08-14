@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createTestingPinia } from '@pinia/testing'
-import CallSheetComposer from '../index.vue'
+import CallSheetComposer from '../CallSheetComposerView.vue'
 
 describe('CallSheetComposer', () => {
   it('renders correctly', () => {

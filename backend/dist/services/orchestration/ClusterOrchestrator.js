@@ -56,10 +56,7 @@ class ClusterOrchestrator extends BaseService_1.BaseService {
             startedAt: new Date()
         };
         this.activeWorkflows.set(workflowId, workflow);
-        await this.queueService.addJob('cluster-orchestration', 'execute-workflow', {
-            workflowId,
-            action: 'start'
-        });
+        await this.executeWorkflow(workflow);
         return workflowId;
     }
     async processOrchestrationJob(jobData) {

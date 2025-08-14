@@ -755,7 +755,7 @@ type Mutation {
   createCharacter(input: JSON!, userId: ID!): Character!
   createTalent(input: JSON!, userId: ID!): Talent!
   createCrew(input: JSON!, userId: ID!): Crew!
-  linkSceneToCharacter(sceneId: ID!, characterId: ID!, orgId: ID!, userId: ID!): JSON!
+  # linkSceneToCharacter definition moved to core schema
   
   # Operations
   createVendor(input: JSON!, userId: ID!): Vendor!

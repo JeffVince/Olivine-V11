@@ -15,7 +15,7 @@ import { useCommitsBranchesState } from './Composables/state'
 
 const { items: commits } = useCommits()
 const { branches } = useBranches()
-const { state } = useCommitsBranchesState()
+const {  } = useCommitsBranchesState() // state is not used in this component
 </script>
 
 <style scoped>

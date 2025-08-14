@@ -80,7 +80,7 @@
         <v-btn
           color="secondary"
           prepend-icon="mdi-tag"
-          @click="emit('showClassify', true)"
+          @click="setShowClassify(true)"
         >
           Classify
         </v-btn>
@@ -184,7 +184,7 @@ function triggerReprocess() {
   emit('triggerReprocess')
 }
 
-function showClassify(value: boolean) {
+function setShowClassify(value: boolean) {
   emit('showClassify', value)
 }
 

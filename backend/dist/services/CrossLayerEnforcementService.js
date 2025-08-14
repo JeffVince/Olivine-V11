@@ -237,9 +237,9 @@ class CrossLayerEnforcementService {
           MATCH (f:File {id: $entityId})
           CREATE (cc:ContentCluster {
             id: randomUUID(),
-            orgId: f.orgId,
+            orgId: coalesce(f.orgId, f.org_id),
             fileId: f.id,
-            projectId: f.projectId,
+            projectId: coalesce(f.projectId, f.project_id),
             status: 'empty',
             entitiesCount: 0,
             linksCount: 0,
@@ -326,7 +326,8 @@ class CrossLayerEnforcementService {
         const m = vq.match(/MATCH\s*\((\w+)\s*:/i);
         if (m && m[1])
             alias = m[1];
-        const amended = vq.includes('RETURN') ? vq.replace(/RETURN/i, `AND ${alias}.org_id = $orgId RETURN`) : `${vq} AND ${alias}.org_id = $orgId`;
+        const orgFilter = `(${alias}.org_id = $orgId OR ${alias}.orgId = $orgId)`;
+        const amended = vq.includes('RETURN') ? vq.replace(/RETURN/i, `AND ${orgFilter} RETURN`) : `${vq} AND ${orgFilter}`;
         const violations = await this.neo4jService.run(amended, { orgId });
         const result = {
             ruleId: rule.id,
@@ -447,12 +448,12 @@ class CrossLayerEnforcementService {
     }
     async getCrossLayerStatistics(orgId) {
         const queries = {
-            totalFiles: `MATCH (f:File {orgId: $orgId, current: true, deleted: false}) RETURN count(f) as count`,
-            filesWithClusters: `MATCH (f:File {orgId: $orgId, current: true, deleted: false})-[:HAS_CLUSTER]->(:ContentCluster) RETURN count(f) as count`,
+            totalFiles: `MATCH (f:File) WHERE (f.orgId = $orgId OR f.org_id = $orgId) AND coalesce(f.current,true) = true AND coalesce(f.deleted,false) = false RETURN count(f) as count`,
+            filesWithClusters: `MATCH (f:File)-[:HAS_CLUSTER]->(:ContentCluster) WHERE (f.orgId = $orgId OR f.org_id = $orgId) AND coalesce(f.current,true) = true AND coalesce(f.deleted,false) = false RETURN count(f) as count`,
             totalScenes: `MATCH (s:Scene {org_id: $orgId}) RETURN count(s) as count`,
             scheduledScenes: `MATCH (s:Scene {org_id: $orgId})-[:SCHEDULED_ON]->(:ShootDay) RETURN count(s) as count`,
             castCharacters: `MATCH (c:Character {org_id: $orgId})-[:PORTRAYED_BY]->(:Talent) RETURN count(c) as count`,
-            crossLayerLinks: `MATCH (a)-[r]->(b) WHERE a.org_id = $orgId OR a.orgId = $orgId RETURN type(r) as relType, count(r) as count`,
+            crossLayerLinks: `MATCH (a)-[r]->(b) WHERE (a.org_id = $orgId OR a.orgId = $orgId) RETURN type(r) as relType, count(r) as count`,
             edgeFacts: `MATCH (ef:EdgeFact {org_id: $orgId}) RETURN ef.type as type, count(ef) as count`
         };
         const stats = {};
@@ -471,7 +472,7 @@ class CrossLayerEnforcementService {
             }
             catch (error) {
                 console.error(`Failed to get ${key} statistics:`, error);
-                stats[key] = 0;
+                stats[key] = (key === 'crossLayerLinks' || key === 'edgeFacts') ? [] : 0;
             }
         }
         stats.clusterCoverage = stats.totalFiles > 0 ?

@@ -1,10 +1,10 @@
-import { computed, watch, ref } from 'vue'
+import { computed, watch, ref, Ref } from 'vue'
 import { useFiles } from '@/composables/useFiles'
 import { useMutation } from '@vue/apollo-composable'
 import gql from 'graphql-tag'
 import { FileItem } from './Interface'
 
-export function useFileExplorerData(variables: any, refetch: () => void) {
+export function useFileExplorerData(variables: Ref<any>, refetch: () => void) {
   // Real data
   const { items, loading, renameFile, moveFile, downloadFile, openInProvider } = useFiles()
   

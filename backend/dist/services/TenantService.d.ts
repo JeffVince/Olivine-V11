@@ -1,4 +1,4 @@
-import { Neo4jService } from './Neo4jService';
+import type { Neo4jService } from './Neo4jService';
 export interface Organization {
     id: string;
     name: string;

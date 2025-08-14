@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createTestingPinia } from '@pinia/testing'
-import ApprovalsReviews from '../index.vue'
+import ApprovalsReviews from '../ApprovalsReviewsView.vue'
 
 describe('ApprovalsReviews', () => {
   it('renders correctly', () => {

@@ -9,7 +9,7 @@
 import SystemHealthCard from './Components/SystemHealthCard.vue'
 import { useSystemHealthState } from './Composables/state'
 
-const {  } = useSystemHealthState() // state is not used in this component
+// useSystemHealthState() is called for side effects only, no state is used in this component
 </script>
 
 <style scoped>

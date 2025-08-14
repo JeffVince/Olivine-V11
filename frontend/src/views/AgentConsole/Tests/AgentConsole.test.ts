@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
-import AgentConsole from '../index.vue'
+import AgentConsole from '../AgentConsoleView.vue'
 
 describe('AgentConsole', () => {
   it('should render', () => {

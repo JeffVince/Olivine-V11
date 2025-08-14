@@ -1,12 +1,12 @@
-import { ref } from 'vue'
+import { ref, Ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useNotificationStore } from '@/stores/notificationStore'
 import { FileItem } from './Interface'
 
 export function useFileExplorerActions(
-  selectedFile: any,
-  items: any,
-  variables: any,
+  selectedFile: Ref<FileItem | null>,
+  items: Ref<FileItem[]>,
+  variables: Ref<any>,
   refetch: () => void,
   triggerReprocessMutate: any,
   classifyMutate: any,

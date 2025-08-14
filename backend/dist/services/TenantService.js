@@ -34,12 +34,11 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.TenantService = void 0;
-const Neo4jService_1 = require("./Neo4jService");
 const fs = __importStar(require("fs"));
 const path = __importStar(require("path"));
 class TenantService {
     constructor(neo4jService) {
-        this.neo4jService = neo4jService ?? new Neo4jService_1.Neo4jService();
+        this.neo4jService = neo4jService ?? new (require('./Neo4jService').Neo4jService)();
     }
     validateOrgId(orgId) {
         if (!orgId || orgId.trim() === '') {
@@ -108,10 +107,6 @@ class TenantService {
       RETURN collect(perm.name) as permissions
     `;
         const result = await this.neo4jService.executeQuery(query, { userId, orgId });
-        if (!result || !('records' in result)) {
-            const fallback = (Array.isArray(arguments) && arguments[1]?.permissions) || [];
-            return fallback;
-        }
         if (result.records.length === 0) {
             return [];
         }
@@ -128,9 +123,6 @@ class TenantService {
         COUNT(targetOrg) > 0 as hasCrossAccess
     `;
         const result = await this.neo4jService.executeQuery(query, { userId, targetOrgId });
-        if (!result || !('records' in result)) {
-            return true;
-        }
         if (result.records.length === 0) {
             return false;
         }
@@ -148,9 +140,6 @@ class TenantService {
         COUNT(*) > 0 as hasDirectAccess
     `;
         const result = await this.neo4jService.executeQuery(query, { userId, orgId, projectId });
-        if (!result || !('records' in result)) {
-            return true;
-        }
         if (result.records.length === 0) {
             return false;
         }
@@ -307,9 +296,6 @@ class TenantService {
       RETURN r.role as role
     `;
         const result = await this.neo4jService.executeQuery(query, { userId, orgId });
-        if (!result || !('records' in result)) {
-            return 'admin';
-        }
         if (result.records.length === 0) {
             return null;
         }
@@ -325,9 +311,6 @@ class TenantService {
       RETURN r.role as role, org.status as orgStatus
     `;
         const result = await this.neo4jService.executeQuery(query, { userId, orgId });
-        if (!result || !('records' in result)) {
-            return true;
-        }
         if (result.records.length === 0) {
             return false;
         }
