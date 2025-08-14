@@ -2,7 +2,10 @@ import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
 import { useProjectStore } from '@/stores/projectStore'
 
 const routes: Array<RouteRecordRaw> = [
-  { path: '/', name: 'Home', component: () => import('../views/Dashboard/DashboardView.vue') },
+  { path: '/', name: 'Splash', component: () => import('../views/Splash/SplashView.vue') },
+  { path: '/login', name: 'Login', component: () => import('../views/Auth/LoginView.vue') },
+  { path: '/register', name: 'Register', component: () => import('../views/Auth/RegisterView.vue') },
+  { path: '/app', name: 'Home', component: () => import('../views/Dashboard/DashboardView.vue') },
   { path: '/projects', name: 'Projects', component: () => import('../views/Projects/ProjectsView.vue') },
   { path: '/projects/:id/home', name: 'ProjectHome', component: () => import('../views/Dashboard/DashboardView.vue') },
   { path: '/projects/:id/files', name: 'FileExplorer', component: () => import('../views/FileExplorer/FileExplorerView.vue') },

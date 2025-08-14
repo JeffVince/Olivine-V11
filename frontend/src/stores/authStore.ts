@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { apolloClient } from '@/graphql/client'
 import gql from 'graphql-tag'
+import { useOrganizationStore } from './organizationStore'
 
 interface UserProfile {
   id: string
@@ -46,6 +47,32 @@ export const useAuthStore = defineStore('auth', {
       this.accessToken = null
       this.user = null
       this.status = 'unauthenticated'
+    },
+    async login(email: string, password: string) {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      })
+      if (!res.ok) throw new Error('Login failed')
+      const data = await res.json()
+      this.setToken(data.token)
+      this.setUser({ id: data.userId, email, roles: [data.role] })
+      const orgStore = useOrganizationStore()
+      orgStore.setOrganization({ id: data.orgId, name: '' })
+    },
+    async register(orgName: string, email: string, password: string) {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orgName, email, password })
+      })
+      if (!res.ok) throw new Error('Registration failed')
+      const data = await res.json()
+      this.setToken(data.token)
+      this.setUser({ id: data.userId, email, roles: [data.role] })
+      const orgStore = useOrganizationStore()
+      orgStore.setOrganization({ id: data.orgId, name: orgName })
     },
     async updateProfile(input: { name: string; avatar?: string }) {
       await apolloClient.mutate({
