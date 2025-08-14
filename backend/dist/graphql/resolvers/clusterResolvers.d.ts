@@ -20,7 +20,7 @@ export declare const clusterResolvers: {
             organizationId: string;
         }, context: ClusterResolverContext): Promise<{
             id: any;
-            orgId: any;
+            organizationId: any;
             fileId: any;
             fileName: any;
             projectId: any;
@@ -53,7 +53,7 @@ export declare const clusterResolvers: {
             offset?: number;
         }, context: ClusterResolverContext): Promise<{
             id: any;
-            orgId: any;
+            organizationId: any;
             fileId: any;
             fileName: any;
             projectId: any;
@@ -71,7 +71,7 @@ export declare const clusterResolvers: {
             organizationId: string;
         }, context: ClusterResolverContext): Promise<{
             id: any;
-            orgId: any;
+            organizationId: any;
             fileId: any;
             fileName: any;
             projectId: any;
@@ -119,7 +119,7 @@ export declare const clusterResolvers: {
             offset?: number;
         }, context: ClusterResolverContext): Promise<{
             id: any;
-            orgId: any;
+            organizationId: any;
             fileId: any;
             fileName: any;
             projectId: any;
@@ -139,7 +139,7 @@ export declare const clusterResolvers: {
             organizationId: string;
         }, context: ClusterResolverContext): Promise<{
             id: any;
-            orgId: any;
+            organizationId: any;
             slot: any;
             mimeType: any;
             extension: any;
@@ -187,7 +187,7 @@ export declare const clusterResolvers: {
             featureFlag?: boolean;
         }, context: ClusterResolverContext): Promise<{
             id: any;
-            orgId: any;
+            organizationId: any;
             slot: any;
             mimeType: any;
             extension: any;

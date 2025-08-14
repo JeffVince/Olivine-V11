@@ -18,19 +18,19 @@ export class ProvenanceResolvers {
         // Provide commits and commitHistory queries expected by frontend
         commits: async (
           _: any,
-          { filter, limit }: { filter?: { orgId?: string; branchName?: string }; limit?: number }
+          { filter, limit }: { filter?: { organizationId?: string; branchName?: string }; limit?: number }
         ) => {
-          const orgId = filter?.orgId as string | undefined
+          const organizationId = filter?.organizationId as string | undefined
           const branch = (filter?.branchName as string | undefined) || 'main'
-          if (!orgId) return []
+          if (!organizationId) return []
           const agentLike: any = (this.provenanceService as any)
           if (typeof agentLike.getCommitHistory === 'function') {
-            return await agentLike.getCommitHistory(orgId, branch, limit ?? 50)
+            return await agentLike.getCommitHistory(organizationId, branch, limit ?? 50)
           }
           const result = await (this.provenanceService as any).neo4j.executeQuery(
-            `MATCH (c:Commit {org_id: $orgId, branch_name: $branchName}) RETURN c ORDER BY c.created_at DESC LIMIT $limit`,
-            { orgId, branchName: branch, limit: limit ?? 50 },
-            orgId
+            `MATCH (c:Commit {organization_id: $organizationId, branch_name: $branchName}) RETURN c ORDER BY c.created_at DESC LIMIT $limit`,
+            { organizationId, branchName: branch, limit: limit ?? 50 },
+            organizationId
           )
           return result.records.map((r: any) => {
             const c = r.get('c').properties
@@ -50,16 +50,16 @@ export class ProvenanceResolvers {
 
         commitHistory: async (
           _: any,
-          { orgId, branchName, limit }: { orgId: string; branchName: string; limit?: number }
+          { organizationId, branchName, limit }: { organizationId: string; branchName: string; limit?: number }
         ) => {
           const agentLike: any = (this.provenanceService as any)
           if (typeof agentLike.getCommitHistory === 'function') {
-            return await agentLike.getCommitHistory(orgId, branchName, limit ?? 50)
+            return await agentLike.getCommitHistory(organizationId, branchName, limit ?? 50)
           }
           const result = await (this.provenanceService as any).neo4j.executeQuery(
-            `MATCH (c:Commit {org_id: $orgId, branch_name: $branchName}) RETURN c ORDER BY c.created_at DESC LIMIT $limit`,
-            { orgId, branchName, limit: limit ?? 50 },
-            orgId
+            `MATCH (c:Commit {organization_id: $organizationId, branch_name: $branchName}) RETURN c ORDER BY c.created_at DESC LIMIT $limit`,
+            { organizationId, branchName, limit: limit ?? 50 },
+            organizationId
           )
           return result.records.map((r: any) => {
             const c = r.get('c').properties
@@ -79,36 +79,36 @@ export class ProvenanceResolvers {
 
         branches: async (
           _: any,
-          { orgId }: { orgId: string }
+          { organizationId }: { organizationId: string }
         ) => {
           const result = await (this.provenanceService as any).neo4j.executeQuery(
-            `MATCH (b:Branch {org_id: $orgId}) RETURN b ORDER BY b.created_at DESC`,
-            { orgId },
-            orgId
+            `MATCH (b:Branch {organization_id: $organizationId}) RETURN b ORDER BY b.created_at DESC`,
+            { organizationId },
+            organizationId
           )
           return result.records.map((r: any) => r.get('b').properties)
         },
         entityHistory: async (
           _: any, 
-          { entityId, entityType, orgId }: { entityId: string; entityType: string; orgId: string }
+          { entityId, entityType, organizationId }: { entityId: string; entityType: string; organizationId: string }
         ) => {
-          return await this.provenanceService.getEntityHistory(entityId, entityType, orgId);
+          return await this.provenanceService.getEntityHistory(entityId, entityType, organizationId);
         },
 
         entityAtTime: async (
           _: any,
-          { entityId, timestamp, orgId }: { entityId: string; timestamp: Date; orgId: string }
+          { entityId, timestamp, organizationId }: { entityId: string; timestamp: Date; organizationId: string }
         ) => {
-          return await this.provenanceService.getEntityAtTime(entityId, timestamp, orgId);
+          return await this.provenanceService.getEntityAtTime(entityId, timestamp, organizationId);
         }
       },
 
       Mutation: {
         createBranch: async (
           _: any,
-          { name, orgId, projectId, description, userId, fromCommit }: {
+          { name, organizationId, projectId, description, userId, fromCommit }: {
             name: string;
-            orgId: string;
+            organizationId: string;
             projectId?: string;
             description: string;
             userId: string;
@@ -117,7 +117,7 @@ export class ProvenanceResolvers {
         ) => {
           return await this.provenanceService.createBranch(
             name, 
-            orgId, 
+            organizationId, 
             projectId || null, 
             description, 
             userId, 
@@ -127,11 +127,11 @@ export class ProvenanceResolvers {
 
         createEdgeFact: async (
           _: any,
-          { type, fromId, toId, orgId, userId, props, fromType, toType }: {
+          { type, fromId, toId, organizationId, userId, props, fromType, toType }: {
             type: string;
             fromId: string;
             toId: string;
-            orgId: string;
+            organizationId: string;
             userId: string;
             props?: Record<string, any>;
             fromType?: string;
@@ -142,7 +142,7 @@ export class ProvenanceResolvers {
             type,
             fromId,
             toId,
-            orgId,
+            organizationId,
             userId,
             props,
             fromType,
@@ -153,9 +153,9 @@ export class ProvenanceResolvers {
 
         endEdgeFact: async (
           _: any,
-          { edgeFactId, orgId, userId }: { edgeFactId: string; orgId: string; userId: string }
+          { edgeFactId, organizationId, userId }: { edgeFactId: string; organizationId: string; userId: string }
         ) => {
-          await this.provenanceService.endEdgeFact(edgeFactId, orgId, userId);
+          await this.provenanceService.endEdgeFact(edgeFactId, organizationId, userId);
           return { success: true };
         }
       }

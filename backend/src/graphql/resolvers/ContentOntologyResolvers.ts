@@ -17,16 +17,16 @@ export class ContentOntologyResolvers {
   getResolvers() {
     return {
       Query: {
-        project: async (_: any, { id, orgId }: { id: string; orgId: string }) => {
-          return await this.contentService.getProject(id, orgId);
+        project: async (_: any, { id, organizationId }: { id: string; organizationId: string }) => {
+          return await this.contentService.getProject(id, organizationId);
         },
 
-        projects: async (_: any, { orgId }: { orgId: string }) => {
-          return await this.contentService.getProjects(orgId);
+        projects: async (_: any, { organizationId }: { organizationId: string }) => {
+          return await this.contentService.getProjects(organizationId);
         },
 
-        sceneBreakdown: async (_: any, { shootDayDate, orgId }: { shootDayDate: Date; orgId: string }) => {
-          return await this.contentService.getSceneBreakdown(shootDayDate, orgId);
+        sceneBreakdown: async (_: any, { shootDayDate, organizationId }: { shootDayDate: Date; organizationId: string }) => {
+          return await this.contentService.getSceneBreakdown(shootDayDate, organizationId);
         }
       },
 
@@ -68,14 +68,14 @@ export class ContentOntologyResolvers {
 
         linkSceneToCharacter: async (
           _: any,
-          { sceneId, characterId, orgId, userId }: {
+          { sceneId, characterId, organizationId, userId }: {
             sceneId: string;
             characterId: string;
-            orgId: string;
+            organizationId: string;
             userId: string;
           }
         ) => {
-          await this.contentService.linkSceneToCharacter(sceneId, characterId, orgId, userId);
+          await this.contentService.linkSceneToCharacter(sceneId, characterId, organizationId, userId);
           return { success: true };
         }
       }

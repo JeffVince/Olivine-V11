@@ -28,7 +28,7 @@ export const clusterResolvers = {
     ) {
       // Get cluster from Neo4j
       const clusterResult = await context.neo4jService.run(`
-        MATCH (cc:ContentCluster {id: $clusterId, orgId: $organizationId})
+        MATCH (cc:ContentCluster {id: $clusterId, organizationId: $organizationId})
         OPTIONAL MATCH (cc)<-[:HAS_CLUSTER]-(f:File)
         RETURN cc, f.id as fileId, f.name as fileName
       `, { clusterId, organizationId });
@@ -46,14 +46,14 @@ export const clusterResolvers = {
         FROM extraction_job ej
         LEFT JOIN extracted_entity_temp eet ON ej.id = eet.job_id
         LEFT JOIN extracted_link_temp elt ON ej.id = elt.job_id
-        WHERE ej.file_id = $1 AND ej.org_id = $2
+        WHERE ej.organization_id = $1 AND ej.organization_id = $2
         GROUP BY ej.id
         ORDER BY ej.created_at DESC
       `, [record.get('fileId'), organizationId]);
 
       return {
         id: cluster.id,
-        orgId: cluster.orgId,
+        organizationId: cluster.organizationId,
         fileId: record.get('fileId'),
         fileName: record.get('fileName'),
         projectId: cluster.projectId,
@@ -95,8 +95,8 @@ export const clusterResolvers = {
       context: ClusterResolverContext
     ) {
       // Build Cypher with named parameters (Neo4j requires object params)
-      const conditions: string[] = ['cc.orgId = $orgId'];
-      const cypherParams: Record<string, unknown> = { orgId: organizationId, offset, limit };
+      const conditions: string[] = ['cc.organizationId = $organizationId'];
+      const cypherParams: Record<string, unknown> = { organizationId, offset, limit };
 
       if (fileId) {
         conditions.push('f.id = $fileId');
@@ -122,7 +122,7 @@ export const clusterResolvers = {
         const cluster = record.get('cc').properties;
         return {
           id: cluster.id,
-          orgId: cluster.orgId,
+          organizationId: cluster.organizationId,
           fileId: record.get('fileId'),
           fileName: record.get('fileName'),
           projectId: cluster.projectId,
@@ -150,7 +150,7 @@ export const clusterResolvers = {
         SELECT ej.*, f.name as file_name
         FROM extraction_job ej
         JOIN files f ON ej.file_id = f.id
-        WHERE ej.id = $1 AND ej.org_id = $2
+        WHERE ej.id = $1 AND ej.organization_id = $2
       `, [jobId, organizationId]);
 
       if (jobResult.rows.length === 0) {
@@ -176,7 +176,7 @@ export const clusterResolvers = {
 
       return {
         id: job.id,
-        orgId: job.org_id,
+        organizationId: job.organization_id,
         fileId: job.file_id,
         fileName: job.file_name,
         projectId: job.project_id,
@@ -232,7 +232,7 @@ export const clusterResolvers = {
       },
       context: ClusterResolverContext
     ) {
-      let whereClause = 'WHERE ej.org_id = $1';
+      let whereClause = 'WHERE ej.organization_id = $1';
       const params: any[] = [organizationId];
       let paramIndex = 2;
 
@@ -268,7 +268,7 @@ export const clusterResolvers = {
 
       return result.rows.map(job => ({
         id: job.id,
-        orgId: job.org_id,
+        organizationId: job.organization_id,
         fileId: job.file_id,
         fileName: job.file_name,
         projectId: job.project_id,
@@ -296,13 +296,13 @@ export const clusterResolvers = {
     ) {
       const result = await context.postgresService.query(`
         SELECT * FROM parser_registry 
-        WHERE org_id = $1 
+        WHERE organization_id = $1 
         ORDER BY slot, parser_name, parser_version DESC
       `, [organizationId]);
 
       return result.rows.map(parser => ({
         id: parser.id,
-        orgId: parser.org_id,
+        organizationId: parser.organization_id,
         slot: parser.slot,
         mimeType: parser.mime_type,
         extension: parser.extension,
@@ -333,7 +333,7 @@ export const clusterResolvers = {
     ) {
       // Get file details
       const fileResult = await context.neo4jService.run(`
-        MATCH (f:File {id: $fileId, org_id: $organizationId})
+        MATCH (f:File {id: $fileId, organization_id: $organizationId})
         RETURN f
       `, { fileId, organizationId });
 
@@ -348,12 +348,12 @@ export const clusterResolvers = {
       if (parserName) {
         parsers = await context.postgresService.query(`
           SELECT * FROM parser_registry 
-          WHERE org_id = $1 AND parser_name = $2 AND enabled = true
+          WHERE organization_id = $1 AND parser_name = $2 AND enabled = true
         `, [organizationId, parserName]);
       } else {
         parsers = await context.postgresService.query(`
           SELECT * FROM parser_registry 
-          WHERE org_id = $1 
+          WHERE organization_id = $1 
           AND (mime_type = $2 OR mime_type = '*/*')
           AND ($3::text IS NULL OR slot = $3)
           AND enabled = true
@@ -373,7 +373,7 @@ export const clusterResolvers = {
         // Create extraction job
         await context.postgresService.query(`
           INSERT INTO extraction_job (
-            id, org_id, file_id, parser_name, parser_version, 
+            id, organization_id, file_id, parser_name, parser_version, 
             method, dedupe_key, status, created_at
           )
           VALUES ($1, $2, $3, $4, $5, $6, $7, 'queued', NOW())
@@ -386,7 +386,7 @@ export const clusterResolvers = {
         // Queue extraction job
         await context.queueService.addJob('content-extraction', 'extract-content', {
           jobId,
-          orgId: organizationId,
+          organizationId,
           fileId,
           slot: parser.slot,
           parser: parser.parser_name,
@@ -419,7 +419,7 @@ export const clusterResolvers = {
       // Verify job exists and is ready for promotion
       const jobResult = await context.postgresService.query(`
         SELECT * FROM extraction_job 
-        WHERE id = $1 AND org_id = $2 AND status = 'completed'
+        WHERE id = $1 AND organization_id = $2 AND status = 'completed'
       `, [jobId, organizationId]);
 
       if (jobResult.rows.length === 0) {
@@ -429,7 +429,7 @@ export const clusterResolvers = {
       // Queue promotion job
       await context.queueService.addJob('content-promotion', 'promote-extraction', {
         jobId,
-        orgId: organizationId,
+        organizationId,
         actor: context.user?.id || 'unknown',
         autoPromoted: false,
         reviewNotes
@@ -455,10 +455,10 @@ export const clusterResolvers = {
     ) {
       // Verify audit record exists
       const auditResult = await context.postgresService.query(`
-        SELECT pa.*, ej.org_id 
+        SELECT pa.*, ej.organization_id 
         FROM promotion_audit pa
         JOIN extraction_job ej ON pa.job_id = ej.id
-        WHERE pa.id = $1 AND ej.org_id = $2 AND pa.action = 'promote'
+        WHERE pa.id = $1 AND ej.organization_id = $2 AND pa.action = 'promote'
       `, [auditId, organizationId]);
 
       if (auditResult.rows.length === 0) {
@@ -468,7 +468,7 @@ export const clusterResolvers = {
       // Queue rollback job
       await context.queueService.addJob('content-rollback', 'rollback-promotion', {
         auditId,
-        orgId: organizationId,
+        organizationId,
         actor: context.user?.id || 'unknown',
         reason
       });
@@ -530,7 +530,7 @@ export const clusterResolvers = {
       const result = await context.postgresService.query(`
         UPDATE parser_registry 
         SET ${updateFields.join(', ')}
-        WHERE id = $1 AND org_id = $2
+        WHERE id = $1 AND organization_id = $2
         RETURNING *
       `, values);
 
@@ -541,7 +541,7 @@ export const clusterResolvers = {
       const parser = result.rows[0];
       return {
         id: parser.id,
-        orgId: parser.org_id,
+        organizationId: parser.organization_id,
         slot: parser.slot,
         mimeType: parser.mime_type,
         extension: parser.extension,
@@ -574,7 +574,7 @@ export const clusterResolvers = {
       context: ClusterResolverContext
     ) {
       const workflowId = await context.clusterOrchestrator.startWorkflow(workflowName, {
-        orgId: organizationId,
+        organizationId,
         fileId,
         clusterId,
         sessionId: uuidv4(),

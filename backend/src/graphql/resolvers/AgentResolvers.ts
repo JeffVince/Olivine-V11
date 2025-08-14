@@ -1,9 +1,10 @@
 import { QueueService } from '../../services/queues/QueueService'
+import { JobService } from '../../services/agent/JobService'
 import { LogService } from '../../services/agent/LogService'
 
 interface AgentJob {
   id: string
-  orgId: string
+  organizationId: string
   type: string
   target: string
   status: 'waiting' | 'active' | 'completed' | 'failed' | 'delayed'
@@ -37,7 +38,7 @@ export const agentResolvers = {
     agentJobs: async (
       _: any,
       args: {
-        orgId: string
+        organizationId: string
         status?: string
         type?: string
         limit?: number
@@ -45,88 +46,65 @@ export const agentResolvers = {
       },
       context: any
     ): Promise<AgentJob[]> => {
-      const { orgId, status, type, limit = 50, offset = 0 } = args
+      const { organizationId, status, type, limit = 50, offset = 0 } = args
       
       // Validate organization access
-      if (context.user.orgId !== orgId) {
-        throw new Error('Unauthorized access to organization data')
+      if (context.user.organizationId !== organizationId) {
+        throw new Error('Unauthorized access to organization jobs')
       }
 
-      // Note: QueueService instance should be passed from context or dependency injection
-      // For now, using a placeholder implementation
-      const jobs: any[] = []
-
+      const jobService = new JobService(new QueueService())
+      const jobs = await jobService.listAgentJobs({ status, type, limit, offset })
+      
       return jobs.map((job: any) => ({
         id: job.id,
-        orgId: job.data.orgId,
-        type: job.data.type || job.name,
-        target: job.data.target || job.data.resourcePath || '',
-        status: job.opts.delay ? 'delayed' : 
-                job.finishedOn ? (job.failedReason ? 'failed' : 'completed') :
-                job.processedOn ? 'active' : 'waiting',
-        priority: job.opts.priority || 0,
-        attemptsMade: job.attemptsMade || 0,
-        retries: job.opts.attempts || 0,
-        worker: job.processedBy,
+        organizationId: job.data.organizationId,
+        type: job.name,
+        target: job.data.target || job.data.sceneId || job.data.characterId || job.data.projectId,
+        status: job.status,
+        priority: job.priority,
+        attemptsMade: job.attemptsMade,
+        retries: job.opts.attempts - job.attemptsMade - 1,
+        worker: job.progress?.worker,
         startedAt: job.processedOn ? new Date(job.processedOn) : undefined,
         finishedAt: job.finishedOn ? new Date(job.finishedOn) : undefined,
-        durationMs: job.finishedOn && job.processedOn ? 
-                   job.finishedOn - job.processedOn : undefined,
-        params: job.data
+        durationMs: job.finishedOn && job.processedOn ? job.finishedOn - job.processedOn : undefined,
+        params: job.data.params || {}
       }))
     },
 
     // Get agent health status
     agentHealth: async (
       _: any,
-      args: { orgId: string },
+      args: { organizationId: string },
       context: any
     ): Promise<AgentHealthStatus> => {
-      const { orgId } = args
+      const { organizationId } = args
       
       // Validate organization access
-      if (context.user.orgId !== orgId) {
-        throw new Error('Unauthorized access to organization data')
+      if (context.user.organizationId !== organizationId) {
+        throw new Error('Unauthorized access to organization health')
       }
-
-      // Note: AgentRegistry instance should be passed from context or dependency injection
-      // For now, using a placeholder implementation
-      const runningAgents: any[] = []
-      const allCriticalRunning = false
-
-      return {
-        status: allCriticalRunning ? 'ok' : 'degraded',
-        agents: runningAgents.map((agent: any) => agent.name)
-      }
+      
+      // Health check implementation - placeholder for now
+      return { status: 'ok', agents: [] }
     },
 
     // Get queue statistics
     queues: async (
       _: any,
-      args: { orgId: string },
+      args: { organizationId: string },
       context: any
     ): Promise<QueueStats[]> => {
-      const { orgId } = args
+      const { organizationId } = args
       
       // Validate organization access
-      if (context.user.orgId !== orgId) {
-        throw new Error('Unauthorized access to organization data')
+      if (context.user.organizationId !== organizationId) {
+        throw new Error('Unauthorized access to organization queues')
       }
-
-      // Note: QueueService instance should be passed from context
-      // For now, using a placeholder implementation
-      const queueNames = ['file-sync', 'file-classification', 'provenance', 'content-extraction']
       
-      const stats = queueNames.map((name) => ({
-        name,
-        waiting: 0,
-        active: 0,
-        completed: 0,
-        failed: 0,
-        delayed: 0
-      }))
-
-      return stats
+      const jobService = new JobService(new QueueService())
+      return await jobService.getQueueStats()
     }
   },
 
@@ -136,7 +114,7 @@ export const agentResolvers = {
       _: any,
       args: {
         input: {
-          orgId: string
+          organizationId: string
           type: string
           target: string
           params: any
@@ -145,78 +123,50 @@ export const agentResolvers = {
       },
       context: any
     ) => {
-      const { orgId, type, target, params, priority = 0 } = args.input
+      const { organizationId, type, target, params, priority = 0 } = args.input
       
       // Validate organization access
-      if (context.user.orgId !== orgId) {
-        throw new Error('Unauthorized access to organization data')
+      if (context.user.organizationId !== organizationId) {
+        throw new Error('Unauthorized access to organization jobs')
       }
-
-      // Note: QueueService instance should be passed from context
-      // For now, using a placeholder implementation
       
-      // Determine which queue to use based on job type
-      const queueMap: { [key: string]: string } = {
-        'file-sync': 'file-sync',
-        'file-classification': 'file-classification',
-        'content-extraction': 'content-extraction',
-        'provenance': 'provenance'
-      }
-
-      const queueName = queueMap[type] || 'file-sync'
-      
-      // Placeholder job creation
-      const jobId = `job-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-
-      return {
-        id: jobId,
-        type,
-        status: 'waiting'
-      }
+      const jobService = new JobService(new QueueService())
+      const job = await jobService.enqueueAgentJob({ orgId: organizationId, type, target, params, priority })
+      return { id: job.id, success: true }
     },
 
     // Cancel an agent job
     cancelAgentJob: async (
       _: any,
-      args: { orgId: string; id: string },
+      args: { organizationId: string; id: string },
       context: any
     ): Promise<boolean> => {
-      const { orgId, id } = args
+      const { organizationId, id } = args
       
       // Validate organization access
-      if (context.user.orgId !== orgId) {
-        throw new Error('Unauthorized access to organization data')
+      if (context.user.organizationId !== organizationId) {
+        throw new Error('Unauthorized access to organization jobs')
       }
-
-      // Note: QueueService instance should be passed from context
-      // For now, using a placeholder implementation
       
-      try {
-        // Placeholder job cancellation
-        console.log(`Cancelling job ${id} for org ${orgId}`)
-        return true
-      } catch (error) {
-        console.error('Failed to cancel job:', error)
-        return false
-      }
+      const jobService = new JobService(new QueueService())
+      console.log(`Cancelling job ${id} for org ${organizationId}`)
+      return await jobService.cancelAgentJob(id)
     }
   },
 
   Subscription: {
     // Subscribe to job updates for an organization
     jobUpdated: {
-      subscribe: async (_: any, args: { orgId: string }, context: any) => {
-        const { orgId } = args
+      subscribe: async (_: any, args: { organizationId: string }, context: any) => {
+        const { organizationId } = args
         
         // Validate organization access
-        if (context.user.orgId !== orgId) {
-          throw new Error('Unauthorized access to organization data')
+        if (context.user.organizationId !== organizationId) {
+          throw new Error('Unauthorized access to organization job updates')
         }
-
-        // Return subscription iterator for job updates
-        // This would typically use Redis pub/sub or similar
-        const queueService = QueueService.getInstance()
-        return queueService.subscribeToJobUpdates(orgId)
+        
+        const queueService = new QueueService()
+        return queueService.subscribeToJobUpdates(organizationId)
       }
     }
   }

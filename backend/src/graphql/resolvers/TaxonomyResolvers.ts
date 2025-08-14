@@ -10,83 +10,80 @@ export class TaxonomyResolvers {
   getResolvers() {
     return {
       Query: {
-        canonicalSlots: async (_: any, { orgId }: { orgId: string }) => {
-          return await this.taxonomyService.getCanonicalSlots(orgId);
+        canonicalSlots: async (_: any, { organizationId }: { organizationId: string }) => {
+          return await this.taxonomyService.getCanonicalSlots(organizationId);
         },
 
-        taxonomyProfiles: async (_: any, { orgId }: { orgId: string }) => {
-          return await this.taxonomyService.getTaxonomyProfiles(orgId);
+        taxonomyProfiles: async (_: any, { organizationId }: { organizationId: string }) => {
+          return await this.taxonomyService.getTaxonomyProfiles(organizationId);
         },
 
-        taxonomyRules: async (_: any, { profileId, orgId }: { profileId: string; orgId: string }) => {
-          return await this.taxonomyService.getTaxonomyRules(profileId, orgId);
+        taxonomyRules: async (_: any, { profileId, organizationId }: { profileId: string; organizationId: string }) => {
+          return await this.taxonomyService.getTaxonomyRules(profileId, organizationId);
         },
 
-        fileClassification: async (_: any, { fileId, orgId }: { fileId: string; orgId: string }) => {
-          return await this.taxonomyService.getFileClassification(fileId, orgId);
+        fileClassification: async (_: any, { fileId, organizationId }: { fileId: string; organizationId: string }) => {
+          return await this.taxonomyService.getFileClassification(fileId, organizationId);
         }
       },
 
       Mutation: {
         createCanonicalSlot: async (
           _: any, 
-          { input, orgId }: { input: Omit<CanonicalSlot, 'key'> & { key?: string }; orgId: string }
+          { input, organizationId }: { input: Omit<CanonicalSlot, 'key'> & { key?: string }; organizationId: string }
         ) => {
-          return await this.taxonomyService.createCanonicalSlot(input, orgId);
+          return await this.taxonomyService.createCanonicalSlot(input, organizationId);
         },
 
         createTaxonomyProfile: async (
           _: any, 
-          { input, orgId }: { input: Omit<TaxonomyProfile, 'id' | 'created_at'>; orgId: string }
+          { input, organizationId }: { input: Omit<TaxonomyProfile, 'id' | 'created_at'>; organizationId: string }
         ) => {
-          return await this.taxonomyService.createTaxonomyProfile(input, orgId);
+          return await this.taxonomyService.createTaxonomyProfile(input, organizationId);
         },
 
         createTaxonomyRule: async (
           _: any, 
-          { input, profileId, orgId }: { 
+          { input, profileId, organizationId }: { 
             input: Omit<TaxonomyRule, 'id'>; 
             profileId: string; 
-            orgId: string;
+            organizationId: string;
           }
         ) => {
-          return await this.taxonomyService.createTaxonomyRule(input, profileId, orgId);
+          return await this.taxonomyService.createTaxonomyRule(input, profileId, organizationId);
         },
 
         classifyTaxonomyFile: async (
           _: any, 
-          { fileId, orgId, userId }: { fileId: string; orgId: string; userId: string }
+          { fileId, organizationId, userId }: { fileId: string; organizationId: string; userId: string }
         ) => {
-          const classifications = await this.taxonomyService.classifyFile(fileId, orgId);
-          
-          if (classifications.length > 0) {
-            // Apply the best classification
-            const bestClassification = classifications[0];
-            await this.taxonomyService.applyClassification(fileId, bestClassification, orgId, userId);
-            return bestClassification;
+          const classifications = await this.taxonomyService.classifyFile(fileId, organizationId);
+          const bestClassification = classifications[0];
+          if (bestClassification) {
+            await this.taxonomyService.applyClassification(fileId, bestClassification, organizationId, userId);
           }
-          
-          return null;
+          return classifications;
         },
 
         applyManualClassification: async (
           _: any,
-          { fileId, slot, confidence, orgId, userId }: {
+          { fileId, slot, confidence, organizationId, userId }: {
             fileId: string;
             slot: string;
             confidence?: number;
-            orgId: string;
+            organizationId: string;
             userId: string;
           }
         ) => {
           const classification: Classification = {
             slot,
             confidence: confidence || 1.0,
-            method: 'manual'
+            method: 'manual',
+            source: 'manual',
+            timestamp: new Date().toISOString()
           };
-
-          await this.taxonomyService.applyClassification(fileId, classification, orgId, userId);
-          return classification;
+          await this.taxonomyService.applyClassification(fileId, classification, organizationId, userId);
+          return true;
         }
       }
     };

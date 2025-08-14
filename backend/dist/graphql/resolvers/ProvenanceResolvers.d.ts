@@ -6,44 +6,44 @@ export declare class ProvenanceResolvers {
         Query: {
             commits: (_: any, { filter, limit }: {
                 filter?: {
-                    orgId?: string;
+                    organizationId?: string;
                     branchName?: string;
                 };
                 limit?: number;
             }) => Promise<any>;
-            commitHistory: (_: any, { orgId, branchName, limit }: {
-                orgId: string;
+            commitHistory: (_: any, { organizationId, branchName, limit }: {
+                organizationId: string;
                 branchName: string;
                 limit?: number;
             }) => Promise<any>;
-            branches: (_: any, { orgId }: {
-                orgId: string;
+            branches: (_: any, { organizationId }: {
+                organizationId: string;
             }) => Promise<any>;
-            entityHistory: (_: any, { entityId, entityType, orgId }: {
+            entityHistory: (_: any, { entityId, entityType, organizationId }: {
                 entityId: string;
                 entityType: string;
-                orgId: string;
+                organizationId: string;
             }) => Promise<EntityVersion[]>;
-            entityAtTime: (_: any, { entityId, timestamp, orgId }: {
+            entityAtTime: (_: any, { entityId, timestamp, organizationId }: {
                 entityId: string;
                 timestamp: Date;
-                orgId: string;
+                organizationId: string;
             }) => Promise<Record<string, any> | null>;
         };
         Mutation: {
-            createBranch: (_: any, { name, orgId, projectId, description, userId, fromCommit }: {
+            createBranch: (_: any, { name, organizationId, projectId, description, userId, fromCommit }: {
                 name: string;
-                orgId: string;
+                organizationId: string;
                 projectId?: string;
                 description: string;
                 userId: string;
                 fromCommit?: string;
             }) => Promise<Branch>;
-            createEdgeFact: (_: any, { type, fromId, toId, orgId, userId, props, fromType, toType }: {
+            createEdgeFact: (_: any, { type, fromId, toId, organizationId, userId, props, fromType, toType }: {
                 type: string;
                 fromId: string;
                 toId: string;
-                orgId: string;
+                organizationId: string;
                 userId: string;
                 props?: Record<string, any>;
                 fromType?: string;
@@ -52,9 +52,9 @@ export declare class ProvenanceResolvers {
                 id: string;
                 success: boolean;
             }>;
-            endEdgeFact: (_: any, { edgeFactId, orgId, userId }: {
+            endEdgeFact: (_: any, { edgeFactId, organizationId, userId }: {
                 edgeFactId: string;
-                orgId: string;
+                organizationId: string;
                 userId: string;
             }) => Promise<{
                 success: boolean;
@@ -66,44 +66,44 @@ export declare const provenanceResolvers: {
     Query: {
         commits: (_: any, { filter, limit }: {
             filter?: {
-                orgId?: string;
+                organizationId?: string;
                 branchName?: string;
             } | undefined;
             limit?: number;
         }) => Promise<any>;
-        commitHistory: (_: any, { orgId, branchName, limit }: {
-            orgId: string;
+        commitHistory: (_: any, { organizationId, branchName, limit }: {
+            organizationId: string;
             branchName: string;
             limit?: number;
         }) => Promise<any>;
-        branches: (_: any, { orgId }: {
-            orgId: string;
+        branches: (_: any, { organizationId }: {
+            organizationId: string;
         }) => Promise<any>;
-        entityHistory: (_: any, { entityId, entityType, orgId }: {
+        entityHistory: (_: any, { entityId, entityType, organizationId }: {
             entityId: string;
             entityType: string;
-            orgId: string;
+            organizationId: string;
         }) => Promise<EntityVersion[]>;
-        entityAtTime: (_: any, { entityId, timestamp, orgId }: {
+        entityAtTime: (_: any, { entityId, timestamp, organizationId }: {
             entityId: string;
             timestamp: Date;
-            orgId: string;
+            organizationId: string;
         }) => Promise<Record<string, any> | null>;
     };
     Mutation: {
-        createBranch: (_: any, { name, orgId, projectId, description, userId, fromCommit }: {
+        createBranch: (_: any, { name, organizationId, projectId, description, userId, fromCommit }: {
             name: string;
-            orgId: string;
+            organizationId: string;
             projectId?: string;
             description: string;
             userId: string;
             fromCommit?: string;
         }) => Promise<Branch>;
-        createEdgeFact: (_: any, { type, fromId, toId, orgId, userId, props, fromType, toType }: {
+        createEdgeFact: (_: any, { type, fromId, toId, organizationId, userId, props, fromType, toType }: {
             type: string;
             fromId: string;
             toId: string;
-            orgId: string;
+            organizationId: string;
             userId: string;
             props?: Record<string, any>;
             fromType?: string;
@@ -112,9 +112,9 @@ export declare const provenanceResolvers: {
             id: string;
             success: boolean;
         }>;
-        endEdgeFact: (_: any, { edgeFactId, orgId, userId }: {
+        endEdgeFact: (_: any, { edgeFactId, organizationId, userId }: {
             edgeFactId: string;
-            orgId: string;
+            organizationId: string;
             userId: string;
         }) => Promise<{
             success: boolean;

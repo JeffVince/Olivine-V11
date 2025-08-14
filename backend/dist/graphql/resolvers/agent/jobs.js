@@ -11,7 +11,7 @@ function buildAgentJobResolvers(queueService) {
         Query: {
             agentJobs: async (_, args) => jobService.listAgentJobs({ status: args.status, type: args.type, limit: args.limit, offset: args.offset }),
             agentJob: async (_, args) => jobService.getAgentJob(args.id),
-            runbooks: async (_, args) => runbookService.list(args.orgId),
+            runbooks: async (_, args) => runbookService.list(args.organizationId),
             queues: async () => jobService.getQueueStats(),
             agentHealth: async () => {
                 return {
@@ -28,7 +28,7 @@ function buildAgentJobResolvers(queueService) {
             },
             cancelAgentJob: async (_, { id }) => jobService.cancelAgentJob(id),
             saveRunbook: async (_, { input }) => runbookService.save(input),
-            executeRunbook: async (_, { orgId, id, params }) => jobService.enqueueAgentJob({ orgId, type: 'custom', target: id, params }),
+            executeRunbook: async (_, { organizationId, id, params }) => jobService.enqueueAgentJob({ orgId: organizationId, type: 'custom', target: id, params }),
         },
         Subscription: {
             jobUpdated: {

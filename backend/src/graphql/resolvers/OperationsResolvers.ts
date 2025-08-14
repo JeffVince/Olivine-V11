@@ -21,12 +21,12 @@ export class OperationsResolvers {
         amount: (src: any) => src.amount || src.total_amount,
       },
       Query: {
-        budgetVsActualAnalysis: async (_: any, { projectId, orgId }: { projectId: string; orgId: string }) => {
-          return await this.operationsService.getBudgetVsActualAnalysis(projectId, orgId);
+        budgetVsActualAnalysis: async (_: any, { projectId, organizationId }: { projectId: string; organizationId: string }) => {
+          return await this.operationsService.getBudgetVsActualAnalysis(projectId, organizationId);
         },
 
-        vendorPerformanceAnalysis: async (_: any, { orgId }: { orgId: string }) => {
-          return await this.operationsService.getVendorPerformanceAnalysis(orgId);
+        vendorPerformanceAnalysis: async (_: any, { organizationId }: { organizationId: string }) => {
+          return await this.operationsService.getVendorPerformanceAnalysis(organizationId);
         }
       },
 

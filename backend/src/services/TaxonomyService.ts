@@ -58,6 +58,8 @@ export interface Classification {
   method: 'rule_based' | 'ml_based' | 'manual';
   rule_id?: string;
   metadata?: Record<string, unknown>;
+  source?: 'manual' | 'rule_based' | 'ml_based';
+  timestamp?: string;
 }
 
 export interface FileNode {

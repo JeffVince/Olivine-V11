@@ -9,46 +9,47 @@ class TaxonomyResolvers {
     getResolvers() {
         return {
             Query: {
-                canonicalSlots: async (_, { orgId }) => {
-                    return await this.taxonomyService.getCanonicalSlots(orgId);
+                canonicalSlots: async (_, { organizationId }) => {
+                    return await this.taxonomyService.getCanonicalSlots(organizationId);
                 },
-                taxonomyProfiles: async (_, { orgId }) => {
-                    return await this.taxonomyService.getTaxonomyProfiles(orgId);
+                taxonomyProfiles: async (_, { organizationId }) => {
+                    return await this.taxonomyService.getTaxonomyProfiles(organizationId);
                 },
-                taxonomyRules: async (_, { profileId, orgId }) => {
-                    return await this.taxonomyService.getTaxonomyRules(profileId, orgId);
+                taxonomyRules: async (_, { profileId, organizationId }) => {
+                    return await this.taxonomyService.getTaxonomyRules(profileId, organizationId);
                 },
-                fileClassification: async (_, { fileId, orgId }) => {
-                    return await this.taxonomyService.getFileClassification(fileId, orgId);
+                fileClassification: async (_, { fileId, organizationId }) => {
+                    return await this.taxonomyService.getFileClassification(fileId, organizationId);
                 }
             },
             Mutation: {
-                createCanonicalSlot: async (_, { input, orgId }) => {
-                    return await this.taxonomyService.createCanonicalSlot(input, orgId);
+                createCanonicalSlot: async (_, { input, organizationId }) => {
+                    return await this.taxonomyService.createCanonicalSlot(input, organizationId);
                 },
-                createTaxonomyProfile: async (_, { input, orgId }) => {
-                    return await this.taxonomyService.createTaxonomyProfile(input, orgId);
+                createTaxonomyProfile: async (_, { input, organizationId }) => {
+                    return await this.taxonomyService.createTaxonomyProfile(input, organizationId);
                 },
-                createTaxonomyRule: async (_, { input, profileId, orgId }) => {
-                    return await this.taxonomyService.createTaxonomyRule(input, profileId, orgId);
+                createTaxonomyRule: async (_, { input, profileId, organizationId }) => {
+                    return await this.taxonomyService.createTaxonomyRule(input, profileId, organizationId);
                 },
-                classifyTaxonomyFile: async (_, { fileId, orgId, userId }) => {
-                    const classifications = await this.taxonomyService.classifyFile(fileId, orgId);
-                    if (classifications.length > 0) {
-                        const bestClassification = classifications[0];
-                        await this.taxonomyService.applyClassification(fileId, bestClassification, orgId, userId);
-                        return bestClassification;
+                classifyTaxonomyFile: async (_, { fileId, organizationId, userId }) => {
+                    const classifications = await this.taxonomyService.classifyFile(fileId, organizationId);
+                    const bestClassification = classifications[0];
+                    if (bestClassification) {
+                        await this.taxonomyService.applyClassification(fileId, bestClassification, organizationId, userId);
                     }
-                    return null;
+                    return classifications;
                 },
-                applyManualClassification: async (_, { fileId, slot, confidence, orgId, userId }) => {
+                applyManualClassification: async (_, { fileId, slot, confidence, organizationId, userId }) => {
                     const classification = {
                         slot,
                         confidence: confidence || 1.0,
-                        method: 'manual'
+                        method: 'manual',
+                        source: 'manual',
+                        timestamp: new Date().toISOString()
                     };
-                    await this.taxonomyService.applyClassification(fileId, classification, orgId, userId);
-                    return classification;
+                    await this.taxonomyService.applyClassification(fileId, classification, organizationId, userId);
+                    return true;
                 }
             }
         };
