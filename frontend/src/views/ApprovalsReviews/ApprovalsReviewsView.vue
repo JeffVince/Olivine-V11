@@ -15,7 +15,6 @@ import { useApprovalsManagement } from './Composables/useApprovalsManagement'
 import ApprovalsTable from './Components/ApprovalsTable.vue'
 
 const {
-  items,
   loading,
   filteredItems,
   handleApprove,

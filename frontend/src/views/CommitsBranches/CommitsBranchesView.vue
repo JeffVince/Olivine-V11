@@ -11,11 +11,15 @@ import { useCommits } from '@/composables/useCommits'
 import { useBranches } from '@/composables/useBranches'
 import CommitTimeline from './Components/CommitTimeline.vue'
 import BranchList from './Components/BranchList.vue'
-import { useCommitsBranchesState } from './Composables/state'
 
 const { items: commits } = useCommits()
 const { branches } = useBranches()
-const {  } = useCommitsBranchesState() // state is not used in this component
+// useCommitsBranchesState() // state is not used in this component
+
+defineExpose({
+  commits,
+  branches
+})
 </script>
 
 <style scoped>

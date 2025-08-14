@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { setActivePinia } from 'pinia'
-import { useProjectStore } from '../stores/projectStore'
+import { useProjectStore, Project } from '../stores/projectStore'
 import { useOrganizationStore } from '../stores/organizationStore'
 import { apolloClient } from '@/graphql/client'
 import { createTestingPinia } from '@pinia/testing'
@@ -36,7 +35,7 @@ describe('projectStore actions', () => {
 
   it('archives a project', async () => {
     const store = useProjectStore()
-    store.projects = [{ id: '1', name: 'Test', status: 'active' }] as any
+    store.projects = [{ id: '1', name: 'Test', status: 'active' }] as Project[]
     (apolloClient.mutate as ReturnType<typeof vi.fn>).mockResolvedValue({
       data: { updateProject: { id: '1', name: 'Test', status: 'archived' } },
     })
@@ -46,7 +45,7 @@ describe('projectStore actions', () => {
 
   it('sets error on delete failure', async () => {
     const store = useProjectStore()
-    store.projects = [{ id: '1', name: 'Test', status: 'active' }] as any
+    store.projects = [{ id: '1', name: 'Test', status: 'active' }] as Project[]
     (apolloClient.mutate as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('fail'))
     await expect(store.deleteProject('1')).rejects.toThrow('fail')
     expect(store.error).toBe('fail')

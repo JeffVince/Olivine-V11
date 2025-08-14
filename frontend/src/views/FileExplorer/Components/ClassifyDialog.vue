@@ -12,14 +12,14 @@
       </v-card-title>
       <v-card-text>
         <v-select
-          v-model="form.canonicalSlot"
+          v-model="localForm.canonicalSlot"
           :items="canonicalSlots"
           item-title="key"
           item-value="key"
           label="Canonical Slot"
         />
         <v-slider
-          v-model="form.confidence"
+          v-model="localForm.confidence"
           min="0"
           max="1"
           step="0.01"
@@ -69,6 +69,7 @@ const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
 
 const showDialog = ref(props.modelValue)
+const localForm = ref({ ...props.form })
 
 watch(() => props.modelValue, (value) => {
   showDialog.value = value
@@ -77,6 +78,10 @@ watch(() => props.modelValue, (value) => {
 watch(showDialog, (value) => {
   emit('update:modelValue', value)
 })
+
+watch(() => props.form, (newForm) => {
+  localForm.value = { ...newForm }
+}, { deep: true })
 
 function closeDialog() {
   showDialog.value = false

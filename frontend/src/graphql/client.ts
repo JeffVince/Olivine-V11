@@ -6,8 +6,7 @@ import { GraphQLWsLink } from '@apollo/client/link/subscriptions'
 import { createUploadLink } from 'apollo-upload-client'
 import { createClient as createWsClient } from 'graphql-ws'
 import { useAuthStore } from '@/stores/authStore'
-import type { Operation } from '@apollo/client/core'
-import type { GraphQLError } from 'graphql'
+
 
 const GRAPHQL_HTTP = `${import.meta.env.VITE_GRAPHQL_URL || ''}`
 const GRAPHQL_WS = `${import.meta.env.VITE_GRAPHQL_WS_URL || ''}`

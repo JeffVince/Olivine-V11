@@ -22,12 +22,7 @@ export interface Project {
   }>
 }
 
-interface ProjectState {
-  currentProjectId: string | null
-  currentBranch: string
-  projects: Project[]
-  error: string | null
-}
+
 
 const LIST_PROJECTS = gql`
   query Projects($orgId: ID!) {

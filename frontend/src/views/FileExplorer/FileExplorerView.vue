@@ -411,7 +411,9 @@ import { useFileExplorerData } from './Composables/data'
 import { useFileExplorerUtils } from './Composables/utils'
 import { useFileExplorerMutations } from './Composables/graphql'
 import { useFileExplorerActions } from './Composables/actions'
-import { FolderItem } from './Composables/Interface'
+import type { FileItem } from './Composables/Interface'
+// FolderItem import is not used
+// import { FolderItem } from './Composables/Interface'
 
 // Import external dependencies
 // import { useRoute, useRouter } from 'vue-router' // Not currently used
@@ -445,6 +447,8 @@ const {
   triggerFullSync
   // CANONICAL_SLOTS_QUERY // Not currently used
 } = useFileExplorerMutations()
+const selectedFile = ref<FileItem | null>(null)
+
 const { 
   actionLoading, 
   showClassify, 
@@ -492,11 +496,7 @@ const openedFolders = computed({
 //   set: (val) => state.value.selectedFiles = val
 // }) // Not currently used
 
-import type { FileItem } from './Composables/Interface'
 
-// ...
-
-const selectedFile = ref<FileItem | null>(null)
 
 const selectedFilters = computed({
   get: () => state.value.selectedFilters,
@@ -523,7 +523,7 @@ const entityGroupBy = computed({
 const entityGroups = computed(() => {
   // Group files by project or source based on entityGroupBy value
   if (entityGroupBy.value === 'project' && items.value) {
-    const groups: { key: string; label: string; items: any[] }[] = []
+    const groups: { key: string; label: string; items: FileItem[] }[] = []
     const projectMap: Record<string, FileItem[]> = {}
     
     // Group files by project
@@ -547,7 +547,7 @@ const entityGroups = computed(() => {
     
     return groups
   } else if (entityGroupBy.value === 'source' && items.value) {
-    const groups: { key: string; label: string; items: any[] }[] = []
+    const groups: { key: string; label: string; items: FileItem[] }[] = []
     const sourceMap: Record<string, FileItem[]> = {}
     
     // Group files by source
@@ -583,7 +583,7 @@ const form = ref({
 })
 
 // Missing functions that are referenced in the template
-function onFolderSelect(selected: (string | { id: string })[]) {
+function onFolderSelect(selected: unknown) {
   // Vuetify treeview emits an array of selected items
   // We need to extract the IDs from the selected items
   if (Array.isArray(selected)) {
@@ -598,11 +598,11 @@ function onFileSelect(file: FileItem) {
   selectedFile.value = file
 }
 
-function applyClassificationFilter(value: string) {
+function applyClassificationFilter(_value: string) {
   // Implementation would go here
 }
 
-function applyMimeFilter(value: string) {
+function applyMimeFilter(_value: string) {
   // Implementation would go here
 }
 

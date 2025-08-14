@@ -175,7 +175,10 @@ interface Emits {
   (e: 'applyMimeFilter', mime: string): void
 }
 
+// Props and emits are defined for type safety but not used directly
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const props = defineProps<Props>()
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const emit = defineEmits<Emits>()
 
 const { formatFileSize, formatDate, classificationColor, mimeIcon } = useFileExplorerUtils()

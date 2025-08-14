@@ -186,7 +186,7 @@
       <v-col cols="12">
         <JobsTable
           :jobs="filteredJobs"
-          :loading="loading"
+          :loading="jobLoading"
           @refresh="refetchJobs"
           @open-logs="openLogs"
           @cancel-job="handleCancelJob"
@@ -211,7 +211,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed } from 'vue'
 import { useNotificationStore } from '@/stores/notificationStore'
 import { useAgentJobs } from '@/composables/useAgentJobs'
 import { useAgentHealth } from '@/composables/useAgentHealth'
@@ -223,16 +223,17 @@ import JobsTable from './Components/JobsTable.vue'
 import LogsDialog from './Components/LogsDialog.vue'
 import CreateAgentDialog from './Components/CreateAgentDialog.vue'
 import { Agent, Log, Job } from './Composables/Interface'
+import { QueueData } from '@/composables/useAgentHealth'
 
 const notificationStore = useNotificationStore()
 const { jobs, logs: agentLogs, subscribeJobLogs, cancelJob } = useAgentJobs()
 const organizationStore = useOrganizationStore()
 const orgIdRef = computed(() => organizationStore.currentOrg?.id || '')
-const { status: healthStatus, agents: healthAgents, queues: healthQueues, refetch: refetchHealth } = useAgentHealth(orgIdRef)
+// const { status: healthStatus, agents: healthAgents, queues: healthQueues, refetch: refetchHealth } = useAgentHealth(orgIdRef) - unused variables
 
 // Logs related computed properties
 const selectedJobId = ref<string | null>(null)
-const subscribed = ref<Set<string>>(new Set())
+// // const subscribed = ref<Set<string>>(new Set()) - unused variable - unused variable
 const selectedJobLogs = computed<Log[]>(() => {
   if (selectedJobId.value && agentLogs.value[selectedJobId.value]) {
     return agentLogs.value[selectedJobId.value] as Log[]
@@ -263,13 +264,9 @@ const {
 } = useAgentManagement((notification) => notificationStore.add('info', notification.message))
 
 const {
-  searchQuery: jobSearchQuery,
-  statusFilter: jobStatusFilter,
-  typeFilter: jobTypeFilter,
   filteredJobs,
   loading: jobLoading,
   refetchJobs,
-  cancelJob: jobCancelJob,
   openLogs,
   getJobStatusColor,
   formatDuration,
@@ -291,8 +288,8 @@ function handleCancelJob(job: Job) {
 
 // Computed
 const activeAgents = computed(() => agents.value.filter(a => a.status === 'active').length)
-const runningTasks = computed(() => agents.value.reduce((sum, a) => sum + a.tasksRunning, 0))
-const completedTasks = computed(() => agents.value.reduce((sum, a) => sum + a.tasksCompleted, 0))
+// const runningTasks = computed(() => agents.value.reduce((sum, a) => sum + a.tasksRunning, 0)) - unused variable
+// const completedTasks = computed(() => agents.value.reduce((sum, a) => sum + a.tasksCompleted, 0)) - unused variable
 // const failedTasks = computed(() => 0) // Not currently used
 
 // Options
@@ -303,48 +300,48 @@ const statusOptions = [
   { title: 'Paused', value: 'paused' }
 ]
 
-const agentTypes = [
-  { title: 'File Processor', value: 'file-processor' },
-  { title: 'Data Sync', value: 'data-sync' },
-  { title: 'Notification', value: 'notification' },
-  { title: 'Backup', value: 'backup' },
-  { title: 'Analytics', value: 'analytics' },
-  { title: 'Custom', value: 'custom' }
-]
+// const agentTypes = [ - unused variable
+//   { title: 'File Processor', value: 'file-processor' },
+//   { title: 'Data Sync', value: 'data-sync' },
+//   { title: 'Notification', value: 'notification' },
+//   { title: 'Backup', value: 'backup' },
+//   { title: 'Analytics', value: 'analytics' },
+//   { title: 'Custom', value: 'custom' }
+// ]
 
 // Wire backend
-const { status: backendHealthStatus, queues: backendQueues } = useAgentHealth(orgIdRef)
+const { queues: backendQueues } = useAgentHealth(orgIdRef)
 
 // Queue statistics
-const totalActive = computed(() => backendQueues.value.reduce((s: number, q: any) => s + (q.active || 0), 0))
-const totalWaiting = computed(() => backendQueues.value.reduce((s: number, q: any) => s + (q.waiting || 0), 0))
-const totalFailed = computed(() => backendQueues.value.reduce((s: number, q: any) => s + (q.failed || 0), 0))
+const totalActive = computed(() => backendQueues.value.reduce((s: number, q: QueueData) => s + (q.active || 0), 0))
+const totalWaiting = computed(() => backendQueues.value.reduce((s: number, q: QueueData) => s + (q.waiting || 0), 0))
+const totalFailed = computed(() => backendQueues.value.reduce((s: number, q: QueueData) => s + (q.failed || 0), 0))
 
-const jobStatusOptions = [
-  { title: 'queued', value: 'queued' },
-  { title: 'active', value: 'active' },
-  { title: 'completed', value: 'completed' },
-  { title: 'failed', value: 'failed' },
-  { title: 'delayed', value: 'delayed' },
-]
+// const jobStatusOptions = [ - unused variable
+//   { title: 'queued', value: 'queued' },
+//   { title: 'active', value: 'active' },
+//   { title: 'completed', value: 'completed' },
+//   { title: 'failed', value: 'failed' },
+//   { title: 'delayed', value: 'delayed' },
+// ]
 
-const jobTypeOptions = [
-  { title: 'reindexProject', value: 'reindexProject' },
-  { title: 'reclassifyLowConfidence', value: 'reclassifyLowConfidence' },
-  { title: 'generateCallSheet', value: 'generateCallSheet' },
-  { title: 'extractContent', value: 'extractContent' },
-  { title: 'custom', value: 'custom' },
-]
+// const jobTypeOptions = [ - unused variable
+//   { title: 'reindexProject', value: 'reindexProject' },
+//   { title: 'reclassifyLowConfidence', value: 'reclassifyLowConfidence' },
+//   { title: 'generateCallSheet', value: 'generateCallSheet' },
+//   { title: 'extractContent', value: 'extractContent' },
+//   { title: 'custom', value: 'custom' },
+// ]
 
-const jobHeaders = [
-  { title: 'ID', key: 'id' },
-  { title: 'Type', key: 'type' },
-  { title: 'Target', key: 'target' },
-  { title: 'Status', key: 'status' },
-  { title: 'Started', key: 'startedAt' },
-  { title: 'Duration (ms)', key: 'durationMs' },
-  { title: 'Actions', key: 'actions', sortable: false },
-]
+// const jobHeaders = [ - unused variable
+//   { title: 'ID', key: 'id' },
+//   { title: 'Type', key: 'type' },
+//   { title: 'Target', key: 'target' },
+//   { title: 'Status', key: 'status' },
+//   { title: 'Started', key: 'startedAt' },
+//   { title: 'Duration (ms)', key: 'durationMs' },
+//   { title: 'Actions', key: 'actions', sortable: false },
+// ]
 
 
 
@@ -357,36 +354,40 @@ function saveAgent(agent: Agent) {
   showCreateDialog.value = false
 }
 
-async function onCancelJob(item: any) {
-  if (!orgIdRef.value) return
-  await cancelJob(orgIdRef.value, item.id)
-}
+// async function onCancelJob(item: any) { // unused function
+//   if (!orgIdRef.value) return
+//   await cancelJob(orgIdRef.value, item.id)
+// }
 
 // Expose properties to template
 defineExpose({
-  searchQuery: agentSearch,
-  statusFilter: agentStatusFilter,
-  loading: jobLoading,
+  showCreateDialog,
   activeAgents,
-  runningTasks,
-  completedTasks,
   totalActive,
   totalWaiting,
   totalFailed,
+  agentSearch,
+  agentStatusFilter,
   statusOptions,
-  agentTypes,
-  jobStatusOptions,
-  jobTypeOptions,
-  jobHeaders,
-  agents,
   filteredAgents,
+  toggling,
+  viewAgent,
+  editAgent,
+  duplicateAgent,
+  deleteAgent,
+  toggleAgentStatus,
   filteredJobs,
-  showCreateDialog,
-  editingAgent,
-  saving,
+  jobLoading,
+  refetchJobs,
+  openLogs,
+  handleCancelJob,
   showLogDialog,
   selectedLogs,
-  handleCancelJob,
+  editingAgent,
+  saving,
+  saveAgent,
+  createAgent,
+  updateAgent,
   getAgentColor,
   getAgentIcon,
   getStatusColor,
@@ -394,15 +395,6 @@ defineExpose({
   getJobStatusColor,
   formatDuration,
   formatDate,
-  refetchJobs,
-  openLogs,
-  createAgent,
-  updateAgent,
-  deleteAgent,
-  toggleAgentStatus,
-  duplicateAgent,
-  viewAgent,
-  editAgent,
   openCreateDialog
 })
 

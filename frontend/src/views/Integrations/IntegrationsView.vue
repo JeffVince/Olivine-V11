@@ -59,65 +59,67 @@
 </template>
 
 <script setup lang="ts">
-import {
-  showAddDialog,
-  showConfigDialog,
-  showLogsDialog,
-  selectedIntegration,
-  logsIntegration,
-  logs,
-  filteredIntegrations,
-  availableIntegrations,
-  newIntegration,
-  loading,
-  selectedIntegrationRootFolder,
-  selectedIntegrationEnableWebhooks,
-  connectIntegration,
-  disconnectIntegration,
-  triggerSync,
-  configureIntegration,
-  viewLogs,
-  addIntegration,
-  proceedWithIntegration,
-  saveConfiguration,
-  closeConfigDialog,
-  closeLogsDialog
+// Import components first
+import IntegrationsHeader from '@/views/Integrations/Components/IntegrationsHeader.vue'
+import IntegrationCard from '@/views/Integrations/Components/IntegrationCard.vue'
+import AvailableIntegrations from '@/views/Integrations/Components/AvailableIntegrations.vue'
+import AddIntegrationDialog from '@/views/Integrations/Components/AddIntegrationDialog.vue'
+import LogsDialog from '@/views/Integrations/Components/LogsDialog.vue'
+import ConfigureIntegrationDialog from '@/views/Integrations/Components/ConfigDialog.vue'
+
+// Import composables individually to ensure proper type inference
+import { 
+  showAddDialog, 
+  showConfigDialog, 
+  showLogsDialog, 
+  selectedIntegration, 
+  logsIntegration, 
+  logs, 
+  filteredIntegrations, 
+  availableIntegrations, 
+  newIntegration, 
+  loading, 
+  selectedIntegrationRootFolder, 
+  selectedIntegrationEnableWebhooks, 
+  integrations, 
+  search, 
+  connectIntegration, 
+  disconnectIntegration, 
+  triggerSync, 
+  configureIntegration, 
+  viewLogs, 
+  addIntegration, 
+  proceedWithIntegration, 
+  saveConfiguration, 
+  closeConfigDialog, 
+  closeLogsDialog, 
+  updateIntegrationsFromResult 
 } from '@/views/Integrations/Composables'
 
 // Import Apollo Client composable
 import { useSourcesQuery } from '@/views/Integrations/Composables/graphql'
-import { updateIntegrationsFromResult } from '@/views/Integrations/Composables/state'
 import { useRoute } from 'vue-router'
 import { useOrganizationStore } from '@/stores/organizationStore'
 import { watch } from 'vue'
 
 // Get organization ID from store
-const route = useRoute()
 const organizationStore = useOrganizationStore()
-const projectId = route.params.id as string
+// const projectId = route.params.id as string
 
 // Use the GraphQL query within component context
 // Use organization ID from store, fallback to a default for development
 const organizationId = organizationStore.currentOrg?.id || '00000000-0000-0000-0000-000000000000'
-const { result, loading: queryLoading, error } = useSourcesQuery(organizationId)
+const { result, error } = useSourcesQuery(organizationId)
 
 // Watch for changes in the query result and update integrations
 watch(result, (newResult: any) => {
-  updateIntegrationsFromResult(newResult)
-})
-
-// Watch for query errors
-watch(error, (newError: any) => {
-  if (newError) {
-    console.error('GraphQL Error:', newError)
+  if (newResult) {
+    updateIntegrationsFromResult(newResult)
   }
 })
 
-// Import new components
-import IntegrationsHeader from '@/views/Integrations/Components/IntegrationsHeader.vue'
-import IntegrationCard from '@/views/Integrations/Components/IntegrationCard.vue'
-import AvailableIntegrations from '@/views/Integrations/Components/AvailableIntegrations.vue'
-import AddIntegrationDialog from '@/views/Integrations/Components/AddIntegrationDialog.vue'
-import ConfigureIntegrationDialog from '@/views/Integrations/Components/ConfigureIntegrationDialog.vue'
-import LogsDialog from '@/views/Integrations/Components/LogsDialog.vue'
+// Error handling is done in the composable
+
+// Watch for query errors
+// Error handling is done in the composable
 </script>

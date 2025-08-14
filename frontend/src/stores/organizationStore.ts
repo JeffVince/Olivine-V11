@@ -6,12 +6,7 @@ interface Organization {
   name: string
 }
 
-interface OrganizationState {
-  currentOrg: Organization | null
-  members: Array<{ id: string; email: string; role: string }>
-  isLoading: boolean
-  error: string | null
-}
+
 
 export const useOrganizationStore = defineStore('organization', () => {
   const currentOrg = ref<Organization | null>(null)

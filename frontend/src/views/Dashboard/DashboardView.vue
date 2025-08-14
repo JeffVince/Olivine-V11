@@ -3,7 +3,7 @@
     <v-row>
       <v-col cols="12">
         <v-card class="glass-card">
-          <Header />
+          <DashboardHeader @create-project="console.log('Create project clicked')" />
           <v-card-text>
             <p>{{ dashboardMessage }}</p>
             
@@ -31,10 +31,12 @@
 
 <script setup lang="ts">
 // Import composables
-import { dashboardMessage } from '@/views/Dashboard/Composables'
+import { useDashboard } from './Composables/useDashboard'
 
 // Import components
-import Header from '@/views/Dashboard/Components/Header.vue'
-import QuickActions from '@/views/Dashboard/Components/QuickActions.vue'
-import SystemStatus from '@/views/Dashboard/Components/SystemStatus.vue'
+import DashboardHeader from './Components/DashboardHeader.vue'
+import QuickActions from './Components/QuickActions.vue'
+import SystemStatus from './Components/SystemStatus.vue'
+
+const { dashboardMessage } = useDashboard()
 </script>

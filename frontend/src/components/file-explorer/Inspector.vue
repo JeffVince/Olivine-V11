@@ -24,27 +24,27 @@
       <v-window-item value="details">
         <v-list density="compact">
           <v-list-item
-            :title="file?.name"
+            :title="fileData?.name"
             subtitle="Name"
           />
           <v-list-item
-            :title="file?.path"
+            :title="fileData?.path"
             subtitle="Path"
           />
           <v-list-item
-            :title="String(file?.size || '')"
+            :title="String(fileData?.size || '')"
             subtitle="Size"
           />
           <v-list-item
-            :title="file?.mimeType"
+            :title="fileData?.mimeType"
             subtitle="MIME"
           />
           <v-list-item
-            :title="file?.modified"
+            :title="fileData?.modified"
             subtitle="Modified"
           />
           <v-list-item
-            :title="file?.checksum"
+            :title="fileData?.checksum"
             subtitle="Checksum"
           />
         </v-list>
@@ -55,25 +55,25 @@
             <v-list-item-title>Classification</v-list-item-title>
             <v-list-item-subtitle>
               <v-chip
-                v-if="file?.classificationStatus"
-                :color="classificationColor(file?.classificationStatus)"
+                v-if="fileData?.classificationStatus"
+                :color="classificationColor(fileData?.classificationStatus)"
                 size="small"
                 label
                 variant="tonal"
               >
-                {{ file?.classificationStatus }}
+                {{ fileData?.classificationStatus }}
               </v-chip>
               <span
-                v-if="file?.classificationConfidence"
+                v-if="fileData?.classificationConfidence"
                 class="ml-2 text-medium-emphasis"
               >
-                {{ (file?.classificationConfidence * 100).toFixed(0) }}%
+                {{ (fileData?.classificationConfidence * 100).toFixed(0) }}%
               </span>
             </v-list-item-subtitle>
           </v-list-item>
-          <v-list-item v-if="file?.canonicalSlot">
+          <v-list-item v-if="fileData?.canonicalSlot">
             <v-list-item-title>Canonical Slot</v-list-item-title>
-            <v-list-item-subtitle>{{ file?.canonicalSlot }}</v-list-item-subtitle>
+            <v-list-item-subtitle>{{ fileData?.canonicalSlot }}</v-list-item-subtitle>
           </v-list-item>
         </v-list>
       </v-window-item>
@@ -87,7 +87,7 @@
         <v-card-text>
           <template v-if="file?.metadata?.previewUrl">
             <iframe
-              :src="file.metadata.previewUrl as string"
+              :src="fileData?.metadata?.previewUrl as string"
               style="width:100%;height:300px;"
             />
           </template>
@@ -96,7 +96,7 @@
               class="text-wrap"
               style="white-space: pre-wrap; max-height: 300px; overflow:auto;"
             >
-              {{ file?.metadata?.preview || file?.extractedText }}
+              {{ fileData?.metadata?.preview || fileData?.extractedText }}
             </div>
           </template>
         </v-card-text>
@@ -108,12 +108,17 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useFile } from '@/composables/useFile'
+import type { FileItem } from '@/types/file'
 
-const props = defineProps<{ fileId: string | null }>()
+defineOptions({
+  name: 'FileInspector'
+})
+
+const props = defineProps<{ file: FileItem }>()
 const tab = ref('details')
 
-const { data } = useFile(() => props.fileId)
-const file = computed(() => data.value)
+const { data } = useFile(() => props.file.id)
+const fileData = computed(() => data.value)
 
 function classificationColor(status?: string) {
   switch ((status || '').toUpperCase()) {
@@ -128,5 +133,3 @@ function classificationColor(status?: string) {
   }
 }
 </script>
-
-

@@ -2,7 +2,7 @@ import { ref } from 'vue'
 import { useQuery } from '@vue/apollo-composable'
 import gql from 'graphql-tag'
 
-interface QueueData {
+export interface QueueData {
   name: string
   waiting: number
   active: number

@@ -3,6 +3,7 @@ import { API_BASE } from './constants'
 import { showError, showSuccess } from './utils'
 import type { Integration, AvailableIntegration } from './Interface'
 import { createSource } from './graphql'
+import { useOrganizationStore } from '@/stores/organizationStore'
 
 // Integration methods
 export async function connectIntegration(integration: Integration) {
@@ -10,7 +11,9 @@ export async function connectIntegration(integration: Integration) {
     loading.value = true
     
     const provider = integration.type
-    const orgId = '12345'
+    // Get organization ID from store
+    const organizationStore = useOrganizationStore()
+    const orgId = organizationStore.currentOrg?.id || '00000000-0000-0000-0000-000000000000'
 
     // For existing integrations, redirect with sourceId
     if (integration.__existing && integration.id) {

@@ -6,9 +6,9 @@
 
 <script setup lang="ts">
 import WelcomeCard from './Components/WelcomeCard.vue'
-import { useHomeState } from './Composables/state'
-
 // useHomeState() is called for side effects only, no state is used in this component
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { useHomeState } from './Composables/state'
 </script>
 
 <style scoped>

@@ -187,27 +187,27 @@ function formatDateTime(dateString: string): string {
   return new Date(dateString).toLocaleString()
 }
 
-function viewAgent(agent: Agent) {
+function viewAgent(_agent: Agent) {
   // Emit event to parent
   // Implementation will be handled by parent component
 }
 
-function editAgent(agent: Agent) {
+function editAgent(_agent: Agent) {
   // Emit event to parent
   // Implementation will be handled by parent component
 }
 
-function duplicateAgent(agent: Agent) {
+function duplicateAgent(_agent: Agent) {
   // Emit event to parent
   // Implementation will be handled by parent component
 }
 
-function deleteAgent(agent: Agent) {
+function deleteAgent(_agent: Agent) {
   // Emit event to parent
   // Implementation will be handled by parent component
 }
 
-function toggleAgentStatus(agent: Agent) {
+function toggleAgentStatus(_agent: Agent) {
   // Emit event to parent
   // Implementation will be handled by parent component
 }

@@ -21,9 +21,9 @@
 <script setup lang="ts">
 import ScenesTable from './Components/ScenesTable.vue'
 import ActionsCard from './Components/ActionsCard.vue'
-import { useShootDayCockpitState } from './Composables/state'
-
 // useShootDayCockpitState() is called for side effects only, no state is used in this component
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { useShootDayCockpitState } from './Composables/state'
 </script>
 
 <style scoped>

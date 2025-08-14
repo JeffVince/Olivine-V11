@@ -33,10 +33,8 @@ const internalOpen = computed({
   set: (v: boolean) => emit('update:open', v),
 })
 
-import { useRouter } from 'vue-router'
 import { useProjectStore } from '@/stores/projectStore'
 
-const router = useRouter()
 const projectStore = useProjectStore()
 
 const projectPath = (suffix: string) => `/projects/${projectStore.currentProjectId || ''}${suffix}`

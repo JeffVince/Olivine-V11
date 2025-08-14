@@ -19,6 +19,8 @@
 
 <script setup lang="ts">
 // Minimal header component
+
+defineEmits(['toggle-drawer'])
 </script>
 
 

@@ -23,8 +23,12 @@
                 </v-avatar>
               </template>
               <v-list-item-title>{{ integration.name }}</v-list-item-title>
-              <v-list-item-subtitle v-if="integration.description">{{ integration.description }}</v-list-item-subtitle>
-              <v-list-item-subtitle v-else>No description available</v-list-item-subtitle>
+              <v-list-item-subtitle v-if="integration.description">
+                {{ integration.description }}
+              </v-list-item-subtitle>
+              <v-list-item-subtitle v-else>
+                No description available
+              </v-list-item-subtitle>
               <template #append>
                 <v-btn 
                   color="primary"

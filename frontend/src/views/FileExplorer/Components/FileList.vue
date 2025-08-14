@@ -28,13 +28,12 @@
           {{ file.classificationStatus }}
         </v-chip>
         <v-menu>
-          <template #activator="{ props }">
+          <template #activator="{ props: menuProps }">
             <v-btn
               icon
               variant="text"
               size="small"
-              v-bind="props"
-              @click.stop
+              v-bind="menuProps"
             >
               <v-icon>mdi-dots-vertical</v-icon>
             </v-btn>
@@ -66,27 +65,30 @@ import { useFileExplorerUtils } from '../Composables/utils'
 interface Props {
   filteredFiles: FileItem[]
   selectedFile: FileItem | null
-  renameFile: any
-  moveFile: any
+  renameFile: (id: string, name: string) => Promise<void>
+  moveFile: (id: string, path: string) => Promise<void>
 }
 
 interface Emits {
   (e: 'fileSelect', file: FileItem): void
 }
 
+// Props and emits are defined for type safety but not used directly
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const props = defineProps<Props>()
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const emit = defineEmits<Emits>()
 
 const { formatFileSize, formatDate, classificationColor, mimeIcon } = useFileExplorerUtils()
 
-function promptRename(file: FileItem, renameFile: any) {
+function promptRename(file: FileItem, renameFile: (id: string, name: string) => Promise<void>) {
   const name = window.prompt('Rename file', file.name)
   if (name && name !== file.name) {
     renameFile(file.id, name)
   }
 }
 
-function promptMove(file: FileItem, moveFile: any) {
+function promptMove(file: FileItem, moveFile: (id: string, path: string) => Promise<void>) {
   const path = window.prompt('Move file to path', file.path)
   if (path && path !== file.path) {
     moveFile(file.id, path)

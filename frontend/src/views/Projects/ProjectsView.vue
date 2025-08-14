@@ -221,6 +221,8 @@ import { useProjectStore } from '@/stores/projectStore'
 import { useNotificationStore } from '@/stores/notificationStore'
 
 // Import composables
+// Some variables from composables are imported but not used
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import {
   projects,
   showCreateDialog,

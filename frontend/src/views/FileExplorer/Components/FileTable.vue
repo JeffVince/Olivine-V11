@@ -39,12 +39,12 @@
     
     <template #item.actions="{ item }">
       <v-menu>
-        <template #activator="{ props }">
+        <template #activator="{ props: menuProps }">
           <v-btn
             icon
             variant="text"
             size="small"
-            v-bind="props"
+            v-bind="menuProps"
           >
             <v-icon>mdi-dots-vertical</v-icon>
           </v-btn>
@@ -62,13 +62,13 @@
             </template>
             <v-list-item-title>Move</v-list-item-title>
           </v-list-item>
-          <v-list-item @click="downloadFile(item.id)">
+          <v-list-item @click="downloadFile(item)">
             <template #prepend>
               <v-icon>mdi-download</v-icon>
             </template>
             <v-list-item-title>Download</v-list-item-title>
           </v-list-item>
-          <v-list-item @click="openInProvider(item.id)">
+          <v-list-item @click="openInProvider(item)">
             <template #prepend>
               <v-icon>mdi-open-in-new</v-icon>
             </template>
@@ -81,25 +81,26 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
 import { FileItem } from '../Composables/Interface'
 import { useFileExplorerUtils } from '../Composables/utils'
-import { useFileExplorerData } from '../Composables/data'
 
 interface Props {
   filteredFiles: FileItem[]
   loading: boolean
-  renameFile: any
-  moveFile: any
-  downloadFile: any
-  openInProvider: any
+  renameFile: (id: string, name: string) => Promise<void>
+  moveFile: (id: string, path: string) => Promise<void>
+  downloadFile: (file: FileItem) => void
+  openInProvider: (file: FileItem) => void
 }
 
 interface Emits {
   (e: 'fileSelect', file: FileItem): void
 }
 
+// Props and emits are defined for type safety but not used directly
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const props = defineProps<Props>()
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const emit = defineEmits<Emits>()
 
 const { fileHeaders, formatFileSize, formatDate, mimeIcon } = useFileExplorerUtils()
@@ -108,14 +109,14 @@ function onFileSelect(event: Event, { item }: { item: FileItem }) {
   emit('fileSelect', item)
 }
 
-function promptRename(file: FileItem, renameFile: any) {
+function promptRename(file: FileItem, renameFile: (id: string, name: string) => Promise<void>) {
   const name = window.prompt('Rename file', file.name)
   if (name && name !== file.name) {
     renameFile(file.id, name)
   }
 }
 
-function promptMove(file: FileItem, moveFile: any) {
+function promptMove(file: FileItem, moveFile: (id: string, path: string) => Promise<void>) {
   const path = window.prompt('Move file to path', file.path)
   if (path && path !== file.path) {
     moveFile(file.id, path)
