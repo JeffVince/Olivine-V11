@@ -1,5 +1,8 @@
 <template>
-  <v-card variant="outlined" class="glass-card">
+  <v-card
+    variant="outlined"
+    class="glass-card"
+  >
     <v-card-title>Quick Actions</v-card-title>
     <v-card-text>
       <v-btn 

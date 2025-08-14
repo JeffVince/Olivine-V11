@@ -16,12 +16,19 @@
         >
           <v-card-text class="pa-3">
             <div class="d-flex align-center mb-2">
-              <v-icon size="x-large" class="mr-3">
+              <v-icon
+                size="x-large"
+                class="mr-3"
+              >
                 {{ mimeIcon(file.mimeType) }}
               </v-icon>
               <div>
-                <div class="text-subtitle-2 text-truncate">{{ file.name }}</div>
-                <div class="text-caption text-medium-emphasis">{{ formatFileSize(file.size || 0) }}</div>
+                <div class="text-subtitle-2 text-truncate">
+                  {{ file.name }}
+                </div>
+                <div class="text-caption text-medium-emphasis">
+                  {{ formatFileSize(file.size || 0) }}
+                </div>
               </div>
             </div>
             

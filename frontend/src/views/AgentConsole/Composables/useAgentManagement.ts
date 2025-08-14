@@ -4,43 +4,7 @@ import { Agent } from './Interface'
 export function useAgentManagement(addNotification: (notification: { message: string; type: string }) => void) {
   
   // State
-  const agents = ref<Agent[]>([
-    {
-      id: '1',
-      name: 'File Processor',
-      description: 'Processes uploaded files and extracts metadata',
-      type: 'file-processor',
-      status: 'active',
-      tasksCompleted: 124,
-      tasksRunning: 3,
-      uptime: '2d 4h',
-      lastActivity: '2023-05-15T14:30:00Z',
-      created: '2023-05-10T09:15:00Z',
-    },
-    {
-      id: '2',
-      name: 'Data Sync',
-      description: 'Synchronizes data with external systems',
-      type: 'data-sync',
-      status: 'active',
-      tasksCompleted: 87,
-      tasksRunning: 1,
-      uptime: '1d 12h',
-      lastActivity: '2023-05-15T14:25:00Z',
-      created: '2023-05-12T11:30:00Z',
-    },
-    {
-      id: '3',
-      name: 'Notification Service',
-      description: 'Sends notifications to users',
-      type: 'notification',
-      status: 'inactive',
-      tasksCompleted: 203,
-      tasksRunning: 0,
-      uptime: '0h 0m',
-      created: '2023-05-14T16:45:00Z',
-    },
-  ])
+  const agents = ref<Agent[]>([])
   
   const showCreateDialog = ref(false)
   const editingAgent = ref<Agent | null>(null)

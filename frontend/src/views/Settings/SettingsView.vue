@@ -9,9 +9,15 @@
       density="compact"
       class="mb-4"
     >
-      <v-tab value="profile">Profile</v-tab>
-      <v-tab value="notifications">Notifications</v-tab>
-      <v-tab value="project">Project</v-tab>
+      <v-tab value="profile">
+        Profile
+      </v-tab>
+      <v-tab value="notifications">
+        Notifications
+      </v-tab>
+      <v-tab value="project">
+        Project
+      </v-tab>
     </v-tabs>
     
     <!-- Tab Content -->

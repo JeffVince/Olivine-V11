@@ -149,27 +149,27 @@
         <v-card
           class="text-center pa-8 glass-card"
         >
-      <v-icon
-        size="64"
-        color="grey-lighten-1"
-        class="mb-4"
-      >
-        mdi-folder-plus
-      </v-icon>
-      <h3 class="text-h6 mb-2">
-        No Projects Yet
-      </h3>
-      <p class="text-body-2 text-medium-emphasis mb-4">
-        Create your first project to get started with Olivine
-      </p>
-      <v-btn 
-        color="primary" 
-        size="large"
-        prepend-icon="mdi-plus"
-        @click="showCreateDialog = true"
-      >
-        Create Project
-      </v-btn>
+          <v-icon
+            size="64"
+            color="grey-lighten-1"
+            class="mb-4"
+          >
+            mdi-folder-plus
+          </v-icon>
+          <h3 class="text-h6 mb-2">
+            No Projects Yet
+          </h3>
+          <p class="text-body-2 text-medium-emphasis mb-4">
+            Create your first project to get started with Olivine
+          </p>
+          <v-btn 
+            color="primary" 
+            size="large"
+            prepend-icon="mdi-plus"
+            @click="showCreateDialog = true"
+          >
+            Create Project
+          </v-btn>
         </v-card>
       </v-col>
     </v-row>
@@ -182,7 +182,10 @@
     />
 
     <!-- Delete Confirmation Dialog -->
-    <v-dialog v-model="showDeleteDialogRef" max-width="500px">
+    <v-dialog
+      v-model="showDeleteDialogRef"
+      max-width="500px"
+    >
       <v-card>
         <v-card-title>
           <span class="text-h5">Confirm Delete</span>
@@ -191,9 +194,21 @@
           Are you sure you want to delete this project? This action cannot be undone.
         </v-card-text>
         <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn color="blue-darken-1" variant="text" @click="showDeleteDialogRef = false">Cancel</v-btn>
-          <v-btn color="red-darken-1" variant="text" @click="confirmDelete">Delete</v-btn>
+          <v-spacer />
+          <v-btn
+            color="blue-darken-1"
+            variant="text"
+            @click="showDeleteDialogRef = false"
+          >
+            Cancel
+          </v-btn>
+          <v-btn
+            color="red-darken-1"
+            variant="text"
+            @click="confirmDelete"
+          >
+            Delete
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -201,7 +216,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { onMounted } from 'vue'
 import { useProjectStore } from '@/stores/projectStore'
 import { useNotificationStore } from '@/stores/notificationStore'
 
@@ -226,12 +241,12 @@ import {
 } from '@/views/Projects/Composables'
 
 // Import components
-import Header from '@/views/Projects/Components/Header.vue'
+import ProjectsHeader from '@/views/Projects/Components/ProjectsHeader.vue'
 import ProjectCard from '@/views/Projects/Components/ProjectCard.vue'
 import CreateProjectDialog from '@/views/Projects/Components/CreateProjectDialog.vue'
 
 const projectStore = useProjectStore()
-const notificationStore = useNotificationStore()
+// const notificationStore = useNotificationStore() // Commented out as it's not currently used
 
 // Load projects on mount
 onMounted(() => {

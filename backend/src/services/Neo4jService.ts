@@ -77,9 +77,15 @@ export class Neo4jService {
           sanitizedParams[k] = null
           continue
         }
-        if (v && typeof v === 'object' && !(v instanceof Date) && !Array.isArray(v)) {
-          // Convert plain objects to JSON to avoid Neo4j Map errors when used as properties
-          sanitizedParams[k] = JSON.stringify(v)
+        if (v instanceof Date) {
+          // Normalize JS Date to ISO string to avoid Map-like parameter encoding
+          sanitizedParams[k] = v.toISOString()
+          continue
+        }
+        if (v && typeof v === 'object' && !Array.isArray(v)) {
+          // Convert plain objects to Neo4j-compatible string to prevent Map property assignment
+          const likelyUsedAsProperty = true
+          sanitizedParams[k] = likelyUsedAsProperty ? JSON.stringify(v) : v
         } else {
           sanitizedParams[k] = v
         }

@@ -9,7 +9,7 @@
       </v-card-title>
       <v-card-text>
         <v-text-field
-          v-model="newIntegration.name"
+          v-model="localNewIntegration.name"
           label="Integration Name"
           required
         />
@@ -46,10 +46,11 @@ const props = defineProps<{
 }>()
 
 // Emits
-const emit = defineEmits(['update:modelValue', 'cancel', 'proceed'])
+const emit = defineEmits(['update:modelValue', 'update:newIntegration', 'cancel', 'proceed'])
 
 // Reactive variables
 const showDialog = ref(props.modelValue)
+const localNewIntegration = ref<NewIntegration>({ ...props.newIntegration })
 
 // Watch for changes
 watch(() => props.modelValue, (newValue) => {
@@ -58,6 +59,11 @@ watch(() => props.modelValue, (newValue) => {
 
 watch(showDialog, (newValue) => {
   emit('update:modelValue', newValue)
+})
+
+// Watch for prop changes and update local copy
+watch(() => props.newIntegration, () => {
+  localNewIntegration.value = { ...props.newIntegration }
 })
 </script>
 

@@ -17,7 +17,7 @@
               sm="6"
               md="4"
             >
-               <v-card 
+              <v-card 
                 variant="outlined"
                 class="template-card glass-card"
                 @click="$emit('create-from-template', template)"
@@ -28,11 +28,16 @@
                     size="48"
                     class="mb-3"
                   >
-                    <v-icon color="white" size="24">
+                    <v-icon
+                      color="white"
+                      size="24"
+                    >
                       {{ template.icon }}
                     </v-icon>
                   </v-avatar>
-                  <h3 class="text-h6 mb-1">{{ template.name }}</h3>
+                  <h3 class="text-h6 mb-1">
+                    {{ template.name }}
+                  </h3>
                   <p class="text-caption text-medium-emphasis mb-2">
                     {{ template.description }}
                   </p>

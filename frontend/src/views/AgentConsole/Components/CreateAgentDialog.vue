@@ -1,11 +1,18 @@
 <template>
-  <v-dialog v-model="model" max-width="600" persistent>
+  <v-dialog
+    v-model="model"
+    max-width="600"
+    persistent
+  >
     <v-card>
       <v-card-title>
         {{ isEditing ? 'Edit Agent' : 'Create New Agent' }}
       </v-card-title>
       <v-card-text>
-        <v-form ref="form" v-model="valid">
+        <v-form
+          ref="form"
+          v-model="valid"
+        >
           <v-text-field
             v-model="localAgent.name"
             label="Agent Name"
@@ -33,7 +40,9 @@
         </v-form>
       </v-card-text>
       <v-card-actions>
-        <v-btn @click="closeDialog">Cancel</v-btn>
+        <v-btn @click="closeDialog">
+          Cancel
+        </v-btn>
         <v-spacer />
         <v-btn
           color="primary"

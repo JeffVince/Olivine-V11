@@ -1,7 +1,7 @@
 <template>
   <div>
     <!-- Header -->
-    <Header @add-integration="showAddDialog = true" />
+    <IntegrationsHeader @add-integration="showAddDialog = true" />
 
     <!-- Integration Cards -->
     <v-row>
@@ -41,9 +41,9 @@
     <!-- Configuration Dialog -->
     <ConfigureIntegrationDialog
       v-model="showConfigDialog"
-      :selected-integration="selectedIntegration"
       v-model:selected-integration-root-folder="selectedIntegrationRootFolder"
       v-model:selected-integration-enable-webhooks="selectedIntegrationEnableWebhooks"
+      :selected-integration="selectedIntegration"
       @close="closeConfigDialog"
       @save="saveConfiguration"
     />
@@ -72,11 +72,6 @@ import {
   loading,
   selectedIntegrationRootFolder,
   selectedIntegrationEnableWebhooks,
-  getIntegrationColor,
-  getIntegrationIcon,
-  getLogLevelColor,
-  formatDate,
-  formatDateTime,
   connectIntegration,
   disconnectIntegration,
   triggerSync,
@@ -86,16 +81,36 @@ import {
   proceedWithIntegration,
   saveConfiguration,
   closeConfigDialog,
-  closeLogsDialog,
-  notify,
-  showError,
-  showSuccess,
-  showInfo,
-  showWarning
+  closeLogsDialog
 } from '@/views/Integrations/Composables'
 
+// Import Apollo Client composable
+import { useSourcesQuery } from '@/views/Integrations/Composables/graphql'
+import { updateIntegrationsFromResult } from '@/views/Integrations/Composables/state'
+import { useRoute } from 'vue-router'
+import { watch } from 'vue'
+
+// Get organization ID from route
+const route = useRoute()
+const projectId = route.params.id as string
+
+// Use the GraphQL query within component context
+const { result, loading: queryLoading, error } = useSourcesQuery(projectId)
+
+// Watch for changes in the query result and update integrations
+watch(result, (newResult: any) => {
+  updateIntegrationsFromResult(newResult)
+})
+
+// Watch for query errors
+watch(error, (newError: any) => {
+  if (newError) {
+    console.error('GraphQL Error:', newError)
+  }
+})
+
 // Import new components
-import Header from '@/views/Integrations/Components/Header.vue'
+import IntegrationsHeader from '@/views/Integrations/Components/IntegrationsHeader.vue'
 import IntegrationCard from '@/views/Integrations/Components/IntegrationCard.vue'
 import AvailableIntegrations from '@/views/Integrations/Components/AvailableIntegrations.vue'
 import AddIntegrationDialog from '@/views/Integrations/Components/AddIntegrationDialog.vue'

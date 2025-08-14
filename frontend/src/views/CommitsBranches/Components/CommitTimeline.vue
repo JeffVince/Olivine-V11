@@ -1,5 +1,8 @@
 <template>
-  <v-card title="Commit Timeline" class="glass-card">
+  <v-card
+    title="Commit Timeline"
+    class="glass-card"
+  >
     <v-list density="compact">
       <v-list-item
         v-for="commit in commits"

@@ -16,7 +16,9 @@
             :class="`log-${log.level}`"
           >
             <div class="d-flex align-start">
-              <div class="log-timestamp">{{ formatDateTime(log.timestamp) }}</div>
+              <div class="log-timestamp">
+                {{ formatDateTime(log.timestamp) }}
+              </div>
               <v-chip 
                 :color="getLogLevelColor(log.level)"
                 size="x-small"
@@ -24,7 +26,9 @@
               >
                 {{ log.level }}
               </v-chip>
-              <div class="log-message">{{ log.message }}</div>
+              <div class="log-message">
+                {{ log.message }}
+              </div>
             </div>
           </v-list-item>
         </v-list>

@@ -30,7 +30,7 @@
 
 <script setup lang="ts">
 // Emits
-const emit = defineEmits(['add-integration'])
+defineEmits(['add-integration'])
 </script>
 
 <style scoped>

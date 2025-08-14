@@ -1,8 +1,9 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { setActivePinia, createPinia } from 'pinia'
+import { setActivePinia } from 'pinia'
 import { useProjectStore } from '../stores/projectStore'
 import { useOrganizationStore } from '../stores/organizationStore'
 import { apolloClient } from '@/graphql/client'
+import { createTestingPinia } from '@pinia/testing'
 
 vi.mock('@/graphql/client', () => ({
   apolloClient: {
@@ -13,7 +14,10 @@ vi.mock('@/graphql/client', () => ({
 
 describe('projectStore actions', () => {
   beforeEach(() => {
-    setActivePinia(createPinia())
+    createTestingPinia({
+      createSpy: vi.fn,
+      stubActions: false
+    })
     const org = useOrganizationStore()
     org.setOrganization({ id: 'org1', name: 'Org 1' })
     vi.resetAllMocks()
@@ -32,7 +36,7 @@ describe('projectStore actions', () => {
 
   it('archives a project', async () => {
     const store = useProjectStore()
-    store.projects = [{ id: '1', name: 'Test', status: 'active' }]
+    store.projects = [{ id: '1', name: 'Test', status: 'active' }] as any
     (apolloClient.mutate as ReturnType<typeof vi.fn>).mockResolvedValue({
       data: { updateProject: { id: '1', name: 'Test', status: 'archived' } },
     })
@@ -42,7 +46,7 @@ describe('projectStore actions', () => {
 
   it('sets error on delete failure', async () => {
     const store = useProjectStore()
-    store.projects = [{ id: '1', name: 'Test', status: 'active' }]
+    store.projects = [{ id: '1', name: 'Test', status: 'active' }] as any
     (apolloClient.mutate as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('fail'))
     await expect(store.deleteProject('1')).rejects.toThrow('fail')
     expect(store.error).toBe('fail')

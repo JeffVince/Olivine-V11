@@ -1,21 +1,52 @@
 <template>
   <v-card class="glass-card">
-    <v-tabs v-model="tab" density="compact">
-      <v-tab value="details">Details</v-tab>
-      <v-tab value="canonical">Canonical</v-tab>
-      <v-tab value="references">References</v-tab>
-      <v-tab value="provenance">Provenance</v-tab>
-      <v-tab value="preview">Preview</v-tab>
+    <v-tabs
+      v-model="tab"
+      density="compact"
+    >
+      <v-tab value="details">
+        Details
+      </v-tab>
+      <v-tab value="canonical">
+        Canonical
+      </v-tab>
+      <v-tab value="references">
+        References
+      </v-tab>
+      <v-tab value="provenance">
+        Provenance
+      </v-tab>
+      <v-tab value="preview">
+        Preview
+      </v-tab>
     </v-tabs>
     <v-window v-model="tab">
       <v-window-item value="details">
         <v-list density="compact">
-          <v-list-item :title="file?.name" subtitle="Name" />
-          <v-list-item :title="file?.path" subtitle="Path" />
-          <v-list-item :title="String(file?.size || '')" subtitle="Size" />
-          <v-list-item :title="file?.mimeType" subtitle="MIME" />
-          <v-list-item :title="file?.modified" subtitle="Modified" />
-          <v-list-item :title="file?.checksum" subtitle="Checksum" />
+          <v-list-item
+            :title="file?.name"
+            subtitle="Name"
+          />
+          <v-list-item
+            :title="file?.path"
+            subtitle="Path"
+          />
+          <v-list-item
+            :title="String(file?.size || '')"
+            subtitle="Size"
+          />
+          <v-list-item
+            :title="file?.mimeType"
+            subtitle="MIME"
+          />
+          <v-list-item
+            :title="file?.modified"
+            subtitle="Modified"
+          />
+          <v-list-item
+            :title="file?.checksum"
+            subtitle="Checksum"
+          />
         </v-list>
       </v-window-item>
       <v-window-item value="canonical">
@@ -32,7 +63,10 @@
               >
                 {{ file?.classificationStatus }}
               </v-chip>
-              <span v-if="file?.classificationConfidence" class="ml-2 text-medium-emphasis">
+              <span
+                v-if="file?.classificationConfidence"
+                class="ml-2 text-medium-emphasis"
+              >
                 {{ (file?.classificationConfidence * 100).toFixed(0) }}%
               </span>
             </v-list-item-subtitle>
@@ -52,7 +86,10 @@
       <v-window-item value="preview">
         <v-card-text>
           <template v-if="file?.metadata?.previewUrl">
-            <iframe :src="file.metadata.previewUrl as string" style="width:100%;height:300px;" />
+            <iframe
+              :src="file.metadata.previewUrl as string"
+              style="width:100%;height:300px;"
+            />
           </template>
           <template v-else>
             <div

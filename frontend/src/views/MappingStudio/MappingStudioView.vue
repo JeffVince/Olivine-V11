@@ -1,7 +1,7 @@
 <template>
   <div>
     <!-- Header -->
-    <Header @create-mapping="showCreateDialog = true" />
+    <MappingStudioHeader @create-mapping="showCreateDialog = true" />
     
     <!-- Mapping Templates -->
     <MappingTemplates 
@@ -88,7 +88,7 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
 import { useState, useActions } from '@/views/MappingStudio/Composables'
-import Header from '@/views/MappingStudio/Components/Header.vue'
+import MappingStudioHeader from '@/views/MappingStudio/Components/MappingStudioHeader.vue'
 import MappingTemplates from '@/views/MappingStudio/Components/MappingTemplates.vue'
 import MappingGrid from '@/views/MappingStudio/Components/MappingGrid.vue'
 import MappingList from '@/views/MappingStudio/Components/MappingList.vue'

@@ -1,5 +1,8 @@
 <template>
-  <v-card title="Actions" class="glass-card">
+  <v-card
+    title="Actions"
+    class="glass-card"
+  >
     <v-btn
       color="primary"
       class="ma-4"

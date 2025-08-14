@@ -1,5 +1,9 @@
 <template>
-  <v-dialog v-model="model" max-width="800" persistent>
+  <v-dialog
+    v-model="model"
+    max-width="800"
+    persistent
+  >
     <v-card>
       <v-card-title>Job Logs</v-card-title>
       <v-card-text style="max-height: 60vh; overflow: auto;">
@@ -33,7 +37,9 @@
       </v-card-text>
       <v-card-actions>
         <v-spacer />
-        <v-btn @click="closeDialog">Close</v-btn>
+        <v-btn @click="closeDialog">
+          Close
+        </v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>

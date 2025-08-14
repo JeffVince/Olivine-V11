@@ -9,7 +9,10 @@
   >
     <template #item.name="{ item }">
       <div class="d-flex align-center">
-        <v-icon size="small" class="mr-2">
+        <v-icon
+          size="small"
+          class="mr-2"
+        >
           {{ mimeIcon(item.mimeType) }}
         </v-icon>
         <span>{{ item.name }}</span>

@@ -26,9 +26,7 @@
     </v-card-title>
 
     <v-card-text>
-      <p class="text-body-2 mb-3">
-        {{ integration.description }}
-      </p>
+      <!-- Description would go here if available -->
       
       <!-- Connection Status -->
       <div
@@ -64,16 +62,28 @@
         class="integration-stats"
       >
         <div class="stat-card">
-          <div class="stat-value">{{ integration.stats.files }}</div>
-          <div class="stat-label">Files</div>
+          <div class="stat-value">
+            {{ integration.stats.files }}
+          </div>
+          <div class="stat-label">
+            Files
+          </div>
         </div>
         <div class="stat-card">
-          <div class="stat-value">{{ integration.stats.folders }}</div>
-          <div class="stat-label">Folders</div>
+          <div class="stat-value">
+            {{ integration.stats.folders }}
+          </div>
+          <div class="stat-label">
+            Folders
+          </div>
         </div>
         <div class="stat-card">
-          <div class="stat-value">{{ integration.stats.size }}</div>
-          <div class="stat-label">Size</div>
+          <div class="stat-value">
+            {{ integration.stats.size }}
+          </div>
+          <div class="stat-label">
+            Size
+          </div>
         </div>
       </div>
     </v-card-text>
@@ -128,13 +138,13 @@ import type { Integration } from '@/views/Integrations/Composables/Interface'
 import { getIntegrationColor, getIntegrationIcon, formatDate } from '@/views/Integrations/Composables/utils'
 
 // Props
-const props = defineProps<{
+defineProps<{
   integration: Integration
   loading: boolean
 }>()
 
 // Emits
-const emit = defineEmits(['connect', 'sync', 'configure', 'view-logs', 'disconnect'])
+defineEmits(['connect', 'sync', 'configure', 'view-logs', 'disconnect'])
 </script>
 
 <style scoped>

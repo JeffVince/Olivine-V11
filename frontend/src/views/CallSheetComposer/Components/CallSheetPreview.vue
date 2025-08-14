@@ -15,10 +15,20 @@
       </div>
     </v-card-text>
     <v-card-actions>
-      <v-btn color="primary" @click="onSaveDraft" :loading="loading" :disabled="!callSheet">
+      <v-btn
+        color="primary"
+        :loading="loading"
+        :disabled="!callSheet"
+        @click="onSaveDraft"
+      >
         Save Draft PDF
       </v-btn>
-      <v-btn color="success" @click="onPublish" :loading="loading" :disabled="!callSheet">
+      <v-btn
+        color="success"
+        :loading="loading"
+        :disabled="!callSheet"
+        @click="onPublish"
+      >
         Publish Final
       </v-btn>
     </v-card-actions>

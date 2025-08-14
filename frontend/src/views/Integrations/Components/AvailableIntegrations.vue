@@ -23,7 +23,8 @@
                 </v-avatar>
               </template>
               <v-list-item-title>{{ integration.name }}</v-list-item-title>
-              <v-list-item-subtitle>{{ integration.description }}</v-list-item-subtitle>
+              <v-list-item-subtitle v-if="integration.description">{{ integration.description }}</v-list-item-subtitle>
+              <v-list-item-subtitle v-else>No description available</v-list-item-subtitle>
               <template #append>
                 <v-btn 
                   color="primary"
@@ -46,12 +47,12 @@
 import type { AvailableIntegration } from '@/views/Integrations/Composables/Interface'
 
 // Props
-const props = defineProps<{
+defineProps<{
   availableIntegrations: AvailableIntegration[]
 }>()
 
 // Emits
-const emit = defineEmits(['add'])
+defineEmits(['add'])
 </script>
 
 <style scoped>

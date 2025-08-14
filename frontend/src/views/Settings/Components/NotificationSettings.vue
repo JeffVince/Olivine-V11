@@ -5,15 +5,15 @@
   >
     <v-card class="glass-card pa-4 mb-4">
       <v-switch
-        v-model="notif.email"
+        v-model="localNotif.email"
         label="Email"
       />
       <v-switch
-        v-model="notif.sms"
+        v-model="localNotif.sms"
         label="SMS"
       />
       <v-switch
-        v-model="notif.inApp"
+        v-model="localNotif.inApp"
         label="In-App"
       />
       <v-btn
@@ -27,7 +27,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import type { NotificationSettings } from '../Composables/Interface'
 
 // Props
@@ -36,15 +36,24 @@ const props = defineProps<{
 }>()
 
 // Emits
-const emit = defineEmits(['save'])
+const emit = defineEmits(['update:notif', 'save'])
+
+// Create a local copy of the prop
+const localNotif = ref<NotificationSettings>({ ...props.notif })
 
 // Form reference
 const notifForm = ref()
 
 // Methods
 async function saveNotifications() {
-  emit('save', props.notif)
+  emit('save', localNotif.value)
+  emit('update:notif', localNotif.value)
 }
+
+// Watch for prop changes and update local copy
+watch(() => props.notif, () => {
+  localNotif.value = { ...props.notif }
+})
 </script>
 
 <style scoped>

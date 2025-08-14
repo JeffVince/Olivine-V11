@@ -5,20 +5,20 @@
   >
     <v-card class="glass-card pa-4 mb-4">
       <v-text-field
-        v-model="projectOptions.name"
+        v-model="localProjectOptions.name"
         label="Project Name"
         :rules="nameRules"
         required
       />
       <v-combobox
-        v-model="projectOptions.templates"
+        v-model="localProjectOptions.templates"
         label="Templates"
         multiple
         chips
         hide-selected
       />
       <v-switch
-        v-model="projectOptions.autoApprove"
+        v-model="localProjectOptions.autoApprove"
         label="Auto-approve tasks"
       />
       <v-btn
@@ -32,7 +32,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import type { ProjectOptions } from '../Composables/Interface'
 
 // Props
@@ -42,7 +42,10 @@ const props = defineProps<{
 }>()
 
 // Emits
-const emit = defineEmits(['save'])
+const emit = defineEmits(['update:projectOptions', 'save'])
+
+// Create a local copy of the prop
+const localProjectOptions = ref<ProjectOptions>({ ...props.projectOptions })
 
 // Form reference
 const projectForm = ref()
@@ -51,8 +54,14 @@ const projectForm = ref()
 async function saveProject() {
   const { valid } = await projectForm.value.validate()
   if (!valid) return
-  emit('save', props.projectOptions)
+  emit('save', localProjectOptions.value)
+  emit('update:projectOptions', localProjectOptions.value)
 }
+
+// Watch for prop changes and update local copy
+watch(() => props.projectOptions, () => {
+  localProjectOptions.value = { ...props.projectOptions }
+})
 </script>
 
 <style scoped>

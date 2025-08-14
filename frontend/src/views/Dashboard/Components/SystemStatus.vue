@@ -1,5 +1,8 @@
 <template>
-  <v-card variant="outlined" class="glass-card">
+  <v-card
+    variant="outlined"
+    class="glass-card"
+  >
     <v-card-title>System Status</v-card-title>
     <v-card-text>
       <v-chip

@@ -1,6 +1,9 @@
 <template>
   <v-main>
-    <v-container fluid class="bg-obsidian">
+    <v-container
+      fluid
+      class="bg-obsidian"
+    >
       <slot />
     </v-container>
   </v-main>

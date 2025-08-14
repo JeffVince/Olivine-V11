@@ -293,8 +293,8 @@ export class OperationsOntologyService {
         amount: $amount,
         currency: $currency,
         status: $status,
-        order_date: $order_date,
-        needed_date: $needed_date,
+        order_date: datetime($order_date),
+        needed_date: CASE WHEN $needed_date IS NULL THEN NULL ELSE datetime($needed_date) END,
         delivery_address: $delivery_address,
         approved_by: $approved_by,
         created_by: $created_by,
@@ -348,8 +348,8 @@ export class OperationsOntologyService {
       amount: po.total_amount,
       currency: po.currency,
       status: po.status,
-      order_date: po.order_date,
-      needed_date: po.needed_date || null,
+      order_date: (po.order_date instanceof Date ? po.order_date.toISOString() : po.order_date) as any,
+      needed_date: po.needed_date ? (po.needed_date instanceof Date ? po.needed_date.toISOString() : po.needed_date) : null,
       delivery_address: po.delivery_address || null,
       approved_by: po.approved_by || null,
       created_by: po.created_by,
@@ -361,9 +361,11 @@ export class OperationsOntologyService {
     // Map to GraphQL shape expected by tests
     const props = result.records[0]?.get('po').properties;
     if (!props) return props;
+    // Normalize property names to the GraphQL resolver expectations
     return {
       ...props,
-      po_number: props.po_number ?? po.order_number,
+      order_number: props.po_number ?? po.order_number,
+      vendor_id: props.vendor_id ?? po.vendor_id,
       amount: props.amount ?? po.total_amount,
     };
   }
@@ -413,10 +415,10 @@ export class OperationsOntologyService {
         currency: $currency,
         tax_amount: $tax_amount,
         total_amount: $total_amount,
-        invoice_date: $invoice_date,
-        due_date: $due_date,
+        invoice_date: datetime($invoice_date),
+        due_date: datetime($due_date),
         status: $status,
-        payment_date: $payment_date,
+        payment_date: CASE WHEN $payment_date IS NULL THEN NULL ELSE datetime($payment_date) END,
         payment_method: $payment_method,
         approved_by: $approved_by,
         metadata: $metadata,
@@ -460,10 +462,10 @@ export class OperationsOntologyService {
       currency: invoice.currency,
       tax_amount: invoice.tax_amount || null,
       total_amount: invoice.total_amount,
-      invoice_date: invoice.invoice_date,
-      due_date: invoice.due_date,
+      invoice_date: (invoice.invoice_date instanceof Date ? invoice.invoice_date.toISOString() : invoice.invoice_date) as any,
+      due_date: (invoice.due_date instanceof Date ? invoice.due_date.toISOString() : invoice.due_date) as any,
       status: invoice.status,
-      payment_date: invoice.payment_date || null,
+      payment_date: invoice.payment_date ? (invoice.payment_date instanceof Date ? invoice.payment_date.toISOString() : invoice.payment_date) : null,
       payment_method: invoice.payment_method || null,
       approved_by: invoice.approved_by || null,
       metadata: JSON.stringify(invoice.metadata || {}),

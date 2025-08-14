@@ -18,7 +18,10 @@
 
     <v-card-text>
       <v-row class="mb-4">
-        <v-col cols="12" md="4">
+        <v-col
+          cols="12"
+          md="4"
+        >
           <v-select
             v-model="jobFilters.status"
             :items="[
@@ -34,7 +37,10 @@
             hide-details
           />
         </v-col>
-        <v-col cols="12" md="4">
+        <v-col
+          cols="12"
+          md="4"
+        >
           <v-select
             v-model="jobFilters.type"
             :items="[
@@ -50,7 +56,10 @@
             hide-details
           />
         </v-col>
-        <v-col cols="12" md="4">
+        <v-col
+          cols="12"
+          md="4"
+        >
           <v-btn
             color="primary"
             variant="outlined"

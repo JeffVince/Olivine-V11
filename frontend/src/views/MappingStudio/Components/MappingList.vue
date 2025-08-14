@@ -11,7 +11,10 @@
         size="small"
         variant="tonal"
       >
-        <v-icon start size="small">
+        <v-icon
+          start
+          size="small"
+        >
           {{ getMappingIcon(item.type) }}
         </v-icon>
         {{ item.type }}
@@ -67,7 +70,10 @@
             </template>
             <v-list-item-title>Duplicate</v-list-item-title>
           </v-list-item>
-          <v-list-item @click="$emit('delete', item)" class="text-error">
+          <v-list-item
+            class="text-error"
+            @click="$emit('delete', item)"
+          >
             <template #prepend>
               <v-icon>mdi-delete</v-icon>
             </template>

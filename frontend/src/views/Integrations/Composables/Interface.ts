@@ -3,7 +3,7 @@ export interface Integration {
   id: string
   type: string
   name: string
-  description: string
+  description?: string
   connected: boolean
   lastSync?: string
   rootFolder?: string
@@ -54,16 +54,9 @@ export interface IntegrationBase {
   id: string
   type: string
   name: string
-  description: string
   active: boolean
   updatedAt: string
-  config?: {
-    rootFolder?: string
-    enableWebhooks?: boolean
-    notifications?: boolean
-    syncFrequency?: string
-    [key: string]: any
-  }
+  config?: any
 }
 
 // GraphQL Types

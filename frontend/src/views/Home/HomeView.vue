@@ -8,7 +8,7 @@
 import WelcomeCard from './Components/WelcomeCard.vue'
 import { useHomeState } from './Composables/state'
 
-const { state } = useHomeState()
+const {  } = useHomeState() // state is not used in this component
 </script>
 
 <style scoped>

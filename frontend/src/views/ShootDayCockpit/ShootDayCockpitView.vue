@@ -23,7 +23,7 @@ import ScenesTable from './Components/ScenesTable.vue'
 import ActionsCard from './Components/ActionsCard.vue'
 import { useShootDayCockpitState } from './Composables/state'
 
-const { state } = useShootDayCockpitState()
+const {  } = useShootDayCockpitState() // state is not used in this component
 </script>
 
 <style scoped>

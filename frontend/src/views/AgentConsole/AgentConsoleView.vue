@@ -189,7 +189,7 @@
           :loading="loading"
           @refresh="refetchJobs"
           @open-logs="openLogs"
-          @cancel-job="cancelJob"
+          @cancel-job="handleCancelJob"
         />
       </v-col>
     </v-row>
@@ -215,6 +215,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useNotificationStore } from '@/stores/notificationStore'
 import { useAgentJobs } from '@/composables/useAgentJobs'
 import { useAgentHealth } from '@/composables/useAgentHealth'
+import { useOrganizationStore } from '@/stores/organizationStore'
 import { useAgentManagement } from './Composables/useAgentManagement'
 import { useJobManagement } from './Composables/useJobManagement'
 import AgentCard from './Components/AgentCard.vue'
@@ -224,8 +225,21 @@ import CreateAgentDialog from './Components/CreateAgentDialog.vue'
 import { Agent, Log, Job } from './Composables/Interface'
 
 const notificationStore = useNotificationStore()
-const { jobs, logs, subscribeJobLogs, cancelJob } = useAgentJobs()
-const { status: healthStatus, agents: healthAgents, queues: healthQueues, refetch: refetchHealth } = useAgentHealth()
+const { jobs, logs: agentLogs, subscribeJobLogs, cancelJob } = useAgentJobs()
+const organizationStore = useOrganizationStore()
+const orgIdRef = computed(() => organizationStore.currentOrg?.id || '')
+const { status: healthStatus, agents: healthAgents, queues: healthQueues, refetch: refetchHealth } = useAgentHealth(orgIdRef)
+
+// Logs related computed properties
+const selectedJobId = ref<string | null>(null)
+const subscribed = ref<Set<string>>(new Set())
+const selectedJobLogs = computed<Log[]>(() => {
+  if (selectedJobId.value && agentLogs.value[selectedJobId.value]) {
+    return agentLogs.value[selectedJobId.value] as Log[]
+  }
+  return []
+})
+const selectedLogs = computed(() => selectedJobLogs.value)
 const {
   agents,
   showCreateDialog,
@@ -233,7 +247,6 @@ const {
   saving,
   search: agentSearch,
   statusFilter: agentStatusFilter,
-  typeFilter: agentTypeFilter,
   filteredAgents,
   createAgent,
   updateAgent,
@@ -247,7 +260,7 @@ const {
   getAgentIcon,
   getStatusColor,
   formatDateTime
-} = useAgentManagement(notificationStore.addNotification)
+} = useAgentManagement((notification) => notificationStore.add('info', notification.message))
 
 const {
   searchQuery: jobSearchQuery,
@@ -256,12 +269,12 @@ const {
   filteredJobs,
   loading: jobLoading,
   refetchJobs,
-  cancelJob,
+  cancelJob: jobCancelJob,
   openLogs,
   getJobStatusColor,
   formatDuration,
   formatDate
-} = useJobManagement(jobs, logs, subscribeJobLogs, cancelJob)
+} = useJobManagement(jobs, selectedJobLogs, subscribeJobLogs, (jobId) => cancelJob(organizationStore.currentOrg?.id || '', jobId))
 
 // Logs dialog state
 const showLogDialog = ref(false)
@@ -269,11 +282,18 @@ const toggling = ref<string | null>(null)
 const searchQuery = ref('')
 const statusFilter = ref('')
 
+// Wrapper function for cancelJob to match JobsTable expected signature
+function handleCancelJob(job: Job) {
+  if (organizationStore.currentOrg?.id) {
+    cancelJob(organizationStore.currentOrg.id, job.id)
+  }
+}
+
 // Computed
 const activeAgents = computed(() => agents.value.filter(a => a.status === 'active').length)
 const runningTasks = computed(() => agents.value.reduce((sum, a) => sum + a.tasksRunning, 0))
 const completedTasks = computed(() => agents.value.reduce((sum, a) => sum + a.tasksCompleted, 0))
-const failedTasks = computed(() => agents.value.reduce((sum, a) => sum + a.tasksFailed, 0))
+const failedTasks = computed(() => 0)
 
 // Options
 const statusOptions = [
@@ -293,14 +313,12 @@ const agentTypes = [
 ]
 
 // Wire backend
-const organizationStore = useOrganizationStore()
-const orgIdRef = computed(() => organizationStore.currentOrg?.id || '')
-const { status: healthStatus, queues } = useAgentHealth(orgIdRef)
+const { status: backendHealthStatus, queues: backendQueues } = useAgentHealth(orgIdRef)
 
 // Queue statistics
-const totalActive = computed(() => queues.value.reduce((s: number, q: any) => s + (q.active || 0), 0))
-const totalWaiting = computed(() => queues.value.reduce((s: number, q: any) => s + (q.waiting || 0), 0))
-const totalFailed = computed(() => queues.value.reduce((s: number, q: any) => s + (q.failed || 0), 0))
+const totalActive = computed(() => backendQueues.value.reduce((s: number, q: any) => s + (q.active || 0), 0))
+const totalWaiting = computed(() => backendQueues.value.reduce((s: number, q: any) => s + (q.waiting || 0), 0))
+const totalFailed = computed(() => backendQueues.value.reduce((s: number, q: any) => s + (q.failed || 0), 0))
 
 const jobStatusOptions = [
   { title: 'queued', value: 'queued' },
@@ -328,9 +346,7 @@ const jobHeaders = [
   { title: 'Actions', key: 'actions', sortable: false },
 ]
 
-const selectedJobId = ref<string | null>(null)
-const subscribed = ref<Set<string>>(new Set())
-const selectedLogs = computed(() => (selectedJobId.value ? (logs.value[selectedJobId.value] || []) as Log[] : []))
+
 
 const loading = ref(false)
 

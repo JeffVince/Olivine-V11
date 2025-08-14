@@ -38,7 +38,7 @@ import type { NotificationItem } from '@/stores/notificationStore'
 import type { PropType } from 'vue'
 
 // Props
-const props = defineProps({
+defineProps({
   notifications: {
     type: Array as PropType<NotificationItem[]>,
     required: true

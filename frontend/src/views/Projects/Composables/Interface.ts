@@ -8,6 +8,8 @@ export interface Project {
     autoApprove: boolean
   }
   lastActivity?: string
+  created_at?: string
+  updated_at?: string
   integrations?: Array<{
     type: 'dropbox' | 'googledrive' | 'frameio'
     connected: boolean

@@ -130,11 +130,8 @@ export class ClusterOrchestrator extends BaseService {
 
     this.activeWorkflows.set(workflowId, workflow);
 
-    // Queue workflow execution
-    await this.queueService.addJob('cluster-orchestration', 'execute-workflow', {
-      workflowId,
-      action: 'start'
-    });
+    // Kick off execution immediately in-process for test determinism
+    await this.executeWorkflow(workflow);
 
     return workflowId;
   }

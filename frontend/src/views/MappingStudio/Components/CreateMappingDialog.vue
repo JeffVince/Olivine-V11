@@ -1,8 +1,8 @@
 <template>
   <v-dialog 
     :model-value="modelValue" 
-    @update:model-value="$emit('update:modelValue', $event)"
     max-width="500px"
+    @update:model-value="$emit('update:modelValue', $event)"
   >
     <v-card>
       <v-card-title>
@@ -10,7 +10,10 @@
       </v-card-title>
       
       <v-card-text>
-        <v-form ref="form" v-model="valid">
+        <v-form
+          ref="form"
+          v-model="valid"
+        >
           <v-text-field
             v-model="localMapping.name"
             label="Mapping Name"

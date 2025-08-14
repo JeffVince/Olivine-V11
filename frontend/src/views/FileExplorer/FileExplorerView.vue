@@ -2,13 +2,22 @@
   <div>
     <!-- Header -->
     <v-row class="mb-4">
-      <v-col cols="12" md="8">
-        <h1 class="text-h4 font-weight-bold">File Explorer</h1>
+      <v-col
+        cols="12"
+        md="8"
+      >
+        <h1 class="text-h4 font-weight-bold">
+          File Explorer
+        </h1>
         <p class="text-subtitle-1 text-medium-emphasis">
           Browse and manage project files from connected storage
         </p>
       </v-col>
-      <v-col cols="12" md="4" class="text-right">
+      <v-col
+        cols="12"
+        md="4"
+        class="text-right"
+      >
         <v-btn
           color="primary"
           prepend-icon="mdi-sync"
@@ -17,24 +26,37 @@
         >
           Sync Now
         </v-btn>
-        <v-btn class="ml-2" prepend-icon="mdi-upload" @click="showUploadDialog = true">
+        <v-btn
+          class="ml-2"
+          prepend-icon="mdi-upload"
+          @click="showUploadDialog = true"
+        >
           Upload
         </v-btn>
       </v-col>
     </v-row>
 
     <!-- View Mode Tabs -->
-    <v-tabs v-model="viewMode" class="mb-4">
+    <v-tabs
+      v-model="viewMode"
+      class="mb-4"
+    >
       <v-tab value="source">
-        <v-icon start>mdi-folder-outline</v-icon>
+        <v-icon start>
+          mdi-folder-outline
+        </v-icon>
         Source View
       </v-tab>
       <v-tab value="canonical">
-        <v-icon start>mdi-folder-star</v-icon>
+        <v-icon start>
+          mdi-folder-star
+        </v-icon>
         Canonical View
       </v-tab>
       <v-tab value="entity">
-        <v-icon start>mdi-sitemap</v-icon>
+        <v-icon start>
+          mdi-sitemap
+        </v-icon>
         Entity View
       </v-tab>
     </v-tabs>
@@ -42,10 +64,15 @@
     <!-- Main Content -->
     <v-row>
       <!-- Left Panel - Folder Tree -->
-      <v-col cols="12" lg="3">
+      <v-col
+        cols="12"
+        lg="3"
+      >
         <v-card class="glass-card">
           <v-card-title class="d-flex align-center">
-            <v-icon class="mr-2">mdi-folder-multiple</v-icon>
+            <v-icon class="mr-2">
+              mdi-folder-multiple
+            </v-icon>
             Folders
             <v-spacer />
             <v-chip
@@ -53,7 +80,12 @@
               size="small"
               variant="tonal"
             >
-              <v-icon start size="small">{{ getProviderIcon(currentProvider) }}</v-icon>
+              <v-icon
+                start
+                size="small"
+              >
+                {{ getProviderIcon(currentProvider) }}
+              </v-icon>
               {{ currentProvider }}
             </v-chip>
           </v-card-title>
@@ -71,7 +103,10 @@
             />
 
             <!-- Folder Tree (pending backend wiring) -->
-            <div v-if="folderTree.length === 0" class="text-medium-emphasis pa-4">
+            <div
+              v-if="folderTree.length === 0"
+              class="text-medium-emphasis pa-4"
+            >
               Folder tree integration is coming soon.
             </div>
             <v-treeview
@@ -97,10 +132,15 @@
       </v-col>
 
       <!-- Center Panel - File List -->
-      <v-col cols="12" lg="6">
+      <v-col
+        cols="12"
+        lg="6"
+      >
         <v-card class="glass-card">
           <v-card-title class="d-flex align-center">
-            <v-icon class="mr-2">mdi-file-multiple</v-icon>
+            <v-icon class="mr-2">
+              mdi-file-multiple
+            </v-icon>
             Files
             <v-spacer />
             <v-btn-group density="compact">
@@ -130,7 +170,10 @@
                   hide-details
                   class="mb-2"
                 />
-                <v-chip-group v-model="selectedFilters" multiple>
+                <v-chip-group
+                  v-model="selectedFilters"
+                  multiple
+                >
                   <v-chip
                     v-for="filter in fileFilters"
                     :key="filter.key"
@@ -138,7 +181,12 @@
                     size="small"
                     variant="outlined"
                   >
-                    <v-icon start size="small">{{ filter.icon }}</v-icon>
+                    <v-icon
+                      start
+                      size="small"
+                    >
+                      {{ filter.icon }}
+                    </v-icon>
                     {{ filter.label }}
                   </v-chip>
                   <v-menu>
@@ -183,26 +231,47 @@
                 v-if="Object.keys(filesByCanonical.value).length === 0"
                 class="pa-6 text-center"
               >
-                <v-icon size="56" color="primary" class="mb-3">mdi-folder-star</v-icon>
-                <div class="text-h6 mb-2">No canonical groupings yet</div>
+                <v-icon
+                  size="56"
+                  color="primary"
+                  class="mb-3"
+                >
+                  mdi-folder-star
+                </v-icon>
+                <div class="text-h6 mb-2">
+                  No canonical groupings yet
+                </div>
                 <div class="text-body-2 text-medium-emphasis mb-4">
                   Configure taxonomy rules and classifications in Mapping Studio to enable
                   canonical slot grouping.
                 </div>
-                <v-btn color="primary" prepend-icon="mdi-map" @click="openMappingStudio">
+                <v-btn
+                  color="primary"
+                  prepend-icon="mdi-map"
+                  @click="openMappingStudio"
+                >
                   Open Mapping Studio
                 </v-btn>
               </div>
-              <div v-else class="pa-4">
+              <div
+                v-else
+                class="pa-4"
+              >
                 <v-expansion-panels variant="accordion">
                   <v-expansion-panel
                     v-for="group in filesByCanonicalList"
                     :key="group.key"
                   >
                     <v-expansion-panel-title>
-                      <v-icon start>mdi-folder-star</v-icon>
+                      <v-icon start>
+                        mdi-folder-star
+                      </v-icon>
                       <span class="ml-2">{{ group.key || 'Unassigned' }}</span>
-                      <v-chip class="ml-3" size="x-small" label>
+                      <v-chip
+                        class="ml-3"
+                        size="x-small"
+                        label
+                      >
                         {{ group.items.length }}
                       </v-chip>
                     </v-expansion-panel-title>
@@ -214,7 +283,9 @@
                           @click="selectedFile = f"
                         >
                           <template #prepend>
-                            <v-icon size="small">{{ mimeIcon(f.mimeType) }}</v-icon>
+                            <v-icon size="small">
+                              {{ mimeIcon(f.mimeType) }}
+                            </v-icon>
                           </template>
                           <v-list-item-title>{{ f.name }}</v-list-item-title>
                           <v-list-item-subtitle>{{ f.path }}</v-list-item-subtitle>
@@ -238,12 +309,20 @@
             <!-- Entity View -->
             <template v-else-if="viewMode === 'entity'">
               <div class="pa-4">
-                <v-tabs v-model="entityGroupBy" density="compact" class="mb-3">
+                <v-tabs
+                  v-model="entityGroupBy"
+                  density="compact"
+                  class="mb-3"
+                >
                   <v-tab value="project">
-                    <v-icon start>mdi-view-module</v-icon>By Project
+                    <v-icon start>
+                      mdi-view-module
+                    </v-icon>By Project
                   </v-tab>
                   <v-tab value="source">
-                    <v-icon start>mdi-cloud</v-icon>By Source
+                    <v-icon start>
+                      mdi-cloud
+                    </v-icon>By Source
                   </v-tab>
                 </v-tabs>
                 <v-expansion-panels>
@@ -252,9 +331,15 @@
                     :key="group.key"
                   >
                     <v-expansion-panel-title>
-                      <v-icon start>{{ entityGroupIcon }}</v-icon>
+                      <v-icon start>
+                        {{ entityGroupIcon }}
+                      </v-icon>
                       <span class="ml-2">{{ group.label }}</span>
-                      <v-chip class="ml-3" size="x-small" label>
+                      <v-chip
+                        class="ml-3"
+                        size="x-small"
+                        label
+                      >
                         {{ group.items.length }}
                       </v-chip>
                     </v-expansion-panel-title>
@@ -266,7 +351,9 @@
                           @click="selectedFile = f"
                         >
                           <template #prepend>
-                            <v-icon size="small">{{ mimeIcon(f.mimeType) }}</v-icon>
+                            <v-icon size="small">
+                              {{ mimeIcon(f.mimeType) }}
+                            </v-icon>
                           </template>
                           <v-list-item-title>{{ f.name }}</v-list-item-title>
                           <v-list-item-subtitle>{{ f.path }}</v-list-item-subtitle>
@@ -282,7 +369,10 @@
       </v-col>
 
       <!-- Right Panel - Inspector -->
-      <v-col cols="12" lg="3">
+      <v-col
+        cols="12"
+        lg="3"
+      >
         <!-- File Inspector Component -->
         <FileInspector
           :selected-file="selectedFile"
@@ -323,8 +413,8 @@ import { useFileExplorerMutations } from './Composables/graphql'
 import { useFileExplorerActions } from './Composables/actions'
 
 // Import external dependencies
-import { useRoute, useRouter } from 'vue-router'
-import { useNotificationStore } from '@/stores/notificationStore'
+// import { useRoute, useRouter } from 'vue-router' // Not currently used
+// import { useNotificationStore } from '@/stores/notificationStore' // Not currently used
 import { useFiles } from '@/composables/useFiles'
 import { ref, watch, computed } from 'vue'
 
@@ -342,11 +432,8 @@ const {
 const { 
   getProviderColor, 
   getProviderIcon, 
-  formatFileSize, 
-  formatDate, 
   classificationColor, 
   mimeIcon,
-  fileHeaders,
   fileFilters,
   classificationOptions,
   mimeOptions
@@ -354,8 +441,8 @@ const {
 const { 
   triggerReprocessMutate, 
   classifyMutate, 
-  triggerFullSync, 
-  CANONICAL_SLOTS_QUERY 
+  triggerFullSync
+  // CANONICAL_SLOTS_QUERY // Not currently used
 } = useFileExplorerMutations()
 const { 
   actionLoading, 
@@ -364,9 +451,9 @@ const {
   triggerReprocess, 
   submitClassification, 
   triggerSync, 
-  openMappingStudio, 
-  promptRename, 
-  promptMove 
+  openMappingStudio
+  // promptRename, // Not currently used
+  // promptMove // Not currently used
 } = useFileExplorerActions(
   state,
   items,
@@ -399,10 +486,10 @@ const openedFolders = computed({
   set: (val) => state.value.openedFolders = val
 })
 
-const selectedFiles = computed({
-  get: () => state.value.selectedFiles,
-  set: (val) => state.value.selectedFiles = val
-})
+// const selectedFiles = computed({
+//   get: () => state.value.selectedFiles,
+//   set: (val) => state.value.selectedFiles = val
+// }) // Not currently used
 
 import type { FileItem } from './Composables/Interface'
 

@@ -5,13 +5,13 @@
   >
     <v-card class="glass-card pa-4 mb-4">
       <v-text-field
-        v-model="profile.name"
+        v-model="localProfile.name"
         label="Name"
         :rules="nameRules"
         required
       />
       <v-text-field
-        v-model="profile.avatar"
+        v-model="localProfile.avatar"
         label="Avatar URL"
         :rules="urlRules"
       />
@@ -26,7 +26,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import type { Profile } from '../Composables/Interface'
 
 // Props
@@ -37,7 +37,10 @@ const props = defineProps<{
 }>()
 
 // Emits
-const emit = defineEmits(['save'])
+const emit = defineEmits(['update:profile', 'save'])
+
+// Create a local copy of the prop
+const localProfile = ref<Profile>({ ...props.profile })
 
 // Form reference
 const profileForm = ref()
@@ -46,8 +49,14 @@ const profileForm = ref()
 async function saveProfile() {
   const { valid } = await profileForm.value.validate()
   if (!valid) return
-  emit('save', props.profile)
+  emit('save', localProfile.value)
+  emit('update:profile', localProfile.value)
 }
+
+// Watch for prop changes and update local copy
+watch(() => props.profile, () => {
+  localProfile.value = { ...props.profile }
+})
 </script>
 
 <style scoped>

@@ -903,17 +903,24 @@ export class FileStewardAgent extends BaseAgent {
     const slots: string[] = [];
 
     try {
-      // Get applicable taxonomy rules for this file
-      const rules = await this.getApplicableTaxonomyRules(orgId, fileMetadata);
+      // Prefer real taxonomy classification if available; fall back to parser registry heuristic
+      try {
+        const classifications = await this.taxonomyService.classifyFile(fileId, orgId);
+        for (const c of classifications) {
+          if (!slots.includes(c.slot)) slots.push(c.slot);
+          await this.createSlotEdgeFact(fileId, c.slot, c.confidence ?? 0.7, c.rule_id || 'taxonomy', orgId);
+        }
+      } catch {}
 
-      for (const rule of rules) {
-        const confidence = this.calculateRuleConfidence(rule, fileMetadata, resourcePath);
-        
-        if (confidence >= (rule.min_confidence ?? (rule.minConfidence ?? 0))) {
-          slots.push(rule.slot);
-          
-          // Create EdgeFact for this classification
-          await this.createSlotEdgeFact(fileId, rule.slot, confidence, rule.id, orgId);
+      if (slots.length === 0) {
+        // Heuristic using parser registry when taxonomy rules not present
+        const rules = await this.getApplicableTaxonomyRules(orgId, fileMetadata);
+        for (const rule of rules) {
+          const confidence = this.calculateRuleConfidence(rule, fileMetadata, resourcePath);
+          if (confidence >= (rule.min_confidence ?? (rule.minConfidence ?? 0))) {
+            slots.push(rule.slot);
+            await this.createSlotEdgeFact(fileId, rule.slot, confidence, rule.id, orgId);
+          }
         }
       }
 
@@ -998,12 +1005,10 @@ export class FileStewardAgent extends BaseAgent {
       CREATE (ef:EdgeFact {
         id: $edgeFactId,
         type: 'FILLS_SLOT',
-        props: {
-          slot: $slot,
-          confidence: $confidence,
-          ruleId: $ruleId,
-          method: 'taxonomy_rule'
-        },
+        slot: $slot,
+        confidence: $confidence,
+        ruleId: $ruleId,
+        method: 'taxonomy_rule',
         orgId: $orgId,
         createdAt: datetime(),
         validFrom: datetime(),
@@ -1232,6 +1237,28 @@ export class FileStewardAgent extends BaseAgent {
       extra: fileEventData.extra || {}
     };
     
+    // Ensure File node exists for cluster processing
+    await this.neo4jService.run(
+      `
+      MERGE (f:File {id: $fileId})
+      ON CREATE SET f.orgId = $orgId,
+                    f.path = $resourcePath,
+                    f.name = $name,
+                    f.mimeType = $mimeType,
+                    f.current = true,
+                    f.deleted = false,
+                    f.createdAt = datetime(),
+                    f.updatedAt = datetime()
+      `,
+      {
+        fileId: fileEventData.id,
+        orgId,
+        resourcePath,
+        name: fileMetadata.name,
+        mimeType: fileMetadata.mimeType,
+      }
+    );
+
     // Process file with cluster approach
     const result = await this.processFileWithCluster(
       orgId,

@@ -1,6 +1,13 @@
 <template>
-  <v-navigation-drawer v-model="internalOpen" app class="glass glass-sidebar">
-    <v-list density="comfortable" nav>
+  <v-navigation-drawer
+    v-model="internalOpen"
+    app
+    class="glass glass-sidebar"
+  >
+    <v-list
+      density="comfortable"
+      nav
+    >
       <v-list-item
         v-for="link in links"
         :key="link.id"

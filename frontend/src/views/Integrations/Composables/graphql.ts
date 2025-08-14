@@ -1,8 +1,6 @@
 import { useQuery, useMutation } from '@vue/apollo-composable'
 import gql from 'graphql-tag'
 import type { GetSourcesResult, CreateSourceResult, TriggerSyncResult } from './Interface'
-import { integrations } from './state'
-import { updateFromResult } from './data'
 
 // GraphQL
 export const GET_SOURCES = gql`
@@ -11,13 +9,9 @@ export const GET_SOURCES = gql`
       id
       type
       name
-      description
       active
       updatedAt
-      config {
-        rootFolder
-        enableWebhooks
-      }
+      config
     }
   }
 `
@@ -28,13 +22,9 @@ export const CREATE_SOURCE = gql`
       id
       type
       name
-      description
       active
       updatedAt
-      config {
-        rootFolder
-        enableWebhooks
-      }
+      config
     }
   }
 `
@@ -48,16 +38,19 @@ export const TRIGGER_SYNC = gql`
   }
 `
 
-export const { result, refetch } = useQuery<GetSourcesResult>(
-  GET_SOURCES,
-  () => ({
-    organizationId: '12345'
-  }),
-  () => ({
-    enabled: true,
-    fetchPolicy: 'cache-and-network'
-  })
-)
+// Export functions that create the queries when called within component context
+export const useSourcesQuery = (organizationId: string) => {
+  return useQuery<GetSourcesResult>(
+    GET_SOURCES,
+    () => ({
+      organizationId
+    }),
+    () => ({
+      enabled: !!organizationId,
+      fetchPolicy: 'cache-and-network'
+    })
+  )
+}
 
 export const { mutate: createSource } = useMutation<CreateSourceResult>(CREATE_SOURCE)
 export const { mutate: triggerSyncMutation } = useMutation<TriggerSyncResult>(TRIGGER_SYNC)

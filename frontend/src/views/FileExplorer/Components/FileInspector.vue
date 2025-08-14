@@ -1,5 +1,8 @@
 <template>
-  <v-card v-if="selectedFile" class="glass-card">
+  <v-card
+    v-if="selectedFile"
+    class="glass-card"
+  >
     <v-card-title>
       <v-icon class="mr-2">
         mdi-information
@@ -77,7 +80,7 @@
         <v-btn
           color="secondary"
           prepend-icon="mdi-tag"
-          @click="showClassify = true"
+          @click="emit('showClassify', true)"
         >
           Classify
         </v-btn>

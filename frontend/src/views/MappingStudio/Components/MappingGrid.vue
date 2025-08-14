@@ -7,7 +7,7 @@
       md="6"
       lg="4"
     >
-       <v-card 
+      <v-card 
         class="mapping-card glass-card"
         :class="{ 'border-success': mapping.status === 'active' }"
       >
@@ -17,7 +17,10 @@
             size="36"
             class="mr-3"
           >
-            <v-icon color="white" size="18">
+            <v-icon
+              color="white"
+              size="18"
+            >
               {{ getMappingIcon(mapping.type) }}
             </v-icon>
           </v-avatar>
@@ -38,14 +41,32 @@
           </p>
           
           <div class="d-flex align-center text-caption mb-2">
-            <v-icon size="small" class="mr-2">mdi-format-list-bulleted</v-icon>
+            <v-icon
+              size="small"
+              class="mr-2"
+            >
+              mdi-format-list-bulleted
+            </v-icon>
             <span>{{ mapping.fieldCount }} fields</span>
-            <v-icon size="small" class="mx-2">mdi-arrow-right</v-icon>
+            <v-icon
+              size="small"
+              class="mx-2"
+            >
+              mdi-arrow-right
+            </v-icon>
             <span>{{ mapping.transformCount }} transforms</span>
           </div>
           
-          <div v-if="mapping.lastRun" class="d-flex align-center text-caption">
-            <v-icon size="small" class="mr-2">mdi-clock-outline</v-icon>
+          <div
+            v-if="mapping.lastRun"
+            class="d-flex align-center text-caption"
+          >
+            <v-icon
+              size="small"
+              class="mr-2"
+            >
+              mdi-clock-outline
+            </v-icon>
             <span>Last run: {{ formatDate(mapping.lastRun) }}</span>
           </div>
         </v-card-text>
@@ -56,7 +77,12 @@
             variant="text"
             @click="$emit('edit', mapping)"
           >
-            <v-icon size="small" class="mr-1">mdi-pencil</v-icon>
+            <v-icon
+              size="small"
+              class="mr-1"
+            >
+              mdi-pencil
+            </v-icon>
             Edit
           </v-btn>
           <v-btn 
@@ -64,7 +90,12 @@
             variant="text"
             @click="$emit('test', mapping)"
           >
-            <v-icon size="small" class="mr-1">mdi-test-tube</v-icon>
+            <v-icon
+              size="small"
+              class="mr-1"
+            >
+              mdi-test-tube
+            </v-icon>
             Test
           </v-btn>
           <v-spacer />
@@ -73,7 +104,12 @@
             variant="text"
             @click="$emit('toggle-status', mapping)"
           >
-            <v-icon size="small" class="mr-1">{{ mapping.status === 'active' ? 'mdi-pause' : 'mdi-play' }}</v-icon>
+            <v-icon
+              size="small"
+              class="mr-1"
+            >
+              {{ mapping.status === 'active' ? 'mdi-pause' : 'mdi-play' }}
+            </v-icon>
             {{ mapping.status === 'active' ? 'Pause' : 'Activate' }}
           </v-btn>
           <v-menu>
@@ -92,7 +128,10 @@
                 </template>
                 <v-list-item-title>Duplicate</v-list-item-title>
               </v-list-item>
-              <v-list-item @click="$emit('delete', mapping)" class="text-error">
+              <v-list-item
+                class="text-error"
+                @click="$emit('delete', mapping)"
+              >
                 <template #prepend>
                   <v-icon>mdi-delete</v-icon>
                 </template>

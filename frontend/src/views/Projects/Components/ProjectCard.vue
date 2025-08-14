@@ -28,22 +28,31 @@
       </v-chip>
       
       <v-chip
-        v-for="integration in project.integrations"
-        :key="integration.id"
+        v-for="(integration, index) in project.integrations"
+        :key="index"
         :color="getIntegrationColor(integration.type)"
         size="small"
         class="mr-2 mb-2"
       >
-        <v-icon left size="small">
+        <v-icon
+          left
+          size="small"
+        >
           {{ getIntegrationIcon(integration.type) }}
         </v-icon>
-        {{ integration.name }}
+        {{ integration.type }}
       </v-chip>
       
-      <div class="text-caption text-medium-emphasis mt-3">
+      <div
+        v-if="project.created_at"
+        class="text-caption text-medium-emphasis mt-3"
+      >
         Created: {{ formatDate(project.created_at) }}
       </div>
-      <div class="text-caption text-medium-emphasis">
+      <div
+        v-if="project.updated_at"
+        class="text-caption text-medium-emphasis"
+      >
         Updated: {{ formatDate(project.updated_at) }}
       </div>
     </v-card-text>

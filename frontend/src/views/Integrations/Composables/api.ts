@@ -162,7 +162,6 @@ export function proceedWithIntegration() {
       id: '',
       type: newIntegration.value.type,
       name: newIntegration.value.name,
-      description: '',
       connected: false
     } as Integration)
   }

@@ -30,7 +30,7 @@
 
 <script setup lang="ts">
 // Emits
-const emit = defineEmits(['create-mapping'])
+defineEmits(['create-mapping'])
 </script>
 
 <style scoped>
