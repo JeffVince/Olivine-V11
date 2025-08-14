@@ -183,6 +183,12 @@ export class GraphQLServer {
     const schemaPath = __dirname.includes('/dist/') 
       ? join(__dirname, 'schema')
       : join(process.cwd(), 'src', 'graphql', 'schema');
+<<<<<<< Updated upstream
+=======
+    
+    // Single-schema approach: do not load enhanced overlay
+    const enhancedTypeDefs = '';
+>>>>>>> Stashed changes
     
     let coreTypeDefs = readFileSync(
       join(schemaPath, 'core.graphql'),

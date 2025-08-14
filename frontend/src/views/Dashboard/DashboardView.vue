@@ -51,19 +51,12 @@
           <v-card class="stat-card">
             <v-card-title class="text-subtitle-1 font-weight-medium">Files</v-card-title>
             <v-card-text>
-              <div class="text-h4 mb-2">{{ formatNumber(stats?.fileStats?.totalFiles || 0) }}</div>
-              <div class="text-caption text-medium-emphasis">{{ formatBytes(stats?.fileStats?.totalSize || 0) }}</div>
-            </v-card-text>
-          </v-card>
-        </v-col>
-        
-        <v-col cols="12" md="4">
-          <v-card class="stat-card">
-            <v-card-title class="text-subtitle-1 font-weight-medium">Classifications</v-card-title>
-            <v-card-text>
-              <div class="text-h4 mb-2">{{ formatNumber(stats?.classificationStats?.totalClassified || 0) }}</div>
+              <div class="text-h4 mb-2">{{ formatNumber(stats?.fileStats?.total || 0) }}</div>
               <div class="text-caption text-medium-emphasis">
-                {{ stats?.classificationStats?.totalPending || 0 }} pending
+                <span v-if="stats?.fileStats?.byStatus">
+                  {{ stats.fileStats.byStatus.PROCESSED || 0 }} processed • 
+                  {{ stats.fileStats.byStatus.PENDING || 0 }} pending
+                </span>
               </div>
             </v-card-text>
           </v-card>
@@ -71,18 +64,37 @@
         
         <v-col cols="12" md="4">
           <v-card class="stat-card">
-            <v-card-title class="text-subtitle-1 font-weight-medium">System Health</v-card-title>
+            <v-card-title class="text-subtitle-1 font-weight-medium">File Types</v-card-title>
             <v-card-text>
-              <v-chip
-                :color="getHealthStatusColor(stats?.systemHealth?.status || '')"
-                size="small"
-                class="mb-2"
-              >
-                {{ stats?.systemHealth?.status || 'UNKNOWN' }}
-              </v-chip>
-              <div class="text-caption text-medium-emphasis">
-                Last checked: {{ formatDate(stats?.systemHealth?.lastChecked) }}
+              <div v-if="stats?.fileStats?.byMimeType" class="mb-2">
+                <div v-for="(count, type) in stats.fileStats.byMimeType" :key="type" class="d-flex align-center mb-1">
+                  <span class="text-caption text-truncate" style="width: 100px">{{ typeof type === 'string' ? type.split('/').pop() : type }}</span>
+                  <v-spacer></v-spacer>
+                  <span class="text-caption font-weight-medium">{{ count }}</span>
+                </div>
               </div>
+              <div v-else class="text-caption text-medium-emphasis">No file type data available</div>
+            </v-card-text>
+          </v-card>
+        </v-col>
+        
+        <v-col cols="12" md="4">
+          <v-card class="stat-card">
+            <v-card-title class="text-subtitle-1 font-weight-medium">Data Sources</v-card-title>
+            <v-card-text>
+              <div v-if="stats?.sources?.length" class="mb-2">
+                <div v-for="source in stats.sources" :key="source.id" class="d-flex align-center mb-1">
+                  <v-icon :icon="getSourceIcon(source.type)" size="small" class="mr-2"></v-icon>
+                  <span class="text-caption">{{ source.name }}</span>
+                  <v-spacer></v-spacer>
+                  <v-icon
+                    :color="source.active ? 'success' : 'error'"
+                    size="x-small"
+                    :icon="source.active ? 'mdi-check-circle' : 'mdi-close-circle'"
+                  ></v-icon>
+                </div>
+              </div>
+              <div v-else class="text-caption text-medium-emphasis">No data sources connected</div>
             </v-card-text>
           </v-card>
         </v-col>
@@ -161,31 +173,50 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useDashboard } from './Composables/useDashboard';
 import DashboardHeader from './Components/DashboardHeader.vue';
-import type { FileStats, ClassificationStats, ProvenanceStats, SystemHealthStatus, File, Commit } from './Composables/state';
+import type { DashboardStats, FileStats, Source } from './Composables/useDashboard';
 
-interface DashboardStats {
-  fileStats: FileStats | null;
-  classificationStats: ClassificationStats | null;
-  provenanceStats: ProvenanceStats | null;
-  systemHealth: SystemHealthStatus | null;
-  recentFiles: File[];
-  recentCommits: Commit[];
+// Define local types for better type safety
+interface LocalDashboardStats {
+  fileStats: {
+    total: number;
+    byStatus: Record<string, number>;
+    byMimeType: Record<string, number>;
+  } | null;
+  recentFiles: Array<{
+    id: string;
+    name: string;
+    path: string;
+    size: number | null;
+    mimeType: string | null;
+    createdAt: string;
+    updatedAt: string;
+    classificationStatus: string;
+  }>;
+  sources: Array<{
+    id: string;
+    name: string;
+    type: string;
+    active: boolean;
+    updatedAt: string;
+  }>;
 }
 
 const { 
-  stats, 
+  dashboardStats, 
   isLoading, 
   error, 
   refresh 
-}: {
-  stats: DashboardStats;
-  isLoading: boolean;
-  error: string | null;
-  refresh: () => Promise<void>;
 } = useDashboard();
+
+// Create a computed property to handle the reactive dashboard stats
+const stats = computed<LocalDashboardStats>(() => ({
+  fileStats: dashboardStats.value?.fileStats || null,
+  recentFiles: dashboardStats.value?.recentFiles || [],
+  sources: dashboardStats.value?.sources || []
+}));
 
 // Refresh data when component is mounted
 onMounted(() => {
@@ -221,6 +252,20 @@ const formatDate = (dateString?: string): string => {
     hour: '2-digit',
     minute: '2-digit'
   });
+};
+
+// Get icon for source type
+const getSourceIcon = (type: string): string => {
+  switch (type.toLowerCase()) {
+    case 'dropbox':
+      return 'mdi-dropbox';
+    case 'google-drive':
+      return 'mdi-google-drive';
+    case 'onedrive':
+      return 'mdi-microsoft-onedrive';
+    default:
+      return 'mdi-folder';
+  }
 };
 
 // Get color based on health status
