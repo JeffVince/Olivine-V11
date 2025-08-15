@@ -1,0 +1,12 @@
+{
+  "watch": ["src"],
+  "ext": "ts,json",
+  "signal": "SIGTERM",
+  "delay": "1000ms",
+  "ignore": [
+    "src/graphql/schema/*.graphql",
+    "**/*.test.ts",
+    "**/__tests__/**",
+    "dist/**"
+  ]
+}

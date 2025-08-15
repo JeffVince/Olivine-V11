@@ -36,10 +36,20 @@ type FileStats {
   byMimeType: JSON!
 }
 
+input FileFilter {
+  orgId: ID
+  sourceId: ID
+  classificationStatus: String
+  mimeType: String
+  path: String
+  name: String
+}
+
 type Query {
   getSources(orgId: ID!): [Source!]!
   getSource(sourceId: ID!, orgId: ID!): Source
   getFiles(orgId: ID!, sourceId: ID, limit: Int): [FileMeta!]!
+  files(filter: FileFilter, limit: Int, offset: Int): [FileMeta!]!
   getFile(fileId: ID!, orgId: ID!): FileMeta
   getFileStats(orgId: ID!): FileStats!
   getSourceStats(sourceId: ID!, orgId: ID!): JSON!

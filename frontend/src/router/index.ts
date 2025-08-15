@@ -7,6 +7,8 @@ const routes: Array<RouteRecordRaw> = [
   { path: '/register', name: 'Register', component: () => import('../views/Auth/RegisterView.vue') },
   { path: '/app', name: 'Home', component: () => import('../views/Dashboard/DashboardView.vue') },
   { path: '/projects', name: 'Projects', component: () => import('../views/Projects/ProjectsView.vue') },
+  // Redirect shorthand project path to default home sub-route
+  { path: '/projects/:id', redirect: (to) => `/projects/${to.params.id as string}/home` },
   { path: '/projects/:id/home', name: 'ProjectHome', component: () => import('../views/Dashboard/DashboardView.vue') },
   { path: '/projects/:id/files', name: 'FileExplorer', component: () => import('../views/FileExplorer/FileExplorerView.vue') },
   { path: '/projects/:id/mapping', name: 'MappingStudio', component: () => import('../views/MappingStudio/MappingStudioView.vue') },
@@ -33,3 +35,4 @@ router.beforeEach((to) => {
 })
 
 export default router
+

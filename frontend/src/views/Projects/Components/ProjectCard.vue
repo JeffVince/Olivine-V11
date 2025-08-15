@@ -11,12 +11,12 @@
       >
         mdi-folder-star
       </v-icon>
-      {{ project.name }}
+      {{ project.title }}
     </v-card-title>
     
     <v-card-text>
       <p class="text-subtitle-2 text-medium-emphasis mb-2">
-        {{ project.description }}
+        {{ project.metadata?.description }}
       </p>
       
       <v-chip
@@ -28,121 +28,77 @@
       </v-chip>
       
       <v-chip
-        v-for="(integration, index) in project.integrations"
-        :key="index"
+        v-if="project.metadata?.integrations"
+        v-for="integration in project.metadata.integrations"
+        :key="integration.type"
         :color="getIntegrationColor(integration.type)"
         size="small"
         class="mr-2 mb-2"
       >
-        <v-icon
-          left
-          size="small"
-        >
+        <v-icon left small>
           {{ getIntegrationIcon(integration.type) }}
         </v-icon>
         {{ integration.type }}
       </v-chip>
-      
-      <div
-        v-if="project.created_at"
-        class="text-caption text-medium-emphasis mt-3"
-      >
-        Created: {{ formatDate(project.created_at) }}
-      </div>
-      <div
-        v-if="project.updated_at"
-        class="text-caption text-medium-emphasis"
-      >
-        Updated: {{ formatDate(project.updated_at) }}
-      </div>
     </v-card-text>
     
-    <v-card-actions>
-      <v-btn 
-        color="primary" 
-        variant="text" 
-        size="small"
-        @click.stop="editProject"
-      >
-        Edit
-      </v-btn>
-      <v-btn 
-        color="warning" 
-        variant="text" 
-        size="small"
-        @click.stop="archiveProject"
-      >
-        Archive
-      </v-btn>
-      <v-btn 
-        color="error" 
-        variant="text" 
-        size="small"
-        @click.stop="deleteProject"
-      >
-        Delete
-      </v-btn>
+    <v-card-actions class="px-4 py-2">
+      <v-spacer />
+      <span class="text-caption text-medium-emphasis">
+        Last updated: {{ formatDate(project.updatedAt as any) }}
+      </span>
     </v-card-actions>
   </v-card>
 </template>
 
 <script setup lang="ts">
-import type { Project } from '../Composables/Interface'
+import type { Project } from '@/stores/projectStore'
 
 // Define props
-const props = defineProps<{
-  project: Project
-}>()
+const props = defineProps<{ project: Project }>()
 
 // Define emits
 const emit = defineEmits(['open', 'edit', 'archive', 'delete'])
 
 // Methods to emit events
-const openProject = () => {
-  emit('open', props.project.id)
-}
-
-const editProject = () => {
-  emit('edit', props.project)
-}
-
-const archiveProject = () => {
-  emit('archive', props.project)
-}
-
-const deleteProject = () => {
-  emit('delete', props.project)
-}
+const openProject = () => emit('open', props.project.id)
+const editProject = () => emit('edit', props.project.id)
+const archiveProject = () => emit('archive', props.project.id)
+const deleteProject = () => emit('delete', props.project.id)
 
 // These methods would typically be imported from composables
 const getStatusColor = (status: string) => {
-  switch (status) {
-    case 'active': return 'success'
-    case 'archived': return 'warning'
-    case 'deleted': return 'error'
-    default: return 'grey'
+  const colors: Record<string, string> = {
+    development: 'blue',
+    pre_production: 'orange',
+    production: 'red',
+    post_production: 'purple',
+    completed: 'green',
+    cancelled: 'grey'
   }
+  return colors[status] || 'grey'
 }
 
 const getIntegrationColor = (type: string) => {
-  switch (type) {
-    case 'dropbox': return '#0061FF'
-    case 'frameio': return '#FF6B00'
-    case 'shotgrid': return '#FF0000'
-    default: return 'primary'
+  const colors: Record<string, string> = {
+    dropbox: 'blue',
+    googledrive: 'green',
+    frameio: 'red'
   }
+  return colors[type] || 'grey'
 }
 
 const getIntegrationIcon = (type: string) => {
-  switch (type) {
-    case 'dropbox': return 'mdi-dropbox'
-    case 'frameio': return 'mdi-video'
-    case 'shotgrid': return 'mdi-database'
-    default: return 'mdi-folder'
+  const icons: Record<string, string> = {
+    dropbox: 'mdi-dropbox',
+    googledrive: 'mdi-google-drive',
+    frameio: 'mdi-video'
   }
+  return icons[type] || 'mdi-cloud'
 }
 
 const formatDate = (dateString: string) => {
+  if (!dateString) return 'Never'
   return new Date(dateString).toLocaleDateString()
 }
 </script>
@@ -154,5 +110,6 @@ const formatDate = (dateString: string) => {
 
 .project-card:hover {
   transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 </style>

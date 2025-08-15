@@ -49,6 +49,57 @@ export class FileResolvers {
   }
 
   /**
+   * Get files with filtering (for frontend compatibility)
+   */
+  async files(filter?: {
+    orgId?: string;
+    sourceId?: string;
+    classificationStatus?: string;
+    mimeType?: string;
+    path?: string;
+    name?: string;
+  }, limit: number = 100, offset: number = 0): Promise<FileMetadata[]> {
+    if (!filter?.orgId || filter.orgId.trim() === '') {
+      throw new Error('Organization ID is required in filter');
+    }
+    
+    let files: FileMetadata[] = [];
+    
+    if (filter.sourceId) {
+      files = await this.fileModel.getFilesBySource(filter.sourceId, filter.orgId, limit + offset);
+    } else {
+      // Get all sources for the organization and then get files from all sources
+      const sources = await this.sourceModel.getSourcesByOrganization(filter.orgId);
+      const allFiles: FileMetadata[] = [];
+      
+      for (const source of sources) {
+        const sourceFiles = await this.fileModel.getFilesBySource(source.id, filter.orgId, limit + offset);
+        allFiles.push(...sourceFiles);
+      }
+      
+      // Sort by updated date
+      files = allFiles.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
+    }
+    
+    // Apply filters
+    if (filter.classificationStatus) {
+      files = files.filter(f => f.classificationStatus === filter.classificationStatus);
+    }
+    if (filter.mimeType) {
+      files = files.filter(f => f.mimeType === filter.mimeType);
+    }
+    if (filter.path) {
+      files = files.filter(f => f.path.includes(filter.path!));
+    }
+    if (filter.name) {
+      files = files.filter(f => f.name.toLowerCase().includes(filter.name!.toLowerCase()));
+    }
+    
+    // Apply pagination
+    return files.slice(offset, offset + limit);
+  }
+
+  /**
    * Get a specific file by ID
    */
   async getFile(fileId: string, orgId: string): Promise<FileMetadata | null> {

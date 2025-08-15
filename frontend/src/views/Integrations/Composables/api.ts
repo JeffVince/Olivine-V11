@@ -2,8 +2,9 @@ import { showAddDialog, logs, integrations, newIntegration, loading, selectedInt
 import { API_BASE } from './constants'
 import { showError, showSuccess } from './utils'
 import type { Integration, AvailableIntegration } from './Interface'
-import { createSource } from './graphql'
+import { CREATE_SOURCE, DELETE_SOURCE } from './graphql'
 import { useOrganizationStore } from '@/stores/organizationStore'
+import { apolloClient } from '@/graphql/client'
 
 // Integration methods
 export async function connectIntegration(integration: Integration) {
@@ -22,12 +23,13 @@ export async function connectIntegration(integration: Integration) {
     }
 
     // For new integrations, create a Source first to obtain sourceId
-    const created = await createSource({
-      input: {
+    const created = await apolloClient.mutate({
+      mutation: CREATE_SOURCE,
+      variables: {
         orgId: orgId,
-        type: provider === 'googledrive' ? 'google_drive' : provider,
         name: integration.name || `${provider} Integration`,
-        config: {}
+        type: provider === 'googledrive' ? 'google_drive' : provider,
+        config: {},
       }
     })
 
@@ -46,15 +48,15 @@ export async function connectIntegration(integration: Integration) {
 export async function disconnectIntegration(integration: Integration) {
   try {
     loading.value = true
-    
-    const response = await fetch(`${API_BASE}/sources/${integration.id}`, {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-      }
+    // Use GraphQL mutation instead of REST
+    const organizationStore = useOrganizationStore()
+    const orgId = organizationStore.currentOrg?.id || '00000000-0000-0000-0000-000000000000'
+    const result = await apolloClient.mutate({
+      mutation: DELETE_SOURCE,
+      variables: { orgId, sourceId: integration.id },
     })
-    
-    if (!response.ok) throw new Error('Failed to disconnect integration')
+    const ok = (result as any)?.data?.deleteSource === true
+    if (!ok) throw new Error('Failed to disconnect integration')
     
     // Remove from local state
     integrations.value = integrations.value.filter(i => i.id !== integration.id)

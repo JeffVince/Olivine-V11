@@ -62,16 +62,7 @@ export interface IntegrationBase {
 // GraphQL Types
 export type Maybe<T> = T | null
 
-export interface CreateSourceInput {
-  orgId: string
-  type: string
-  name: string
-  config?: any
-}
-
-export interface TriggerSyncInput {
-  sourceId: string
-}
+// Input interfaces not needed on frontend since backend expects separate args
 
 // GraphQL Result Types
 export interface GetSourcesResult {
@@ -83,8 +74,5 @@ export interface CreateSourceResult {
 }
 
 export interface TriggerSyncResult {
-  triggerSync: {
-    success: boolean
-    message: string
-  }
+  triggerSourceResync: boolean
 }

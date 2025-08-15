@@ -13,7 +13,8 @@
     "type-check": "npm run type-check:backend && npm run type-check:frontend",
     "type-check:backend": "npm --prefix backend run type-check",
     "type-check:frontend": "npm --prefix frontend run type-check"
+  },
+  "dependencies": {
+    "node-fetch": "^3.3.2"
   }
 }
-
-

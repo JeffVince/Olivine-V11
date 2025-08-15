@@ -1,8 +1,9 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { useOrganizationStore } from '@/stores/organizationStore'
 import { apolloClient } from '@/graphql/client'
 import gql from 'graphql-tag'
+import { useOrganizationStore } from './organizationStore'
+import { useAuthStore } from './authStore'
 
 export interface ProjectSettings {
   templates: string[]
@@ -11,10 +12,14 @@ export interface ProjectSettings {
 
 export interface Project {
   id: string
-  name: string
-  status: 'active' | 'syncing' | 'error' | 'archived'
+  orgId: string
+  title: string
+  status: 'development' | 'pre_production' | 'production' | 'post_production' | 'completed' | 'cancelled'
+  settings?: Record<string, any>
+  metadata?: Record<string, any>
+  createdAt?: string
+  updatedAt?: string
   description?: string | null
-  settings?: ProjectSettings
   lastActivity?: string
   integrations?: Array<{
     type: 'dropbox' | 'googledrive' | 'frameio'
@@ -22,28 +27,29 @@ export interface Project {
   }>
 }
 
-
-
 const LIST_PROJECTS = gql`
   query Projects($orgId: ID!) {
-    projects(filter: { status: "ACTIVE" }, limit: 100, offset: 0) {
+    projects(orgId: $orgId) {
       id
-      name
+      title
       status
-      description
       settings
+      createdAt
+      updatedAt
     }
   }
 `
 
 const CREATE_PROJECT = gql`
-  mutation CreateProject($input: CreateProjectInput!) {
-    createProject(input: $input) {
+  mutation CreateProject($input: ProjectInput!, $userId: String!) {
+    createProject(input: $input, userId: $userId) {
       id
-      name
+      title
       status
-      description
       settings
+      metadata
+      createdAt
+      updatedAt
     }
   }
 `
@@ -74,10 +80,11 @@ export const useProjectStore = defineStore('project', () => {
   const isLoading = ref(false)
   
   const organizationStore = useOrganizationStore()
+  const authStore = useAuthStore()
   
   const currentProject = computed(() => 
     currentProjectId.value 
-      ? projects.value.find(p => p.id === currentProjectId.value) || null 
+      ? projects.value.find((p: Project) => p.id === currentProjectId.value) || null 
       : null
   )
   
@@ -92,6 +99,10 @@ export const useProjectStore = defineStore('project', () => {
   
   function setBranch(name: string) {
     currentBranch.value = name
+  }
+  
+  function setProjects(newProjects: Project[]) {
+    projects.value = newProjects
   }
   
   async function fetchProjects() {
@@ -121,13 +132,15 @@ export const useProjectStore = defineStore('project', () => {
     }
   }
   
-  async function createProject(input: { name: string; description?: string; settings?: Record<string, unknown> }) {
+  async function createProject(input: { title: string; type: string; status: string; start_date?: string; budget?: number; metadata?: Record<string, any> }) {
     try {
       const orgId = organizationStore.currentOrg?.id
       if (!orgId) throw new Error('Organization not selected')
+      const userId = authStore.user?.id
+      if (!userId) throw new Error('User not authenticated')
       const { data } = await apolloClient.mutate({
         mutation: CREATE_PROJECT,
-        variables: { input: { orgId, ...input } },
+        variables: { input: { orgId, ...input }, userId },
       })
       projects.value.push(data.createProject)
       error.value = null
@@ -146,7 +159,7 @@ export const useProjectStore = defineStore('project', () => {
         mutation: UPDATE_PROJECT,
         variables: { input: { id, orgId, name } },
       })
-      const idx = projects.value.findIndex(p => p.id === id)
+      const idx = projects.value.findIndex((p: Project) => p.id === id)
       if (idx !== -1) projects.value[idx] = data.updateProject
       error.value = null
       return data.updateProject as Project
@@ -171,7 +184,7 @@ export const useProjectStore = defineStore('project', () => {
           },
         },
       })
-      const idx = projects.value.findIndex(p => p.id === id)
+      const idx = projects.value.findIndex((p: Project) => p.id === id)
       if (idx !== -1) projects.value[idx] = data.updateProject
       error.value = null
       return data.updateProject as Project
@@ -189,7 +202,7 @@ export const useProjectStore = defineStore('project', () => {
         mutation: UPDATE_PROJECT,
         variables: { input: { id, orgId, status: 'ARCHIVED' } },
       })
-      const idx = projects.value.findIndex(p => p.id === id)
+      const idx = projects.value.findIndex((p: Project) => p.id === id)
       if (idx !== -1) projects.value[idx] = data.updateProject
       error.value = null
       return data.updateProject as Project
@@ -207,7 +220,7 @@ export const useProjectStore = defineStore('project', () => {
         mutation: DELETE_PROJECT,
         variables: { id, orgId },
       })
-      projects.value = projects.value.filter(p => p.id !== id)
+      projects.value = projects.value.filter((p: Project) => p.id !== id)
       if (currentProjectId.value === id) setProject(null)
       error.value = null
     } catch (e: unknown) {
@@ -245,6 +258,7 @@ export const useProjectStore = defineStore('project', () => {
     // Actions
     setProject,
     setBranch,
+    setProjects,
     fetchProjects,
     initializeProject,
     createProject,

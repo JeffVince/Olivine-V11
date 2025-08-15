@@ -85,24 +85,23 @@ new QueueMonitor(queueService).start()
 const dropboxWebhookHandler = new DropboxWebhookHandler(queueService);
 const gdriveWebhookHandler = new GoogleDriveWebhookHandler(queueService);
 
-const registry = new AgentRegistry()
-registry.register({ name: 'file-steward-agent', instance: new FileStewardAgent(queueService) })
-registry.register({ name: 'taxonomy-classification-agent', instance: new TaxonomyClassificationAgent(queueService) })
-registry.register({ name: 'provenance-tracking-agent', instance: new ProvenanceTrackingAgent(queueService) })
-registry.register({ name: 'sync-agent', instance: new SyncAgent(queueService) })
+// Store reference to GraphQL server instance
+let graphqlServerInstance: GraphQLServer;
 
 // Start server function
 async function startServer() {
   try {
+    if (starting) return;
+    starting = true;
     // Create GraphQL server with WebSocket support
-    const graphqlServer = new GraphQLServer();
+    graphqlServerInstance = new GraphQLServer();
     
     // Start the GraphQL server
     const port = parseInt(process.env.PORT || '8080', 10);
-    await graphqlServer.start(port);
+    await graphqlServerInstance.start(port);
     
     // Get the Express app from the GraphQL server
-    const app = graphqlServer.getApp();
+    const app = graphqlServerInstance.getApp();
     
     // Apply additional middleware
     app.use(cors({
@@ -132,17 +131,57 @@ async function startServer() {
   } catch (error) {
     console.error('Error starting server:', error);
     process.exit(1);
+  } finally {
+    starting = false;
   }
 }
 
-// Start the server
+// Prevent duplicate starts when nodemon restarts rapidly
+let starting = false;
 startServer();
 
-// Graceful shutdown
-process.on('SIGINT', async () => {
-  console.log('Shutting down gracefully...');
-  await registry.stopAll();
-  await driver.close();
-  await queueService.close();
-  process.exit(0);
-});
+// Graceful shutdown function
+async function gracefulShutdown(signal: string) {
+  console.log(`${signal} received. Shutting down gracefully...`);
+  
+  try {
+    if (starting) {
+      console.log('Startup in progress. Waiting briefly before shutdown...');
+      await new Promise((r) => setTimeout(r, 250));
+    }
+    // Stop all agents
+    await registry.stopAll();
+    console.log('All agents stopped');
+    
+    // Stop GraphQL server if it exists
+    if (graphqlServerInstance) {
+      await graphqlServerInstance.stop();
+      console.log('GraphQL server stopped');
+    }
+    
+    // Close database connections
+    await driver.close();
+    console.log('Neo4j connection closed');
+    
+    // Close queue service
+    await queueService.close();
+    console.log('Queue service closed');
+    
+    console.log('Graceful shutdown completed');
+    process.exit(0);
+  } catch (error) {
+    console.error('Error during graceful shutdown:', error);
+    process.exit(1);
+  }
+}
+
+// Handle different shutdown signals
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+process.on('SIGUSR2', () => gracefulShutdown('SIGUSR2'));
+
+const registry = new AgentRegistry()
+registry.register({ name: 'file-steward-agent', instance: new FileStewardAgent(queueService) })
+registry.register({ name: 'taxonomy-classification-agent', instance: new TaxonomyClassificationAgent(queueService) })
+registry.register({ name: 'provenance-tracking-agent', instance: new ProvenanceTrackingAgent(queueService) })
+registry.register({ name: 'sync-agent', instance: new SyncAgent(queueService) })

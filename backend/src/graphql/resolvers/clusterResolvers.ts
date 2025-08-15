@@ -46,7 +46,7 @@ export const clusterResolvers = {
         FROM extraction_job ej
         LEFT JOIN extracted_entity_temp eet ON ej.id = eet.job_id
         LEFT JOIN extracted_link_temp elt ON ej.id = elt.job_id
-        WHERE ej.orgId = $1 AND ej.orgId = $2
+        WHERE ej.file_id = $1 AND ej.org_id = $2
         GROUP BY ej.id
         ORDER BY ej.created_at DESC
       `, [record.get('fileId'), orgId]);
@@ -150,7 +150,7 @@ export const clusterResolvers = {
         SELECT ej.*, f.name as file_name
         FROM extraction_job ej
         JOIN files f ON ej.file_id = f.id
-        WHERE ej.id = $1 AND ej.orgId = $2
+        WHERE ej.id = $1 AND ej.org_id = $2
       `, [jobId, orgId]);
 
       if (jobResult.rows.length === 0) {
@@ -232,7 +232,7 @@ export const clusterResolvers = {
       },
       context: ClusterResolverContext
     ) {
-      let whereClause = 'WHERE ej.orgId = $1';
+      let whereClause = 'WHERE ej.org_id = $1';
       const params: any[] = [orgId];
       let paramIndex = 2;
 
@@ -296,7 +296,7 @@ export const clusterResolvers = {
     ) {
       const result = await context.postgresService.query(`
         SELECT * FROM parser_registry 
-        WHERE orgId = $1 
+        WHERE org_id = $1 
         ORDER BY slot, parser_name, parser_version DESC
       `, [orgId]);
 
@@ -348,12 +348,12 @@ export const clusterResolvers = {
       if (parserName) {
         parsers = await context.postgresService.query(`
           SELECT * FROM parser_registry 
-          WHERE orgId = $1 AND parser_name = $2 AND enabled = true
+          WHERE org_id = $1 AND parser_name = $2 AND enabled = true
         `, [orgId, parserName]);
       } else {
         parsers = await context.postgresService.query(`
           SELECT * FROM parser_registry 
-          WHERE orgId = $1 
+          WHERE org_id = $1 
           AND (mime_type = $2 OR mime_type = '*/*')
           AND ($3::text IS NULL OR slot = $3)
           AND enabled = true
@@ -373,7 +373,7 @@ export const clusterResolvers = {
         // Create extraction job
         await context.postgresService.query(`
           INSERT INTO extraction_job (
-            id, orgId, file_id, parser_name, parser_version, 
+            id, org_id, file_id, parser_name, parser_version, 
             method, dedupe_key, status, created_at
           )
           VALUES ($1, $2, $3, $4, $5, $6, $7, 'queued', NOW())
@@ -419,7 +419,7 @@ export const clusterResolvers = {
       // Verify job exists and is ready for promotion
       const jobResult = await context.postgresService.query(`
         SELECT * FROM extraction_job 
-        WHERE id = $1 AND orgId = $2 AND status = 'completed'
+        WHERE id = $1 AND org_id = $2 AND status = 'completed'
       `, [jobId, orgId]);
 
       if (jobResult.rows.length === 0) {
@@ -455,10 +455,10 @@ export const clusterResolvers = {
     ) {
       // Verify audit record exists
       const auditResult = await context.postgresService.query(`
-        SELECT pa.*, ej.orgId 
+        SELECT pa.*, ej.org_id 
         FROM promotion_audit pa
         JOIN extraction_job ej ON pa.job_id = ej.id
-        WHERE pa.id = $1 AND ej.orgId = $2 AND pa.action = 'promote'
+        WHERE pa.id = $1 AND ej.org_id = $2 AND pa.action = 'promote'
       `, [auditId, orgId]);
 
       if (auditResult.rows.length === 0) {
@@ -530,7 +530,7 @@ export const clusterResolvers = {
       const result = await context.postgresService.query(`
         UPDATE parser_registry 
         SET ${updateFields.join(', ')}
-        WHERE id = $1 AND orgId = $2
+        WHERE id = $1 AND org_id = $2
         RETURNING *
       `, values);
 

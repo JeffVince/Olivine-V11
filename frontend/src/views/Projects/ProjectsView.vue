@@ -50,7 +50,7 @@
             >
               mdi-folder-multiple
             </v-icon>
-            {{ project.name }}
+            {{ project.title }}
           </v-card-title>
           
           <v-card-text>
@@ -177,8 +177,7 @@
     <!-- Create Project Dialog -->
     <CreateProjectDialog
       v-model="showCreateDialog"
-      :project="newProject"
-      @save="createProject"
+      @project-created="onProjectCreated"
     />
 
     <!-- Delete Confirmation Dialog -->
@@ -203,9 +202,10 @@
             Cancel
           </v-btn>
           <v-btn
-            color="red-darken-1"
+            color="error"
             variant="text"
             @click="confirmDelete"
+            :loading="projectStore.isLoading"
           >
             Delete
           </v-btn>
@@ -216,38 +216,112 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { onMounted, computed, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { useProjectStore } from '@/stores/projectStore'
+import { format } from 'date-fns'
 
-// Import composables
-// Some variables from composables are imported but not used
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import {
-  projects,
-  showCreateDialog,
-  showDeleteDialog,
-  openProject,
-  editProject,
-  archiveProject,
-  deleteProject,
-  confirmDelete,
-  newProject,
-  createProject,
-  getStatusColor,
-  formatDate,
-  getIntegrationIcon
-} from '@/views/Projects/Composables'
+interface Project {
+  id: string
+  title: string
+  status: string
+  lastActivity?: string
+  integrations: Array<{
+    type: string
+    connected: boolean
+  }>
+}
+
+// Dialog visibility states
+const showCreateDialog = ref(false)
+const showDeleteDialogRef = ref(false)
 
 // Import components
 import CreateProjectDialog from '@/views/Projects/Components/CreateProjectDialog.vue'
 
+const router = useRouter()
 const projectStore = useProjectStore()
-// const notificationStore = useNotificationStore() // Commented out as it's not currently used
+const projectToDelete = ref<Project | null>(null)
+
+// Access projects from the store
+const projects = computed(() => projectStore.projects)
 
 // Load projects on mount
 onMounted(() => {
   projectStore.fetchProjects()
 })
+
+// Handle project created event
+function onProjectCreated() {
+  // Project was created successfully, refresh the project list
+  projectStore.fetchProjects()
+}
+
+// Format date for display
+function formatDate(dateString: string) {
+  if (!dateString) return 'N/A'
+  return format(new Date(dateString), 'MMM d, yyyy')
+}
+
+// Get color based on project status
+function getStatusColor(status: string) {
+  const statusColors: Record<string, string> = {
+    active: 'success',
+    draft: 'warning',
+    archived: 'grey',
+    completed: 'info'
+  }
+  return statusColors[status.toLowerCase()] || 'secondary'
+}
+
+// Get icon for integration type
+function getIntegrationIcon(type: string) {
+  const icons: Record<string, string> = {
+    dropbox: 'mdi-dropbox',
+    google: 'mdi-google-drive',
+    onedrive: 'mdi-microsoft-onedrive',
+    s3: 'mdi-amazon-drive',
+    local: 'mdi-folder'
+  }
+  return icons[type.toLowerCase()] || 'mdi-link'
+}
+
+// Open project details
+function openProject(projectId: string) {
+  router.push({ name: 'ProjectHome', params: { id: projectId } })
+}
+
+// Edit project
+function editProject(project: Project) {
+  // Implement edit functionality
+  console.log('Edit project:', project)
+}
+
+// Archive project
+function archiveProject(project: Project) {
+  // Implement archive functionality
+  console.log('Archive project:', project)
+}
+
+// Delete project
+function deleteProject(project: Project) {
+  projectToDelete.value = project
+  showDeleteDialogRef.value = true
+}
+
+// Confirm delete
+async function confirmDelete() {
+  if (projectToDelete.value) {
+    try {
+      await projectStore.deleteProject(projectToDelete.value.id)
+      showDeleteDialogRef.value = false
+      projectToDelete.value = null
+      projectStore.fetchProjects() // Refresh the list
+    } catch (error) {
+      console.error('Error deleting project:', error)
+    }
+  }
+}
 </script>
 
 <style scoped>

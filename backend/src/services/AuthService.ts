@@ -1,6 +1,8 @@
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
+import { v4 as uuidv4 } from 'uuid';
 import { PostgresService } from './PostgresService';
+import { TenantService } from './TenantService';
 import { config } from 'dotenv';
 
 // Load environment variables
@@ -10,11 +12,13 @@ export class AuthService {
   // TODO: Implementation Plan - 05-Security-Implementation.md - Authentication service implementation
   // TODO: Implementation Checklist - 07-Testing-QA-Checklist.md - Backend authentication service tests
   private postgresService: PostgresService;
+  private tenantService: TenantService;
   private jwtSecret: string;
   private saltRounds: number;
 
   constructor() {
     this.postgresService = new PostgresService();
+    this.tenantService = new TenantService();
     this.jwtSecret = process.env.JWT_SECRET || 'default_secret';
     this.saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS || '10');
   }
@@ -101,7 +105,7 @@ export class AuthService {
     try {
       // Find user by email
       const result = await this.postgresService.executeQuery(
-        'SELECT id, orgId, password_hash, role, name, avatar_url, notification_prefs FROM users WHERE email = $1',
+        'SELECT id, org_id, password_hash, role, first_name, last_name FROM users WHERE email = $1',
         [email]
       );
 
@@ -119,7 +123,7 @@ export class AuthService {
       }
 
       // Generate token
-      const token = this.generateToken(user.id, user.orgId, user.role);
+      const token = this.generateToken(user.id, user.org_id, user.role);
 
       // Update last login
       await this.postgresService.executeQuery(
@@ -130,7 +134,7 @@ export class AuthService {
       return {
         token,
         userId: user.id,
-        orgId: user.orgId,
+        orgId: user.org_id,
         role: user.role
       };
     } catch (error) {
@@ -144,19 +148,25 @@ export class AuthService {
    */
   async register(orgName: string, email: string, password: string): Promise<{ token: string; userId: string; orgId: string; role: string }> {
     try {
-      const slug = orgName.toLowerCase().replace(/\s+/g, '-');
-      const orgResult = await this.postgresService.executeQuery(
-        'INSERT INTO organizations (name, slug) VALUES ($1, $2) RETURNING id',
-        [orgName, slug]
+      // Create organization in Neo4j first
+      const neo4jOrg = await this.tenantService.createOrganization({
+        name: orgName,
+        status: 'active'
+      });
+      const orgId = neo4jOrg.id;
+
+      // Create organization in PostgreSQL using the same ID
+      await this.postgresService.executeQuery(
+        'INSERT INTO organizations (id, name, slug) VALUES ($1, $2, $3)',
+        [orgId, orgName, orgName.toLowerCase().replace(/\s+/g, '-')]
       );
-      const orgId = orgResult.rows[0].id as string;
 
       const passwordHash = await this.hashPassword(password);
+      const userId = uuidv4();
       const userResult = await this.postgresService.executeQuery(
-        'INSERT INTO users (email, password_hash, orgId, role) VALUES ($1, $2, $3, $4) RETURNING id, role',
-        [email, passwordHash, orgId, 'admin']
+        'INSERT INTO users (id, email, password_hash, org_id, role) VALUES ($1, $2, $3, $4, $5) RETURNING id, role',
+        [userId, email, passwordHash, orgId, 'admin']
       );
-      const userId = userResult.rows[0].id as string;
       const role = userResult.rows[0].role as string;
 
       const token = this.generateToken(userId, orgId, role);
@@ -194,7 +204,7 @@ export class AuthService {
   async getUserById(userId: string): Promise<{ id: string; orgId: string; email: string; role: string; name: string; avatar: string; notificationPrefs: Record<string, unknown>; createdAt: Date; lastLogin: Date } | null> {
     try {
       const result = await this.postgresService.executeQuery(
-        'SELECT id, orgId, email, role, name, avatar_url, notification_prefs, created_at, last_login FROM users WHERE id = $1',
+        'SELECT id, org_id, email, role, first_name, last_name, created_at, last_login FROM users WHERE id = $1',
         [userId]
       );
 
@@ -205,17 +215,17 @@ export class AuthService {
       const user = result.rows[0];
       return {
         id: user.id,
-        orgId: user.orgId,
+        orgId: user.org_id,
         email: user.email,
         role: user.role,
-        name: user.name,
-        avatar: user.avatar_url,
-        notificationPrefs: user.notification_prefs,
+        name: `${user.first_name || ''} ${user.last_name || ''}`.trim(),
+        avatar: '',
+        notificationPrefs: {},
         createdAt: user.created_at,
         lastLogin: user.last_login
       };
     } catch (error) {
-      console.error('Error fetching user by ID:', error);
+      console.error('Error getting user by ID:', error);
       return null;
     }
   }

@@ -52,7 +52,7 @@ export class SourceModel {
    */
   async createSource(sourceData: Omit<SourceMetadata, 'id' | 'createdAt' | 'updatedAt'>): Promise<SourceMetadata> {
     const query = `
-      INSERT INTO sources (orgId, name, type, config, active, created_at, updated_at)
+      INSERT INTO sources (org_id, name, type, config, active, created_at, updated_at)
       VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
       RETURNING *
     `;
@@ -75,7 +75,7 @@ export class SourceModel {
   async getSource(sourceId: string, orgId: string): Promise<SourceMetadata | null> {
     const query = `
       SELECT * FROM sources 
-      WHERE id = $1 AND orgId = $2
+      WHERE id = $1 AND org_id = $2
     `;
     
     const result = await this.postgresService.executeQuery(query, [sourceId, orgId]);
@@ -88,7 +88,7 @@ export class SourceModel {
   async getSourcesByOrganization(orgId: string): Promise<SourceMetadata[]> {
     const query = `
       SELECT * FROM sources 
-      WHERE orgId = $1
+      WHERE org_id = $1
       ORDER BY created_at DESC
     `;
     
@@ -103,7 +103,7 @@ export class SourceModel {
     const query = `
       UPDATE sources 
       SET config = $3, updated_at = NOW()
-      WHERE id = $1 AND orgId = $2
+      WHERE id = $1 AND org_id = $2
     `;
     
     const result = await this.postgresService.executeQuery(query, [
@@ -122,7 +122,7 @@ export class SourceModel {
     const query = `
       UPDATE sources 
       SET active = $3, updated_at = NOW()
-      WHERE id = $1 AND orgId = $2
+      WHERE id = $1 AND org_id = $2
     `;
     
     const result = await this.postgresService.executeQuery(query, [sourceId, orgId, active]);
@@ -135,7 +135,7 @@ export class SourceModel {
   async deleteSource(sourceId: string, orgId: string): Promise<boolean> {
     const query = `
       DELETE FROM sources 
-      WHERE id = $1 AND orgId = $2
+      WHERE id = $1 AND org_id = $2
     `;
     
     const result = await this.postgresService.executeQuery(query, [sourceId, orgId]);
@@ -195,7 +195,7 @@ export class SourceModel {
   private mapRowToSource(row: any): SourceMetadata {
     return {
       id: row.id,
-      orgId: row.orgId,
+      orgId: row.org_id,
       name: row.name,
       type: row.type,
       config: row.config,

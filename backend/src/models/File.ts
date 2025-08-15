@@ -52,13 +52,13 @@ export class FileModel {
   async upsertFile(fileData: Partial<FileMetadata>): Promise<FileMetadata> {
     const query = `
       INSERT INTO files (
-        id, orgId, source_id, path, name, extension, mime_type, size,
+        id, org_id, source_id, path, name, extension, mime_type, size,
         created_at, updated_at, modified_at, version_id, metadata, classification_status
       ) VALUES (
         COALESCE($1, gen_random_uuid()), $2, $3, $4, $5, $6, $7, $8,
         COALESCE($9, NOW()), NOW(), $10, $11, $12, COALESCE($13, 'pending')
       )
-      ON CONFLICT (orgId, source_id, path)
+      ON CONFLICT (org_id, source_id, path)
       DO UPDATE SET
         name = EXCLUDED.name,
         extension = EXCLUDED.extension,
@@ -69,7 +69,22 @@ export class FileModel {
         version_id = EXCLUDED.version_id,
         metadata = EXCLUDED.metadata,
         classification_status = COALESCE(EXCLUDED.classification_status, files.classification_status)
-      RETURNING *
+      RETURNING 
+        id,
+        org_id AS "orgId",
+        source_id,
+        path,
+        name,
+        extension,
+        mime_type,
+        size,
+        created_at,
+        updated_at,
+        modified_at,
+        version_id,
+        metadata,
+        classification_status,
+        extracted_text
     `;
 
     const values = [
@@ -90,7 +105,7 @@ export class FileModel {
 
     const result = await this.postgresService.executeQuery(query, values);
     return this.mapRowToFile(result.rows[0]);
-  }
+  }  
 
   /**
    * Get a file by ID and organization
@@ -98,7 +113,7 @@ export class FileModel {
   async getFile(fileId: string, orgId: string): Promise<FileMetadata | null> {
     const query = `
       SELECT * FROM files 
-      WHERE id = $1 AND orgId = $2 AND deleted_at IS NULL
+      WHERE id = $1 AND (org_id = $2 OR "orgId" = $2) AND deleted_at IS NULL
     `;
     
     const result = await this.postgresService.executeQuery(query, [fileId, orgId]);
@@ -111,7 +126,7 @@ export class FileModel {
   async getFilesBySource(sourceId: string, orgId: string, limit = 100): Promise<FileMetadata[]> {
     const query = `
       SELECT * FROM files 
-      WHERE source_id = $1 AND orgId = $2 AND deleted_at IS NULL
+      WHERE source_id = $1 AND (org_id = $2 OR "orgId" = $2) AND deleted_at IS NULL
       ORDER BY updated_at DESC
       LIMIT $3
     `;
@@ -127,7 +142,7 @@ export class FileModel {
     const query = `
       UPDATE files 
       SET deleted_at = NOW(), updated_at = NOW()
-      WHERE id = $1 AND orgId = $2
+      WHERE id = $1 AND (org_id = $2 OR "orgId" = $2)
     `;
     
     const result = await this.postgresService.executeQuery(query, [fileId, orgId]);
@@ -149,7 +164,7 @@ export class FileModel {
         classification_status = $3,
         metadata = COALESCE(metadata, '{}'::jsonb) || $4::jsonb,
         updated_at = NOW()
-      WHERE id = $1 AND orgId = $2
+      WHERE id = $1 AND (org_id = $2 OR "orgId" = $2)
     `;
     
     const classificationData = {
@@ -182,7 +197,7 @@ export class FileModel {
       SET 
         extracted_text = $3,
         updated_at = NOW()
-      WHERE id = $1 AND orgId = $2
+      WHERE id = $1 AND (org_id = $2 OR "orgId" = $2)
     `;
     
     const result = await this.postgresService.executeQuery(query, [fileId, orgId, extractedText]);
@@ -251,7 +266,7 @@ export class FileModel {
   private mapRowToFile(row: any): FileMetadata {
     return {
       id: row.id,
-      orgId: row.orgId,
+      orgId: row.orgId ?? row.org_id,
       sourceId: row.source_id,
       path: row.path,
       name: row.name,

@@ -1,4 +1,4 @@
-import { Pool, PoolConfig, QueryResult } from 'pg';
+import { Pool, PoolConfig, QueryResult, QueryResultRow } from 'pg';
 import { config } from 'dotenv';
 
 // Load environment variables
@@ -59,7 +59,7 @@ export class PostgresService {
    * @param params Query parameters
    * @returns Query result
    */
-  async query(query: string, params: unknown[] = []): Promise<QueryResult> {
+  async query<T extends QueryResultRow = any>(query: string, params: unknown[] = []): Promise<QueryResult<T>> {
     return this.executeQuery(query, params);
   }
 

@@ -56,6 +56,9 @@ export function buildCoreResolvers() {
       getFiles: async (_: any, args: { orgId: string, sourceId?: string, limit?: number }) => {
         return fileLogic.getFiles(args.orgId, args.sourceId, args.limit)
       },
+      files: async (_: any, args: { filter?: any, limit?: number, offset?: number }) => {
+        return fileLogic.files(args.filter, args.limit, args.offset)
+      },
       getFile: async (_: any, args: { fileId: string, orgId: string }) => {
         return fileLogic.getFile(args.fileId, args.orgId)
       },

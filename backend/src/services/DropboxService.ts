@@ -687,16 +687,16 @@ export class DropboxService extends EventEmitter implements StorageProvider {
   async getStoredTokens(orgId: string, sourceId: string): Promise<DropboxTokenData | null> {
     try {
       const query = `
-        SELECT metadata->>'dropbox_access_token' as access_token,
-               metadata->>'dropbox_refresh_token' as refresh_token,
-               metadata->>'dropbox_expires_at' as expires_at,
-               metadata->>'dropbox_account_id' as account_id,
-               metadata->>'dropbox_team_member_id' as team_member_id,
-               metadata->>'dropbox_is_team_account' as is_team_account,
-               metadata->>'dropbox_home_namespace_id' as home_namespace_id,
-               metadata->>'dropbox_root_namespace_id' as root_namespace_id
+        SELECT config->>'dropbox_access_token' as access_token,
+               config->>'dropbox_refresh_token' as refresh_token,
+               config->>'dropbox_expires_at' as expires_at,
+               config->>'dropbox_account_id' as account_id,
+               config->>'dropbox_team_member_id' as team_member_id,
+               config->>'dropbox_is_team_account' as is_team_account,
+               config->>'dropbox_home_namespace_id' as home_namespace_id,
+               config->>'dropbox_root_namespace_id' as root_namespace_id
         FROM sources 
-        WHERE orgId = $1 AND id = $2 AND type = 'dropbox'
+        WHERE org_id = $1 AND id = $2 AND type = 'dropbox'
       `;
       
       const result = await this.getPostgresService().executeQuery(query, [orgId, sourceId]);
@@ -730,18 +730,18 @@ export class DropboxService extends EventEmitter implements StorageProvider {
     try {
       const query = `
         UPDATE sources 
-        SET metadata = metadata || $1::jsonb,
+        SET config = COALESCE(config, '{}'::jsonb) || $1::jsonb,
             updated_at = NOW()
-        WHERE orgId = $2 AND id = $3
+        WHERE org_id = $2 AND id = $3
       `;
       
       const metadata = {
         dropbox_access_token: tokenData.access_token,
         dropbox_refresh_token: tokenData.refresh_token,
-        dropbox_expires_at: tokenData.expires_at.toString(),
+        dropbox_expires_at: tokenData.expires_at?.toString?.() || String(tokenData.expires_at),
         dropbox_account_id: tokenData.account_id,
         dropbox_team_member_id: tokenData.team_member_id,
-        dropbox_is_team_account: tokenData.is_team_account?.toString() || 'false',
+        dropbox_is_team_account: tokenData.is_team_account ? 'true' : 'false',
         dropbox_home_namespace_id: tokenData.home_namespace_id,
         dropbox_root_namespace_id: tokenData.root_namespace_id
       };

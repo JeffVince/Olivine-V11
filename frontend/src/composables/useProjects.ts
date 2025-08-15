@@ -1,4 +1,4 @@
-import { ref, watchEffect } from 'vue'
+import { ref, watch } from 'vue'
 import { useQuery } from '@vue/apollo-composable'
 import gql from 'graphql-tag'
 import { useOrganizationStore } from '@/stores/organizationStore'
@@ -6,16 +6,21 @@ import { useProjectStore } from '@/stores/projectStore'
 
 interface Project {
   id: string
-  name: string
+  orgId: string
+  title: string
   status: string
+  createdAt?: string
+  updatedAt?: string
 }
 
 const LIST_PROJECTS = gql`
   query Projects($orgId: ID!) {
-    projects(filter: { status: "ACTIVE" }, limit: 100, offset: 0) {
+    projects(orgId: $orgId) {
       id
-      name
+      title
       status
+      createdAt
+      updatedAt
     }
   }
 `
@@ -27,12 +32,15 @@ export function useProjects() {
   const { result, loading, refetch } = useQuery(LIST_PROJECTS, variables)
   const items = ref<Project[]>([])
 
-  watchEffect(() => {
-    variables.value.orgId = orgStore.currentOrg?.id || ''
+  watch(() => orgStore.currentOrg?.id, (newOrgId: string | undefined) => {
+    variables.value.orgId = newOrgId || ''
   })
 
-  watchEffect(() => {
-    if (result.value?.projects) items.value = result.value.projects
+  watch(result, (newResult: typeof result.value) => {
+    if (newResult?.projects) {
+      items.value = newResult.projects
+      projectStore.setProjects(newResult.projects)
+    }
   })
 
   function selectProject(id: string) {
@@ -41,5 +49,3 @@ export function useProjects() {
 
   return { items, loading, refetch, selectProject }
 }
-
-

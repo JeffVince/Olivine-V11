@@ -17,8 +17,8 @@ export const GET_SOURCES = gql`
 `
 
 export const CREATE_SOURCE = gql`
-  mutation CreateSource($input: CreateSourceInput!) {
-    createSource(input: $input) {
+  mutation CreateSource($orgId: ID!, $name: String!, $type: SourceType!, $config: JSON) {
+    createSource(orgId: $orgId, name: $name, type: $type, config: $config) {
       id
       type
       name
@@ -30,11 +30,14 @@ export const CREATE_SOURCE = gql`
 `
 
 export const TRIGGER_SYNC = gql`
-  mutation TriggerSync($input: TriggerSyncInput!) {
-    triggerSync(input: $input) {
-      success
-      message
-    }
+  mutation TriggerSourceResync($orgId: ID!, $sourceId: ID!) {
+    triggerSourceResync(orgId: $orgId, sourceId: $sourceId)
+  }
+`
+
+export const DELETE_SOURCE = gql`
+  mutation DeleteSource($orgId: ID!, $sourceId: ID!) {
+    deleteSource(orgId: $orgId, sourceId: $sourceId)
   }
 `
 
@@ -52,5 +55,8 @@ export const useSourcesQuery = (orgId: string) => {
   )
 }
 
-export const { mutate: createSource } = useMutation<CreateSourceResult>(CREATE_SOURCE)
-export const { mutate: triggerSyncMutation } = useMutation<TriggerSyncResult>(TRIGGER_SYNC)
+// IMPORTANT: Do not call useMutation at module top-level.
+// These factory functions must be invoked from within a component setup() or an active instance context.
+export const useCreateSourceMutation = () => useMutation<CreateSourceResult>(CREATE_SOURCE)
+export const useTriggerSyncMutation = () => useMutation<TriggerSyncResult>(TRIGGER_SYNC)
+export const useDeleteSourceMutation = () => useMutation(DELETE_SOURCE)

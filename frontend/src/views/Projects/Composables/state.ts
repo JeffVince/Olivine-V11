@@ -10,9 +10,9 @@ export const showEditDialog = ref(false)
 export const showDeleteDialog = ref(false)
 export const selectedProject = ref<Project | null>(null)
 export const newProject = ref<NewProject>({
-  name: '',
-  description: undefined,
-  settings: {}
+  title: '',
+  type: 'feature_film',
+  status: 'development'
 })
 export const loading = ref(false)
 
@@ -38,7 +38,7 @@ export const editProject = (project: Project) => {
 
 export const archiveProject = (project: Project) => {
   projectStore.archiveProject(project.id)
-  notificationStore.add('success', `Project ${project.name} archived successfully`)
+  notificationStore.add('success', `Project ${project.title} archived successfully`)
 }
 
 export const deleteProject = (project: Project) => {
@@ -49,7 +49,7 @@ export const deleteProject = (project: Project) => {
 export const confirmDelete = () => {
   if (selectedProject.value) {
     projectStore.deleteProject(selectedProject.value.id)
-    notificationStore.add('success', `Project ${selectedProject.value.name} deleted successfully`)
+    notificationStore.add('success', `Project ${selectedProject.value.title} deleted successfully`)
     showDeleteDialog.value = false
   }
 }
@@ -60,9 +60,9 @@ export const createProject = () => {
   showCreateDialog.value = false
   // Reset form
   newProject.value = {
-    name: '',
-    description: undefined,
-    settings: {}
+    title: '',
+    type: 'feature_film',
+    status: 'development'
   }
 }
 

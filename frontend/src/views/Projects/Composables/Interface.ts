@@ -1,19 +1,12 @@
 export interface Project {
   id: string
-  name: string
-  status: 'active' | 'syncing' | 'error' | 'archived'
-  description?: string | null
-  settings?: {
-    templates: string[]
-    autoApprove: boolean
-  }
-  lastActivity?: string
-  created_at?: string
-  updated_at?: string
-  integrations?: Array<{
-    type: 'dropbox' | 'googledrive' | 'frameio'
-    connected: boolean
-  }>
+  orgId: string
+  title: string
+  status: 'development' | 'pre_production' | 'production' | 'post_production' | 'completed' | 'cancelled'
+  settings?: Record<string, any>
+  metadata?: Record<string, any>
+  createdAt?: string
+  updatedAt?: string
 }
 
 export interface Integration {
@@ -23,9 +16,12 @@ export interface Integration {
 }
 
 export interface NewProject {
-  name: string
-  description?: string
-  settings?: Record<string, unknown>
+  title: string
+  type: string
+  status: string
+  start_date?: string
+  budget?: number
+  metadata?: Record<string, any>
 }
 
 export interface ProjectState {

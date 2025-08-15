@@ -118,12 +118,19 @@ export interface ShootDay {
   updated_at?: Date;
 }
 
+import { ProjectRepository } from '../repositories/ProjectRepository';
+import { PostgresService } from './PostgresService';
+
 export class ContentOntologyService {
   private neo4j: Neo4jService;
+  private postgres: PostgresService;
+  private projectRepo: ProjectRepository;
   private provenance: ProvenanceService;
 
   constructor() {
     this.neo4j = new Neo4jService();
+    this.postgres = new PostgresService();
+    this.projectRepo = new ProjectRepository(this.postgres);
     this.provenance = new ProvenanceService();
   }
 
@@ -133,70 +140,111 @@ export class ContentOntologyService {
     const projectId = this.generateId();
     const commitId = this.generateId();
     const actionId = this.generateId();
+    const now = new Date();
 
-    const query = `
-      // Create commit for provenance
-      CREATE (c:Commit {
-        id: $commit_id,
-        org_id: $org_id,
-        message: "Created project: " + $title,
-        author: $user_id,
-        timestamp: datetime(),
-        branch: "main"
-      })
-      
-      // Create action
-      CREATE (a:Action {
-        id: $action_id,
-        tool: "content_ontology_service",
-        action_type: "CREATE_PROJECT",
-        inputs: $inputs,
-        outputs: $outputs,
-        status: "success",
-        timestamp: datetime()
-      })
-      
-      // Link commit to action
-      CREATE (c)-[:INCLUDES]->(a)
-      WITH c,a
-      
-      // Create project
-      CREATE (p:Project {
-        id: $project_id,
-        org_id: $org_id,
-        title: $title,
-        type: $type,
-        status: $status,
-        start_date: $start_date,
-        budget: $budget,
-        metadata: $metadata,
-        created_at: datetime(),
-        updated_at: datetime()
-      })
-      
-      // Link action to project for provenance
-      CREATE (a)-[:TOUCHED]->(p)
-      
-      RETURN p
-    `;
+    // Handle both orgId (GraphQL input) and org_id (database field) for compatibility
+    const orgId = (project as any).orgId || project.org_id;
+    if (!orgId) {
+      throw new Error('org_id is required but was not provided');
+    }
 
-    const result = await this.neo4j.executeQuery(query, {
-      commit_id: commitId,
-      action_id: actionId,
-      project_id: projectId,
-      org_id: project.org_id,
-      user_id: userId,
-      title: project.title,
-      type: project.type,
-      status: project.status,
-      start_date: project.start_date || null,
-      budget: project.budget || null,
-      metadata: JSON.stringify(project.metadata || {}),
-      inputs: { title: project.title, type: project.type },
-      outputs: { project_id: projectId }
-    }, project.org_id);
-
-    return result.records[0]?.get('p').properties;
+    // Start Neo4j session with write access
+    const neo4jSession = this.neo4j.getSession(orgId, 'WRITE');
+    
+    try {
+      // 1. First save to PostgreSQL using transaction
+      const postgresProject = await this.postgres.executeQueryInTransaction(
+        `INSERT INTO projects (
+          id, org_id, title, type, status, start_date, budget, metadata, created_at, updated_at
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) 
+        RETURNING *`,
+        [
+          projectId,
+          orgId,
+          project.title,
+          project.type,
+          project.status,
+          project.start_date || null,
+          project.budget || null,
+          JSON.stringify(project.metadata || {}),
+          now,
+          now
+        ]
+      );
+      
+      // 2. Then save to Neo4j with provenance
+      const query = `
+        // Create commit
+        CREATE (c:Commit {id: $commit_id, created_at: datetime(), message: 'Project created'})
+        
+        // Create action
+        CREATE (a:Action {
+          id: $action_id,
+          type: 'CREATE',
+          entity_type: 'Project',
+          entity_id: $project_id,
+          created_at: datetime(),
+          user_id: $user_id
+        })
+        
+        // Create project node
+        CREATE (p:Project {
+          id: $project_id,
+          org_id: $org_id,
+          title: $title,
+          type: $type,
+          status: $status,
+          start_date: $start_date,
+          budget: $budget,
+          metadata: $metadata,
+          created_at: datetime(),
+          updated_at: datetime()
+        })
+        
+        // Link action to commit
+        CREATE (a)-[:PART_OF]->(c)
+        
+        // Link commit to project
+        CREATE (c)-[:AFFECTS]->(p)
+        
+        // Pass variables to next clause
+        WITH a, p
+        
+        // Link user to action
+        MATCH (u:User {id: $user_id})
+        CREATE (u)-[:PERFORMED]->(a)
+        
+        RETURN p
+      `;
+      
+      const params = {
+        commit_id: commitId,
+        action_id: actionId,
+        project_id: projectId,
+        user_id: userId,
+        org_id: orgId,
+        title: project.title,
+        type: project.type,
+        status: project.status,
+        start_date: project.start_date || null,
+        budget: project.budget || null,
+        metadata: JSON.stringify(project.metadata || {})
+      };
+      
+      // Execute Neo4j query
+      await neo4jSession.run(query, params);
+      
+      return postgresProject.rows[0];
+    } catch (error) {
+      console.error('Error creating project:', error);
+      throw new Error(`Failed to create project: ${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      try {
+        neo4jSession.close();
+      } catch (closeError) {
+        console.error('Error closing Neo4j session:', closeError);
+      }
+    }
   }
 
   async getProject(projectId: string, orgId: string): Promise<Project | null> {

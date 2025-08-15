@@ -14,16 +14,26 @@
           v-model="valid"
         >
           <v-text-field
-            v-model="newProject.name"
-            label="Project Name"
-            :rules="nameRules"
+            v-model="newProject.title"
+            label="Project Title"
+            :rules="titleRules"
             required
           />
           
-          <v-textarea
-            v-model="newProject.description"
-            label="Description"
-            rows="3"
+          <v-select
+            v-model="newProject.type"
+            :items="projectTypes"
+            label="Project Type"
+            :rules="typeRules"
+            required
+          />
+          
+          <v-select
+            v-model="newProject.status"
+            :items="projectStatuses"
+            label="Status"
+            :rules="statusRules"
+            required
           />
         </v-form>
       </v-card-text>
@@ -40,6 +50,7 @@
         <v-btn
           color="blue-darken-1"
           variant="text"
+          :disabled="!valid"
           @click="save"
         >
           Save
@@ -51,49 +62,84 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import type { NewProject } from '../Composables/Interface'
+import { useProjectStore } from '@/stores/projectStore'
 
-// Define props
-const props = defineProps<{
-  modelValue: boolean
-  project: NewProject
-}>()
+// Props
+const props = defineProps({
+  modelValue: Boolean
+})
 
-// Define emits
-const emit = defineEmits(['update:modelValue', 'save'])
+// Emits
+const emit = defineEmits(['update:modelValue', 'project-created'])
+
+// Stores
+const projectStore = useProjectStore()
 
 // Form validation
 const valid = ref(false)
-const nameRules = [
-  (v: string) => !!v || 'Project name is required',
-  (v: string) => (v && v.length <= 50) || 'Project name must be less than 50 characters',
+const titleRules = [
+  (v: string) => !!v || 'Project title is required',
+  (v: string) => (v && v.length <= 50) || 'Project title must be less than 50 characters'
+]
+const typeRules = [
+  (v: string) => !!v || 'Project type is required'
+]
+const statusRules = [
+  (v: string) => !!v || 'Project status is required'
+]
+
+// Project types and statuses
+const projectTypes = [
+  { title: 'Feature Film', value: 'feature_film' },
+  { title: 'TV Series', value: 'tv_series' },
+  { title: 'Commercial', value: 'commercial' },
+  { title: 'Documentary', value: 'documentary' },
+  { title: 'Short Film', value: 'short_film' }
+]
+
+const projectStatuses = [
+  { title: 'Development', value: 'development' },
+  { title: 'Pre Production', value: 'pre_production' },
+  { title: 'Production', value: 'production' },
+  { title: 'Post Production', value: 'post_production' },
+  { title: 'Completed', value: 'completed' },
+  { title: 'Cancelled', value: 'cancelled' }
 ]
 
 // Form data
-const newProject = computed({
-  get: () => props.project,
-  set: (_value) => {
-    // This is a bit awkward with computed - in a real implementation, 
-    // we might want to emit individual field changes instead
-  }
+const newProject = ref({
+  title: '',
+  type: 'feature_film',
+  status: 'development'
 })
 
-// Dialog visibility
+// Computed dialog visibility
 const dialog = computed({
   get: () => props.modelValue,
-  set: (value) => {
-    emit('update:modelValue', value)
-  }
+  set: (value) => emit('update:modelValue', value)
 })
 
 // Methods
-const close = () => {
-  emit('update:modelValue', false)
+function close() {
+  dialog.value = false
+  newProject.value = { title: '', type: 'feature_film', status: 'development' }
+  valid.value = false
 }
 
-const save = () => {
-  if (valid.value) {
-    emit('save', newProject.value)
+async function save() {
+  if (!valid.value) return
+  
+  try {
+    const project = await projectStore.createProject({
+      title: newProject.value.title,
+      type: newProject.value.type,
+      status: newProject.value.status
+    })
+    
+    emit('project-created', project)
+    close()
+  } catch (error) {
+    console.error('Error creating project:', error)
   }
 }
 </script>

@@ -30,6 +30,7 @@ export class GraphQLServer {
   private httpServer: any;
   private apolloServer?: ApolloServer<BaseContext>;
   private wsServer?: WebSocketServer;
+  private isStarted: boolean = false;
   // private enhancedResolvers: EnhancedResolvers;
   private securityMiddleware: SecurityMiddleware;
   private pubSub: PubSub;
@@ -81,6 +82,15 @@ export class GraphQLServer {
    */
   async start(port = 4000): Promise<void> {
     try {
+      if (this.isStarted && this.httpServer?.listening) {
+        this.logger.info(`GraphQL server already started on port ${(this.httpServer.address() as any)?.port}`);
+        return;
+      }
+
+      // Wait for the port to be free in dev to avoid restart races
+      if (process.env.NODE_ENV !== 'production') {
+        await new Promise<void>((resolve) => setTimeout(resolve, 250));
+      }
       // Initialize services
       await this.initializeServices();
 
@@ -97,11 +107,20 @@ export class GraphQLServer {
       this.setupExpressMiddleware();
 
       // Start the server
-      await new Promise<void>((resolve) => {
-        this.httpServer.listen(port, () => {
+      await new Promise<void>((resolve, reject) => {
+        this.httpServer.once('error', (err: any) => {
+          if (err && (err.code === 'EADDRINUSE' || err.code === 'EACCES')) {
+            this.logger.error(`Port ${port} is not available (${err.code}).`);
+          }
+          reject(err);
+        });
+        this.httpServer.once('listening', () => {
+          this.isStarted = true;
+          resolve();
+        });
+        this.httpServer.listen(port, '0.0.0.0', () => {
           this.logger.info(`🚀 GraphQL Server ready at http://localhost:${port}/graphql`);
           this.logger.info(`🚀 GraphQL Subscriptions ready at ws://localhost:${port}/graphql`);
-          resolve();
         });
       });
 
@@ -130,6 +149,7 @@ export class GraphQLServer {
 
       // Close HTTP server
       await new Promise<void>((resolve) => {
+        if (!this.httpServer || !this.httpServer.listening) return resolve();
         this.httpServer.close(() => resolve());
       });
 
@@ -138,6 +158,7 @@ export class GraphQLServer {
       await this.postgresService.close();
       await this.queueService.close();
 
+      this.isStarted = false;
       this.logger.info('GraphQL server stopped successfully');
     } catch (error) {
       this.logger.error('Error stopping GraphQL server:', error);
