@@ -1,8 +1,8 @@
 import { Dropbox, DropboxAuth } from 'dropbox';
 import type { files } from 'dropbox/types/dropbox_types';
-import { PostgresService } from './PostgresService';
 import { ConfigService } from './ConfigService';
 import { StorageProvider } from './StorageProvider';
+import { getSourceMetadata, updateSourceMetadata } from './storage';
 import { EventEmitter } from 'events';
 
 export interface DropboxMetrics {
@@ -57,7 +57,6 @@ export interface RetryOptions {
 
 export class DropboxService extends EventEmitter implements StorageProvider {
   private dropboxAuth?: DropboxAuth;
-  private postgresService?: PostgresService;
   private configService?: ConfigService;
   private appKey: string;
   private appSecret: string;
@@ -103,12 +102,7 @@ export class DropboxService extends EventEmitter implements StorageProvider {
     // Defer DropboxAuth/client creation until used
   }
 
-  private getPostgresService(): PostgresService {
-    if (!this.postgresService) {
-      this.postgresService = new PostgresService();
-    }
-    return this.postgresService;
-  }
+  // Postgres access is routed through storage SDK helpers
 
   private getDropboxAuth(): DropboxAuth {
     if (!this.dropboxAuth) {
@@ -686,36 +680,28 @@ export class DropboxService extends EventEmitter implements StorageProvider {
    */
   async getStoredTokens(orgId: string, sourceId: string): Promise<DropboxTokenData | null> {
     try {
-      const query = `
-        SELECT metadata->>'dropbox_access_token' as access_token,
-               metadata->>'dropbox_refresh_token' as refresh_token,
-               metadata->>'dropbox_expires_at' as expires_at,
-               metadata->>'dropbox_account_id' as account_id,
-               metadata->>'dropbox_team_member_id' as team_member_id,
-               metadata->>'dropbox_is_team_account' as is_team_account,
-               metadata->>'dropbox_home_namespace_id' as home_namespace_id,
-               metadata->>'dropbox_root_namespace_id' as root_namespace_id
-        FROM sources 
-        WHERE orgId = $1 AND id = $2 AND type = 'dropbox'
-      `;
-      
-      const result = await this.getPostgresService().executeQuery(query, [orgId, sourceId]);
-      
-      if (result.rows.length === 0) {
-        return null;
-      }
-      
-      const row = result.rows[0];
-      
+      const row = await getSourceMetadata(orgId, sourceId, 'dropbox', [
+        'dropbox_access_token',
+        'dropbox_refresh_token',
+        'dropbox_expires_at',
+        'dropbox_account_id',
+        'dropbox_team_member_id',
+        'dropbox_is_team_account',
+        'dropbox_home_namespace_id',
+        'dropbox_root_namespace_id'
+      ]);
+
+      if (!row) return null;
+
       return {
-        access_token: row.access_token,
-        refresh_token: row.refresh_token,
-        expires_at: parseInt(row.expires_at),
-        account_id: row.account_id,
-        team_member_id: row.team_member_id,
-        is_team_account: row.is_team_account === 'true',
-        home_namespace_id: row.home_namespace_id,
-        root_namespace_id: row.root_namespace_id
+        access_token: row.dropbox_access_token,
+        refresh_token: row.dropbox_refresh_token,
+        expires_at: parseInt(row.dropbox_expires_at),
+        account_id: row.dropbox_account_id,
+        team_member_id: row.dropbox_team_member_id,
+        is_team_account: row.dropbox_is_team_account === 'true',
+        home_namespace_id: row.dropbox_home_namespace_id,
+        root_namespace_id: row.dropbox_root_namespace_id
       };
     } catch (error) {
       console.error('Error getting stored tokens:', error);
@@ -728,13 +714,6 @@ export class DropboxService extends EventEmitter implements StorageProvider {
    */
   async storeTokens(orgId: string, sourceId: string, tokenData: DropboxTokenData): Promise<void> {
     try {
-      const query = `
-        UPDATE sources 
-        SET metadata = metadata || $1::jsonb,
-            updated_at = NOW()
-        WHERE orgId = $2 AND id = $3
-      `;
-      
       const metadata = {
         dropbox_access_token: tokenData.access_token,
         dropbox_refresh_token: tokenData.refresh_token,
@@ -745,8 +724,7 @@ export class DropboxService extends EventEmitter implements StorageProvider {
         dropbox_home_namespace_id: tokenData.home_namespace_id,
         dropbox_root_namespace_id: tokenData.root_namespace_id
       };
-      
-      await this.getPostgresService().executeQuery(query, [JSON.stringify(metadata), orgId, sourceId]);
+      await updateSourceMetadata(orgId, sourceId, metadata);
     } catch (error) {
       console.error('Error storing tokens:', error);
       throw error;

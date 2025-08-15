@@ -1,7 +1,7 @@
-import { google, Auth } from 'googleapis';
+import { google } from 'googleapis';
 import { JWT, OAuth2Client } from 'google-auth-library';
-import { PostgresService } from './PostgresService';
 import { ConfigService } from './ConfigService';
+import { getSourceMetadata, updateSourceMetadata } from './storage';
 
 export interface GoogleDriveFile {
   id?: string;
@@ -30,14 +30,12 @@ export class GoogleDriveService {
   // TODO: Implementation Plan - 02-Data-Ingestion-Implementation.md - Google Drive service implementation
   // TODO: Implementation Checklist - 03-Storage-Integration-Checklist.md - Google Drive API integration and OAuth
   // TODO: Implementation Checklist - 07-Testing-QA-Checklist.md - Backend storage service tests
-  private postgresService: PostgresService;
   private configService: ConfigService;
   private clientId: string;
   private clientSecret: string;
   private redirectUri: string;
 
   constructor() {
-    this.postgresService = new PostgresService();
     this.configService = new ConfigService();
     this.clientId = process.env.GOOGLE_CLIENT_ID || '';
     this.clientSecret = process.env.GOOGLE_CLIENT_SECRET || '';
@@ -124,28 +122,20 @@ export class GoogleDriveService {
    */
   async getStoredTokens(orgId: string, sourceId: string): Promise<GoogleDriveTokenData | null> {
     try {
-      const query = `
-        SELECT metadata->>'gdrive_access_token' as access_token,
-               metadata->>'gdrive_refresh_token' as refresh_token,
-               metadata->>'gdrive_expires_at' as expires_at,
-               metadata->>'gdrive_token_type' as token_type
-        FROM sources 
-        WHERE orgId = $1 AND id = $2 AND type = 'google_drive'
-      `;
-      
-      const sources = await this.postgresService.executeQuery(query, [orgId, sourceId]);
-      
-      if (sources.rows.length === 0) {
-        return null;
-      }
-      
-      const row = sources.rows[0];
-      
+      const row = await getSourceMetadata(orgId, sourceId, 'google_drive', [
+        'gdrive_access_token',
+        'gdrive_refresh_token',
+        'gdrive_expires_at',
+        'gdrive_token_type'
+      ]);
+
+      if (!row) return null;
+
       return {
-        access_token: row.access_token,
-        refresh_token: row.refresh_token,
-        expires_at: parseInt(row.expires_at),
-        token_type: row.token_type
+        access_token: row.gdrive_access_token,
+        refresh_token: row.gdrive_refresh_token,
+        expires_at: parseInt(row.gdrive_expires_at),
+        token_type: row.gdrive_token_type
       };
     } catch (error) {
       console.error('Error getting stored Google Drive tokens:', error);
@@ -158,21 +148,13 @@ export class GoogleDriveService {
    */
   async storeTokens(orgId: string, sourceId: string, tokenData: GoogleDriveTokenData): Promise<void> {
     try {
-      const query = `
-        UPDATE sources 
-        SET metadata = metadata || $1::jsonb,
-            updated_at = NOW()
-        WHERE orgId = $2 AND id = $3
-      `;
-      
       const metadata = {
         gdrive_access_token: tokenData.access_token,
         gdrive_refresh_token: tokenData.refresh_token,
         gdrive_expires_at: tokenData.expires_at.toString(),
         gdrive_token_type: tokenData.token_type
       };
-      
-      await this.postgresService.executeQuery(query, [JSON.stringify(metadata), orgId, sourceId]);
+      await updateSourceMetadata(orgId, sourceId, metadata);
     } catch (error) {
       console.error('Error storing Google Drive tokens:', error);
       throw error;
