@@ -1,4 +1,4 @@
-import jwt from 'jsonwebtoken';
+import { OlivineAuth, JwtPayload } from '../../../sdk/auth';
 import bcrypt from 'bcrypt';
 import { v4 as uuidv4 } from 'uuid';
 import { PostgresService } from './PostgresService';
@@ -50,18 +50,16 @@ export class AuthService {
    * @returns JWT token
    */
   generateToken(userId: string, orgId: string, role: string): string {
-    const payload = {
+    const payload: JwtPayload = {
       userId,
       orgId,
       role
     };
 
-    const options = {
+    return OlivineAuth.sign(payload, this.jwtSecret, {
       expiresIn: process.env.JWT_EXPIRES_IN || '24h',
       issuer: process.env.JWT_ISSUER || 'olivine'
-    };
-
-    return jwt.sign(payload, this.jwtSecret, options as jwt.SignOptions);
+    });
   }
 
   /**
@@ -76,22 +74,11 @@ export class AuthService {
    */
   verifyToken(token: string): JwtPayload {
     try {
-      const decoded = jwt.verify(token, this.jwtSecret) as jwt.JwtPayload | string;
-      if (typeof decoded === 'string') {
-        throw new Error('Invalid JWT payload');
-      }
-      const payload: any = decoded;
+      const payload = OlivineAuth.verify(token, this.jwtSecret);
       if (!AuthService.JwtPayloadGuard(payload)) {
         throw new Error('Invalid JWT payload structure');
       }
-      return {
-        userId: payload.userId,
-        orgId: payload.orgId,
-        role: payload.role,
-        iat: payload.iat as number | undefined,
-        exp: payload.exp as number | undefined,
-        iss: payload.iss as string | undefined
-      };
+      return payload;
     } catch (error) {
       console.error('Error verifying JWT token:', error);
       throw error;
@@ -238,11 +225,3 @@ export class AuthService {
   }
 }
 
-export interface JwtPayload {
-  userId: string;
-  orgId: string;
-  role: string;
-  iat?: number;
-  exp?: number;
-  iss?: string;
-}
